@@ -23,8 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-// Importar componentes de gráfico (ainda não criados, mas preparando o terreno)
-// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
   const { userData, currentUser } = useAuth();
@@ -216,18 +215,32 @@ const Dashboard = () => {
                       </Badge>
                     </div>
                   </div>
-                  {/* Placeholder para gráfico de linha */}
-                  <div className="h-48 w-full bg-muted/30 rounded-lg mt-4 flex items-center justify-center text-muted-foreground text-sm">
-                    {/* <ResponsiveContainer width="100%" height="100%">
+                  {/* Gráfico de linha real */}
+                  <div className="h-48 w-full mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={monthlyEarningsData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                         <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
-                        <Line type="monotone" dataKey="earnings" stroke="hsl(var(--electric-purple))" strokeWidth={2} dot={{ fill: 'hsl(var(--electric-purple))', r: 4 }} activeDot={{ r: 6 }} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            background: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))', 
+                            borderRadius: '0.5rem' 
+                          }} 
+                          itemStyle={{ color: 'hsl(var(--foreground))' }} 
+                          formatter={(value: number) => `${value.toFixed(2)} KZ`}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="earnings" 
+                          stroke="hsl(var(--electric-purple))" 
+                          strokeWidth={2} 
+                          dot={{ fill: 'hsl(var(--electric-purple))', r: 4 }} 
+                          activeDot={{ r: 6 }} 
+                        />
                       </LineChart>
-                    </ResponsiveContainer> */}
-                    {t("chart_placeholder")}
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>

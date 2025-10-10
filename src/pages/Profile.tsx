@@ -130,13 +130,13 @@ const Profile = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Header do Perfil */}
-          <Card className="mb-8">
+          <Card className="mb-8 bg-card border-border shadow-md">
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
                 <div className="flex items-center space-x-6">
-                  <Avatar className="h-24 w-24">
+                  <Avatar className="h-24 w-24 border-2 border-primary/50 shadow-lg">
                     <AvatarImage src={userData.avatarUrl} />
-                    <AvatarFallback className="text-2xl">
+                    <AvatarFallback className="text-2xl bg-gradient-primary text-primary-foreground">
                       {userData.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -144,12 +144,12 @@ const Profile = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3">
                       <h1 className="text-3xl font-bold text-foreground">{userData.name}</h1>
-                      <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
+                      <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'} className="bg-electric-purple/20 text-electric-purple border-electric-purple/30">
                         {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <Mail className="h-4 w-4" />
                         <span>{currentUser.email}</span>
@@ -177,7 +177,7 @@ const Profile = () => {
                 <Button
                   variant={isEditing ? "destructive" : "outline"}
                   onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 mt-4 md:mt-0"
                 >
                   {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                   <span>{isEditing ? t("cancel") : t("edit_profile")}</span>
@@ -187,7 +187,7 @@ const Profile = () => {
           </Card>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
               <TabsTrigger value="stats">{t("stats")}</TabsTrigger>
               <TabsTrigger value="settings">{t("settings")}</TabsTrigger>
@@ -197,10 +197,10 @@ const Profile = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Informações Pessoais */}
                 <div className="lg:col-span-2">
-                  <Card>
+                  <Card className="bg-card border-border shadow-md">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
-                        <User className="h-5 w-5" />
+                        <User className="h-5 w-5 text-electric-purple" />
                         <span>{t("personal_information")}</span>
                       </CardTitle>
                     </CardHeader>
@@ -256,7 +256,7 @@ const Profile = () => {
                             />
                           </div>
                           
-                          <Button onClick={handleSave} disabled={isLoading} className="w-full">
+                          <Button onClick={handleSave} disabled={isLoading} className="w-full glow-effect">
                             <Save className="h-4 w-4 mr-2" />
                             {isLoading ? t("saving") : t("save_changes")}
                           </Button>
@@ -294,7 +294,7 @@ const Profile = () => {
                               <Label className="text-sm font-medium text-muted-foreground">{t("skills")}</Label>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {userData.skills.map((skill, index) => (
-                                  <Badge key={index} variant="outline">
+                                  <Badge key={index} variant="outline" className="bg-muted/30 text-muted-foreground border-border">
                                     {skill}
                                   </Badge>
                                 ))}
@@ -309,9 +309,12 @@ const Profile = () => {
 
                 {/* Quick Stats */}
                 <div className="space-y-6">
-                  <Card>
+                  <Card className="bg-card border-border shadow-md">
                     <CardHeader>
-                      <CardTitle className="text-lg">{t("your_stats")}</CardTitle>
+                      <CardTitle className="text-lg flex items-center space-x-2">
+                        <BarChart3 className="h-5 w-5 text-cosmic-blue" />
+                        <span>{t("your_stats")}</span>
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -322,7 +325,7 @@ const Profile = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
                         <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-primary text-primary" />
+                          <Star className="h-4 w-4 fill-star-glow text-star-glow" />
                           <span className="font-semibold text-foreground">{(userData.rating || 0).toFixed(1)}</span>
                         </div>
                       </div>
@@ -349,7 +352,7 @@ const Profile = () => {
 
             <TabsContent value="stats" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
+                <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_completed_tasks")}</CardTitle>
                   </CardHeader>
@@ -362,7 +365,7 @@ const Profile = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_earnings")}</CardTitle>
                   </CardHeader>
@@ -375,20 +378,20 @@ const Profile = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{t("average_rating_label")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{(userData.rating || 0).toFixed(1)}</div>
                     <div className="flex items-center text-xs text-muted-foreground">
-                      <Star className="h-3 w-3 mr-1 fill-primary text-primary" />
+                      <Star className="h-3 w-3 mr-1 fill-star-glow text-star-glow" />
                       {t("excellent")}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{t("approval_rate_label")}</CardTitle>
                   </CardHeader>
@@ -406,10 +409,10 @@ const Profile = () => {
             <TabsContent value="settings" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Configurações da Conta */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <Settings className="h-5 w-5" />
+                      <Settings className="h-5 w-5 text-electric-purple" />
                       <span>{t("account_settings")}</span>
                     </CardTitle>
                     <CardDescription>
@@ -444,16 +447,16 @@ const Profile = () => {
                     <div className="space-y-2">
                       <Label>{t("account_status")}</Label>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-success/10 text-success">
+                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                           {t("verified")}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                           {t("premium")}
                         </Badge>
                       </div>
                     </div>
 
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10">
                       {t("change_password")}
                     </Button>
                     
@@ -462,9 +465,12 @@ const Profile = () => {
                 </Card>
 
                 {/* Redes Sociais */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
-                    <CardTitle>{t("social_media")}</CardTitle>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Globe className="h-5 w-5 text-cosmic-blue" />
+                      <span>{t("social_media")}</span>
+                    </CardTitle>
                     <CardDescription>
                       {t("connect_social_media")}
                     </CardDescription>

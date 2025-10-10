@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, MapPin, Smartphone, Monitor, Globe } from "lucide-react";
+import { Clock, Star, MapPin, Smartphone, Monitor, Globe, DollarSign } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import JobApplyButton from "./JobApplyButton";
@@ -70,7 +70,7 @@ const JobCard = ({
 
   return (
     <div 
-      className="card-hover group rounded-xl bg-card p-6 shadow-md cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]" 
+      className="card-hover group rounded-xl bg-card p-6 shadow-md cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border border-border" 
       onClick={handleCardClick}
     >
       <div className="flex items-start justify-between mb-4">
@@ -79,7 +79,7 @@ const JobCard = ({
           <Badge variant="outline" className={getDifficultyColor()}>
             {t(difficulty.toLowerCase())}
           </Badge>
-          <Badge variant="secondary">{platform}</Badge>
+          <Badge variant="secondary" className="bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">{platform}</Badge>
         </div>
         <div className="text-right">
           <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} KZ</p>
@@ -87,7 +87,7 @@ const JobCard = ({
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-card-foreground mb-2 group-hover:text-primary transition-colors">
+      <h3 className="text-lg font-semibold text-card-foreground mb-2 group-hover:text-electric-purple transition-colors">
         {title}
       </h3>
       
@@ -98,18 +98,18 @@ const JobCard = ({
       <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3 w-3 text-muted-foreground" />
             <span>{timeEstimate}</span>
           </div>
           
           <div className="flex items-center space-x-1">
-            <Star className="h-3 w-3 fill-warning text-warning" />
+            <Star className="h-3 w-3 fill-star-glow text-star-glow" />
             <span>{rating.toFixed(1)}</span>
           </div>
 
           {location && (
             <div className="flex items-center space-x-1">
-              <MapPin className="h-3 w-3" />
+              <MapPin className="h-3 w-3 text-muted-foreground" />
               <span>{location}</span>
             </div>
           )}
@@ -124,7 +124,7 @@ const JobCard = ({
         
         <div className="flex items-center gap-2">
           <JobApplyButton jobId={id} posterId={posterId} />
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-primary hover:text-primary-hover transition-colors">
             {t("view_details")} →
           </div>
         </div>

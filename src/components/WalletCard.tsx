@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote, CreditCard, DollarSign } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/hooks/useFirebase";
 import { Transaction } from "@/types/firebase";
@@ -57,6 +57,7 @@ const WalletCard = () => {
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case "deposit":
+      case "admin_deposit":
         return <TrendingUp className="h-4 w-4 text-success" />;
       case "payout":
         return <TrendingDown className="h-4 w-4 text-primary" />;
@@ -65,7 +66,7 @@ const WalletCard = () => {
       case "fee":
         return <TrendingDown className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <TrendingUp className="h-4 w-4" />;
+        return <DollarSign className="h-4 w-4" />;
     }
   };
 
@@ -83,12 +84,12 @@ const WalletCard = () => {
   };
 
   return (
-    <Card className="p-6 bg-gradient-secondary border-border/50">
+    <Card className="p-6 bg-card border-border shadow-md">
       {/* Balance Section */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <h2 className="text-lg font-semibold text-card-foreground">{t("wallet")}</h2>
-          <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
+          <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'} className="bg-electric-purple/20 text-electric-purple border-electric-purple/30">
             {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
           </Badge>
         </div>
@@ -116,7 +117,7 @@ const WalletCard = () => {
         {userData.currentMode === 'tester' ? (
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full border-primary/50 text-primary hover:bg-primary/10"
             disabled={currentBalance < 2000}
             onClick={() => {
               if (currentBalance < 2000) {
@@ -136,8 +137,8 @@ const WalletCard = () => {
         ) : (
           <div className="space-y-3">
             <Button 
-              variant="success" 
-              className="w-full"
+              variant="hero" 
+              className="w-full glow-effect"
               onClick={() => setDepositModal({ open: true, method: 'express' })}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -145,7 +146,7 @@ const WalletCard = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="w-full"
+              className="w-full border-primary/50 text-primary hover:bg-primary/10"
               onClick={() => setDepositModal({ open: true, method: 'iban' })}
             >
               <Banknote className="h-4 w-4 mr-2" />
@@ -169,7 +170,7 @@ const WalletCard = () => {
               transactions.slice(0, 5).map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50"
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50"
               >
                 <div className="flex items-center space-x-3">
                   {getTransactionIcon(transaction.type)}
@@ -183,11 +184,11 @@ const WalletCard = () => {
                 
                 <div className="text-right space-y-1">
                   <p className={`text-sm font-semibold ${
-                    transaction.type === "deposit" || transaction.type === "payout" 
+                    transaction.type === "deposit" || transaction.type === "admin_deposit" 
                       ? "text-success" 
-                      : "text-muted-foreground"
+                      : transaction.type === "payout" ? "text-destructive" : "text-muted-foreground"
                   }`}>
-                    {transaction.type === "deposit" || transaction.type === "payout" ? "+" : "-"}
+                    {transaction.type === "deposit" || transaction.type === "admin_deposit" ? "+" : "-"}
                     {transaction.amount.toFixed(2)} KZ
                   </p>
                   {getStatusBadge(transaction.status)}
@@ -208,7 +209,7 @@ const WalletCard = () => {
 
       {transactions.length > 3 && (
         <div className="mt-4 pt-4 border-t border-border">
-          <Button variant="ghost" className="w-full text-sm">
+          <Button variant="ghost" className="w-full text-sm text-primary hover:bg-primary/10">
             {t("view_all_transactions")}
           </Button>
         </div>

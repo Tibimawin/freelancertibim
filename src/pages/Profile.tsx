@@ -144,7 +144,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3">
                       <h1 className="text-3xl font-bold text-foreground">{userData.name}</h1>
-                      <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'} className="bg-electric-purple/20 text-electric-purple border-electric-purple/30">
+                      <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
                         {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
                       </Badge>
                     </div>

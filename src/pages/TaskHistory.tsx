@@ -3,19 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle, 
+  Smartphone, 
+  Monitor, 
+  Globe, 
+  DollarSign,
+  Calendar
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApplicationService } from "@/services/applicationService";
 import { JobService } from "@/services/firebase";
 import { Application, Job } from "@/types/firebase";
 import Header from "@/components/Header";
+import { useTranslation } from 'react-i18next';
 
 const TaskHistory = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [applications, setApplications] = useState<(Application & { job?: Job })[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -51,17 +64,42 @@ const TaskHistory = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-success/10 text-success border-success/20"><CheckCircle className="h-3 w-3 mr-1" />Aprovada</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20"><CheckCircle className="h-3 w-3 mr-1" />{t("approved")}</Badge>;
       case 'rejected':
-        return <Badge className="bg-destructive/10 text-destructive border-destructive/20"><XCircle className="h-3 w-3 mr-1" />Rejeitada</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20"><XCircle className="h-3 w-3 mr-1" />{t("rejected")}</Badge>;
       case 'submitted':
-        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />Aguardando Análise</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />{t("pending_analysis")}</Badge>;
       case 'accepted':
-        return <Badge className="bg-primary/10 text-primary border-primary/20"><AlertCircle className="h-3 w-3 mr-1" />Aceita</Badge>;
+        return <Badge className="bg-primary/10 text-primary border-primary/20"><AlertCircle className="h-3 w-3 mr-1" />{t("accepted")}</Badge>;
       case 'applied':
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Candidatado</Badge>;
+        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />{t("applied")}</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getPlatformIcon = (platform: string | undefined) => {
+    switch (platform) {
+      case "iOS":
+      case "Android":
+        return <Smartphone className="h-4 w-4 text-muted-foreground" />;
+      case "Web":
+        return <Globe className="h-4 w-4 text-muted-foreground" />;
+      default:
+        return <Monitor className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string | undefined) => {
+    switch (difficulty) {
+      case "Fácil":
+        return "bg-success/10 text-success border-success/20";
+      case "Médio":
+        return "bg-warning/10 text-warning border-warning/20";
+      case "Difícil":
+        return "bg-destructive/10 text-destructive border-destructive/20";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -85,7 +123,7 @@ const TaskHistory = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="animate-pulse text-muted-foreground">Carregando histórico...</div>
+          <div className="animate-pulse text-muted-foreground">{t("loading_history")}</div>
         </div>
       </div>
     );
@@ -104,41 +142,41 @@ const TaskHistory = () => {
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
+            {t("back")}
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">Histórico de Tarefas</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("task_history")}</h1>
         </div>
 
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="all">
-              Todas ({applications.length})
+              {t("all")} ({applications.length})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              Concluídas ({getFilteredApplications('completed').length})
+              {t("completed")} ({getFilteredApplications('completed').length})
             </TabsTrigger>
             <TabsTrigger value="pending">
-              Pendentes ({getFilteredApplications('pending').length})
+              {t("pending")} ({getFilteredApplications('pending').length})
             </TabsTrigger>
             <TabsTrigger value="rejected">
-              Rejeitadas ({getFilteredApplications('rejected').length})
+              {t("rejected")} ({getFilteredApplications('rejected').length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
             {applications.length > 0 ? (
               applications.map((app) => (
-                <Card key={app.id} className="hover:shadow-md transition-shadow">
+                <Card key={app.id} className="interactive-scale bg-card border-border shadow-md">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg">{app.job?.title || 'Tarefa não encontrada'}</CardTitle>
+                        <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Aplicado em {new Date(app.appliedAt).toLocaleDateString('pt-BR')}
+                          {t("applied_on")} {new Date(app.appliedAt).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       <div className="text-right space-y-2">
-                        <div className="text-xl font-bold text-primary">
+                        <div className="text-2xl font-bold text-primary">
                           {app.job?.bounty.toFixed(2) || '0.00'} KZ
                         </div>
                         {getStatusBadge(app.status)}
@@ -154,26 +192,36 @@ const TaskHistory = () => {
                         </p>
                       )}
                       
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          Plataforma: <span className="font-medium">{app.job?.platform}</span>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          {getPlatformIcon(app.job?.platform)}
+                          <span className="font-medium">{app.job?.platform || t('not_available')}</span>
                         </span>
-                        <span className="text-muted-foreground">
-                          Dificuldade: <span className="font-medium">{app.job?.difficulty}</span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Badge variant="outline" className={getDifficultyColor(app.job?.difficulty)}>
+                            {t(app.job?.difficulty?.toLowerCase() || 'not_available')}
+                          </Badge>
+                        </span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-medium">{app.job?.timeEstimate || t('not_available')}</span>
                         </span>
                       </div>
 
                       {app.rejectionReason && (
                         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                          <p className="text-sm text-destructive font-medium">Motivo da rejeição:</p>
+                          <p className="text-sm text-destructive font-medium">{t("rejection_reason")}:</p>
                           <p className="text-sm text-destructive mt-1">{app.rejectionReason}</p>
                         </div>
                       )}
 
                       {app.reviewedAt && (
-                        <div className="text-xs text-muted-foreground">
-                          {app.status === 'approved' ? 'Aprovado' : 'Analisado'} em {' '}
-                          {new Date(app.reviewedAt).toLocaleDateString('pt-BR')}
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {app.status === 'approved' ? t('completed_on') : t('reviewed_on')}{' '}
+                            {new Date(app.reviewedAt).toLocaleDateString('pt-BR')}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -182,24 +230,24 @@ const TaskHistory = () => {
               ))
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Nenhuma tarefa encontrada</p>
+                <p className="text-muted-foreground">{t("no_tasks_found_history")}</p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="completed" className="space-y-4">
             {getFilteredApplications('completed').map((app) => (
-              <Card key={app.id} className="hover:shadow-md transition-shadow border-success/20">
+              <Card key={app.id} className="interactive-scale bg-card border-success/20 shadow-md">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{app.job?.title || 'Tarefa não encontrada'}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Concluída em {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                        {t("completed_on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date_not_available')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
-                      <div className="text-xl font-bold text-success">
+                      <div className="text-2xl font-bold text-success">
                         +{app.job?.bounty.toFixed(2) || '0.00'} KZ
                       </div>
                       {getStatusBadge(app.status)}
@@ -208,7 +256,7 @@ const TaskHistory = () => {
                 </CardHeader>
                 
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {app.job?.description}
                   </p>
                 </CardContent>
@@ -218,17 +266,17 @@ const TaskHistory = () => {
 
           <TabsContent value="pending" className="space-y-4">
             {getFilteredApplications('pending').map((app) => (
-              <Card key={app.id} className="hover:shadow-md transition-shadow border-warning/20">
+              <Card key={app.id} className="interactive-scale bg-card border-warning/20 shadow-md">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{app.job?.title || 'Tarefa não encontrada'}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {app.status === 'submitted' ? 'Aguardando análise das provas' : 'Tarefa aceita - envie as provas'}
+                        {app.status === 'submitted' ? t('pending_analysis') : t('task_accepted_submit_proofs')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
-                      <div className="text-xl font-bold text-warning">
+                      <div className="text-2xl font-bold text-warning">
                         {app.job?.bounty.toFixed(2) || '0.00'} KZ
                       </div>
                       {getStatusBadge(app.status)}
@@ -237,16 +285,17 @@ const TaskHistory = () => {
                 </CardHeader>
                 
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {app.job?.description}
                   </p>
                   {app.status === 'accepted' && (
                     <Button 
                       size="sm" 
-                      className="mt-3"
+                      className="mt-3 glow-effect"
                       onClick={() => navigate(`/job/${app.jobId}`)}
                     >
-                      Enviar Provas
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      {t("submit_proofs")}
                     </Button>
                   )}
                 </CardContent>
@@ -256,17 +305,17 @@ const TaskHistory = () => {
 
           <TabsContent value="rejected" className="space-y-4">
             {getFilteredApplications('rejected').map((app) => (
-              <Card key={app.id} className="hover:shadow-md transition-shadow border-destructive/20">
+              <Card key={app.id} className="interactive-scale bg-card border-destructive/20 shadow-md">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{app.job?.title || 'Tarefa não encontrada'}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Rejeitada em {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                        {t("rejected_on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date_not_available')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
-                      <div className="text-xl font-bold text-muted-foreground">
+                      <div className="text-2xl font-bold text-muted-foreground">
                         {app.job?.bounty.toFixed(2) || '0.00'} KZ
                       </div>
                       {getStatusBadge(app.status)}
@@ -276,13 +325,13 @@ const TaskHistory = () => {
                 
                 <CardContent>
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {app.job?.description}
                     </p>
                     
                     {app.rejectionReason && (
                       <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                        <p className="text-sm text-destructive font-medium">Motivo da rejeição:</p>
+                        <p className="text-sm text-destructive font-medium">{t("rejection_reason")}:</p>
                         <p className="text-sm text-destructive mt-1">{app.rejectionReason}</p>
                       </div>
                     )}

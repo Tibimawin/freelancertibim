@@ -142,11 +142,11 @@ const CreateJob = () => {
 
   const getIconForProofType = (type: 'text' | 'screenshot' | 'file' | 'url') => {
     switch (type) {
-      case 'text': return <Type className="h-4 w-4" />;
-      case 'url': return <Link className="h-4 w-4" />;
-      case 'screenshot': return <Image className="h-4 w-4" />;
-      case 'file': return <FileText className="h-4 w-4" />;
-      default: return <Type className="h-4 w-4" />;
+      case 'text': return <Type className="h-4 w-4 text-electric-purple" />;
+      case 'url': return <Link className="h-4 w-4 text-cosmic-blue" />;
+      case 'screenshot': return <Image className="h-4 w-4 text-star-glow" />;
+      case 'file': return <FileText className="h-4 w-4 text-success" />;
+      default: return <Type className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -276,10 +276,10 @@ const CreateJob = () => {
               {/* Formulário Principal */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Informações Básicas */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5" />
+                      <FileText className="h-5 w-5 text-electric-purple" />
                       <span>{t("basic_information")}</span>
                     </CardTitle>
                   </CardHeader>
@@ -317,19 +317,19 @@ const CreateJob = () => {
                           <SelectContent>
                             <SelectItem value="iOS">
                               <div className="flex items-center space-x-2">
-                                <Smartphone className="h-4 w-4" />
+                                <Smartphone className="h-4 w-4 text-muted-foreground" />
                                 <span>iOS</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="Android">
                               <div className="flex items-center space-x-2">
-                                <Smartphone className="h-4 w-4" />
+                                <Smartphone className="h-4 w-4 text-muted-foreground" />
                                 <span>Android</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="Web">
                               <div className="flex items-center space-x-2">
-                                <Globe className="h-4 w-4" />
+                                <Globe className="h-4 w-4 text-muted-foreground" />
                                 <span>Web</span>
                               </div>
                             </SelectItem>
@@ -372,10 +372,10 @@ const CreateJob = () => {
                 </Card>
 
                 {/* Instruções Detalhadas */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <ListOrdered className="h-5 w-5" />
+                      <ListOrdered className="h-5 w-5 text-cosmic-blue" />
                       <span>{t("detailed_instructions")}</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -422,10 +422,10 @@ const CreateJob = () => {
                 </Card>
 
                 {/* Provas Necessárias */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <ShieldCheck className="h-5 w-5" />
+                      <ShieldCheck className="h-5 w-5 text-star-glow" />
                       <span>{t("proof_requirements")}</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -443,25 +443,25 @@ const CreateJob = () => {
                           <SelectContent>
                             <SelectItem value="text">
                               <div className="flex items-center space-x-2">
-                                <Type className="h-4 w-4" />
+                                <Type className="h-4 w-4 text-electric-purple" />
                                 <span>{t("text_response")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="screenshot">
                               <div className="flex items-center space-x-2">
-                                <Image className="h-4 w-4" />
+                                <Image className="h-4 w-4 text-star-glow" />
                                 <span>{t("screenshot")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="url">
                               <div className="flex items-center space-x-2">
-                                <Link className="h-4 w-4" />
+                                <Link className="h-4 w-4 text-cosmic-blue" />
                                 <span>{t("link_url")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="file">
                               <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4" />
+                                <FileText className="h-4 w-4 text-success" />
                                 <span>{t("file")}</span>
                               </div>
                             </SelectItem>
@@ -490,7 +490,7 @@ const CreateJob = () => {
                       />
                     </div>
                     
-                    <Button type="button" onClick={handleAddProofRequirement} className="w-full">
+                    <Button type="button" onClick={handleAddProofRequirement} className="w-full glow-effect">
                       <Plus className="h-4 w-4 mr-2" />
                       {t("add_proof")}
                     </Button>
@@ -531,7 +531,7 @@ const CreateJob = () => {
                 </Card>
 
                 {/* Requisitos Gerais */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle>{t("general_requirements")}</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -554,7 +554,7 @@ const CreateJob = () => {
                     {formData.requirements.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {formData.requirements.map((req, index) => (
-                          <Badge key={index} variant="outline" className="flex items-center space-x-1">
+                          <Badge key={index} variant="outline" className="flex items-center space-x-1 bg-muted/30 text-muted-foreground border-border">
                             <span>{req}</span>
                             <button
                               type="button"
@@ -571,7 +571,7 @@ const CreateJob = () => {
                 </Card>
 
                 {/* Detalhes Adicionais */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle>{t("additional_details")}</CardTitle>
                   </CardHeader>
@@ -627,10 +627,10 @@ const CreateJob = () => {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Valor do Teste */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <DollarSign className="h-5 w-5" />
+                      <DollarSign className="h-5 w-5 text-electric-purple" />
                       <span>{t("bounty_value")}</span>
                     </CardTitle>
                   </CardHeader>
@@ -656,7 +656,7 @@ const CreateJob = () => {
                 </Card>
 
                 {/* Resumo */}
-                <Card>
+                <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle>{t("job_summary")}</CardTitle>
                   </CardHeader>
@@ -702,7 +702,7 @@ const CreateJob = () => {
                   <Button 
                     type="submit" 
                     disabled={isLoading}
-                    className="w-full"
+                    className="w-full glow-effect"
                     size="lg"
                   >
                     <Save className="h-4 w-4 mr-2" />

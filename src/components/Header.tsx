@@ -8,16 +8,16 @@ import { Link } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import ModeToggle from "./ModeToggle";
 import WithdrawalModal from "./WithdrawalModal";
-import { useNotifications } from "@/hooks/useNotifications"; // Import useNotifications
-import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useNotifications } from "@/hooks/useNotifications";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from 'react-i18next';
 
 const Header = () => {
   const { currentUser, userData, signOut } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading: notificationsLoading } = useNotifications(); // Use the hook
+  const { notifications, unreadCount, markAsRead, markAllAsRead, loading: notificationsLoading } = useNotifications();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     try {

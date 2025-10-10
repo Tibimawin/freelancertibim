@@ -29,7 +29,7 @@ import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
 import { useLocation } from "react-router-dom";
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
   const { userData, currentUser, updateUserData } = useAuth();
@@ -39,7 +39,7 @@ const Profile = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialTab = queryParams.get('tab') || 'overview';
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState(initialTab);
 

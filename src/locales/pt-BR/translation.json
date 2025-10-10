@@ -514,5 +514,6 @@
   "ago_minutes": "há {{count}} min",
   "ago_hours": "há {{count}} h",
   "ago_days": "há {{count}} d",
-  "just_now": "agora mesmo"
+  "just_now": "agora mesmo",
+  "search_tasks_placeholder": "Buscar tarefas..."
 }

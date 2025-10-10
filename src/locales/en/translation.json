@@ -332,7 +332,7 @@
   "manage_contractor_balances": "Manage Contractor Balances",
   "search_contractors": "Search contractors...",
   "no_contractors_found": "No contractors found",
-  "contractor_role": "Contractor",
+  "contractor_role": "Contratante",
   "current_balance_admin": "Current balance",
   "add_balance": "Add Balance",
   "add_balance_to_user": "Add Balance - {{name}}",
@@ -514,5 +514,6 @@
   "ago_minutes": "{{count}} min ago",
   "ago_hours": "{{count}} h ago",
   "ago_days": "{{count}} d ago",
-  "just_now": "just now"
+  "just_now": "just now",
+  "search_tasks_placeholder": "Search tasks..."
 }

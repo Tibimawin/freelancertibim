@@ -66,28 +66,70 @@ const Index = () => {
 
             {/* Platform Tabs */}
             <Tabs defaultValue="all" className="mb-8">
-              <TabsList className="flex flex-wrap w-full gap-1 h-auto">
-                <TabsTrigger value="all">{t("all")}</TabsTrigger>
-                <TabsTrigger value="iOS">{t("ios")}</TabsTrigger>
-                <TabsTrigger value="Android">{t("android")}</TabsTrigger>
-                <TabsTrigger value="Web">{t("web")}</TabsTrigger>
-                <TabsTrigger value="TikTok">TikTok</TabsTrigger>
-                <TabsTrigger value="Instagram">Instagram</TabsTrigger>
-                <TabsTrigger value="Facebook">Facebook</TabsTrigger>
-                <TabsTrigger value="OnlyFans">OnlyFans</TabsTrigger>
-                <TabsTrigger value="Play Store">Play Store</TabsTrigger>
-                <TabsTrigger value="App Store">App Store</TabsTrigger>
-                <TabsTrigger value="Pornhub">Pornhub</TabsTrigger>
-                <TabsTrigger value="X (Twitter)">X</TabsTrigger>
-                <TabsTrigger value="Telegram">Telegram</TabsTrigger>
-                <TabsTrigger value="YouTube">YouTube</TabsTrigger>
-                <TabsTrigger value="WeChat">WeChat</TabsTrigger>
-                <TabsTrigger value="Snapchat">Snapchat</TabsTrigger>
-                <TabsTrigger value="Pinterest">Pinterest</TabsTrigger>
-                <TabsTrigger value="Threads">Threads</TabsTrigger>
-                <TabsTrigger value="LinkedIn">LinkedIn</TabsTrigger>
-                <TabsTrigger value="Discord">Discord</TabsTrigger>
-                <TabsTrigger value="Reddit">Reddit</TabsTrigger>
+              <TabsList className="flex flex-wrap w-full gap-1 h-auto bg-muted/50 border border-border rounded-lg p-1">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  {t("all")}
+                </TabsTrigger>
+                <TabsTrigger value="iOS" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  {t("ios")}
+                </TabsTrigger>
+                <TabsTrigger value="Android" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  {t("android")}
+                </TabsTrigger>
+                <TabsTrigger value="Web" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  {t("web")}
+                </TabsTrigger>
+                <TabsTrigger value="TikTok" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  TikTok
+                </TabsTrigger>
+                <TabsTrigger value="Instagram" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Instagram
+                </TabsTrigger>
+                <TabsTrigger value="Facebook" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Facebook
+                </TabsTrigger>
+                <TabsTrigger value="OnlyFans" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  OnlyFans
+                </TabsTrigger>
+                <TabsTrigger value="Play Store" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Play Store
+                </TabsTrigger>
+                <TabsTrigger value="App Store" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  App Store
+                </TabsTrigger>
+                <TabsTrigger value="Pornhub" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Pornhub
+                </TabsTrigger>
+                <TabsTrigger value="X (Twitter)" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  X
+                </TabsTrigger>
+                <TabsTrigger value="Telegram" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Telegram
+                </TabsTrigger>
+                <TabsTrigger value="YouTube" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  YouTube
+                </TabsTrigger>
+                <TabsTrigger value="WeChat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  WeChat
+                </TabsTrigger>
+                <TabsTrigger value="Snapchat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Snapchat
+                </TabsTrigger>
+                <TabsTrigger value="Pinterest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Pinterest
+                </TabsTrigger>
+                <TabsTrigger value="Threads" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Threads
+                </TabsTrigger>
+                <TabsTrigger value="LinkedIn" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  LinkedIn
+                </TabsTrigger>
+                <TabsTrigger value="Discord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Discord
+                </TabsTrigger>
+                <TabsTrigger value="Reddit" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
+                  Reddit
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all" className="space-y-6">
@@ -143,7 +185,7 @@ const Index = () => {
 
             {/* Load More */}
             <div className="text-center mt-8">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10">
                 {t("load_more_tasks")}
               </Button>
             </div>
@@ -203,10 +245,10 @@ const Index = () => {
                 </div>
                 
               {userData?.currentMode === 'poster' && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-4">
                   <Button 
                     onClick={() => navigate('/create-job')}
-                    className="flex-1"
+                    className="flex-1 glow-effect"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     {t("create_job")}
@@ -214,7 +256,7 @@ const Index = () => {
                   <Button 
                     onClick={() => navigate('/manage-applications')}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 border-primary/50 text-primary hover:bg-primary/10"
                   >
                     {t("manage_applications")}
                   </Button>

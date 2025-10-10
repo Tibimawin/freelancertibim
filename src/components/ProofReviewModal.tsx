@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, XCircle, Eye, FileText } from "lucide-react";
 import { Application, Job, ProofSubmission } from "@/types/firebase";
 import { ApplicationService } from "@/services/applicationService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner"; // Importando toast do sonner
+import { useAuth } from "@/contexts/AuthContext"; // Importando useAuth para obter o currentUser
 
 interface ProofReviewModalProps {
   isOpen: boolean;
@@ -17,32 +18,35 @@ interface ProofReviewModalProps {
 }
 
 const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofReviewModalProps) => {
-  const { toast } = useToast();
+  const { currentUser } = useAuth(); // Obtendo o usuário atual
   const [isLoading, setIsLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionForm, setShowRejectionForm] = useState(false);
 
   const handleApprove = async () => {
+    if (!currentUser) {
+      toast.error("Erro de autenticação", { description: "Você precisa estar logado para aprovar tarefas." });
+      return;
+    }
+
     setIsLoading(true);
     try {
       await ApplicationService.reviewApplication(
         application.id,
         'approved',
-        'current-user-id' // TODO: Get from auth context
+        currentUser.uid // Usando o ID do usuário atual
       );
       
-      toast({
-        title: "Tarefa aprovada!",
+      toast.success("Tarefa aprovada!", {
         description: "O pagamento foi processado e o freelancer foi notificado.",
       });
       
       onReviewed();
       onClose();
     } catch (error) {
-      toast({
-        title: "Erro ao aprovar",
+      console.error('Erro ao aprovar:', error);
+      toast.error("Erro ao aprovar", {
         description: "Tente novamente mais tarde.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -50,11 +54,14 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
   };
 
   const handleReject = async () => {
+    if (!currentUser) {
+      toast.error("Erro de autenticação", { description: "Você precisa estar logado para rejeitar tarefas." });
+      return;
+    }
+
     if (!rejectionReason.trim()) {
-      toast({
-        title: "Motivo obrigatório",
+      toast.error("Motivo obrigatório", {
         description: "Por favor, informe o motivo da rejeição.",
-        variant: "destructive",
       });
       return;
     }
@@ -64,12 +71,11 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
       await ApplicationService.reviewApplication(
         application.id,
         'rejected',
-        'current-user-id', // TODO: Get from auth context
+        currentUser.uid, // Usando o ID do usuário atual
         rejectionReason
       );
       
-      toast({
-        title: "Tarefa rejeitada",
+      toast.success("Tarefa rejeitada", {
         description: "O freelancer foi notificado sobre a rejeição.",
       });
       
@@ -78,10 +84,9 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
       setShowRejectionForm(false);
       setRejectionReason('');
     } catch (error) {
-      toast({
-        title: "Erro ao rejeitar",
+      console.error('Erro ao rejeitar:', error);
+      toast.error("Erro ao rejeitar", {
         description: "Tente novamente mais tarde.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);

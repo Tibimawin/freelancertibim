@@ -21,7 +21,7 @@ export class ApplicationService {
       const q = query(
         collection(db, 'applications'),
         where('jobId', '==', jobId),
-        where('userId', '==', userId)
+        where('testerId', '==', userId) // Corrigido de 'userId' para 'testerId'
       );
       
       const querySnapshot = await getDocs(q);

@@ -10,6 +10,7 @@ import {
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/firebase';
+import { NotificationService } from './notificationService'; // Import NotificationService
 
 export class AuthService {
   static async signUp(email: string, password: string, name: string) {
@@ -46,7 +47,26 @@ export class AuthService {
   static async signIn(email: string, password: string) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      const firebaseUser = userCredential.user;
+
+      // Fetch user data to check settings
+      const userData = await this.getUserData(firebaseUser.uid);
+
+      // If login alerts are enabled, send a notification
+      if (userData?.settings?.loginAlerts) {
+        await NotificationService.createNotification({
+          userId: firebaseUser.uid,
+          type: 'login_alert',
+          title: 'Alerta de Login',
+          message: 'Sua conta foi acessada agora mesmo.',
+          read: false,
+          metadata: {
+            // Podemos adicionar mais metadados como IP, dispositivo, etc., se necessário
+          },
+        });
+      }
+
+      return firebaseUser;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -103,6 +123,7 @@ export class AuthService {
           phone: raw.phone,
           location: raw.location,
           skills: raw.skills ?? [],
+          settings: raw.settings, // Ensure settings are loaded
         } as User;
         
         return user;

@@ -48,8 +48,8 @@ const Header = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-                <span className="text-sm font-bold text-white">F</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-md">
+                <span className="text-sm font-bold text-primary-foreground">F</span>
               </div>
               <span className="text-xl font-bold text-foreground">Freelincer</span>
             </Link>
@@ -62,7 +62,7 @@ const Header = () => {
               <input
                 type="text"
                 placeholder={t("search_tasks_placeholder")}
-                className="w-full rounded-lg border border-input bg-background pl-10 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-input bg-input pl-10 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground"
               />
             </div>
           </div>
@@ -72,7 +72,7 @@ const Header = () => {
             {currentUser && userData ? (
               <>
                 {userData.currentMode === 'poster' && (
-                  <Button variant="outline" size="sm" asChild className="hidden md:flex">
+                  <Button variant="outline" size="sm" asChild className="hidden md:flex border-primary/50 text-primary hover:bg-primary/10">
                     <Link to="/create-job">
                       <Plus className="h-4 w-4 mr-2" />
                       {t("create_job")}
@@ -84,7 +84,7 @@ const Header = () => {
                  
                  <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                     <Button variant="ghost" size="icon" className="relative">
+                     <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
                        <Bell className="h-4 w-4" />
                        {unreadCount > 0 && (
                          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-success text-[10px] font-medium text-success-foreground flex items-center justify-center">
@@ -93,16 +93,16 @@ const Header = () => {
                        )}
                      </Button>
                    </DropdownMenuTrigger>
-                   <DropdownMenuContent align="end" className="w-80">
+                   <DropdownMenuContent align="end" className="w-80 bg-card border-border text-foreground">
                      <div className="flex items-center justify-between p-2">
                        <p className="text-sm font-medium">{t("notifications_count", { count: unreadCount })}</p>
                        {unreadCount > 0 && (
-                         <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto px-2 py-1 text-xs">
+                         <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto px-2 py-1 text-xs text-primary hover:bg-primary/10">
                            {t("mark_all_as_read")}
                          </Button>
                        )}
                      </div>
-                     <DropdownMenuSeparator />
+                     <DropdownMenuSeparator className="bg-border" />
                      <ScrollArea className="h-[200px]">
                        {notificationsLoading ? (
                          <div className="p-4 text-center text-muted-foreground text-sm">{t("loading_notifications")}</div>
@@ -110,7 +110,7 @@ const Header = () => {
                          notifications.map((notification) => (
                            <DropdownMenuItem 
                              key={notification.id} 
-                             className={`flex flex-col items-start space-y-1 p-2 cursor-pointer ${!notification.read ? 'bg-accent/20' : ''}`}
+                             className={`flex flex-col items-start space-y-1 p-2 cursor-pointer ${!notification.read ? 'bg-accent/20' : 'hover:bg-muted/50'}`}
                              onClick={() => markAsRead(notification.id)}
                            >
                              <p className="text-sm font-medium">{notification.title}</p>
@@ -130,6 +130,7 @@ const Header = () => {
                      variant="ghost" 
                      size="icon"
                      onClick={() => setShowWithdrawalModal(true)}
+                     className="text-muted-foreground hover:text-foreground"
                    >
                      <Wallet className="h-4 w-4" />
                    </Button>
@@ -138,15 +139,15 @@ const Header = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 border border-primary/50">
                         <AvatarImage src={userData.avatarUrl} alt={userData.name} />
-                        <AvatarFallback className="bg-gradient-primary text-white">
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground">
                           {userData.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
                         <p className="font-medium">{userData.name}</p>
@@ -165,33 +166,33 @@ const Header = () => {
                          </div>
                       </div>
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem asChild className="hover:bg-muted/50">
                       <Link to="/profile" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         {t("profile")}
                       </Link>
                     </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
+                     <DropdownMenuItem asChild className="hover:bg-muted/50">
                         <Link to="/dashboard" className="flex items-center">
                           <BarChart3 className="mr-2 h-4 w-4" />
                           {t("dashboard")}
                         </Link>
                       </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
+                     <DropdownMenuItem asChild className="hover:bg-muted/50">
                         <Link to="/task-history" className="flex items-center">
                           <History className="mr-2 h-4 w-4" />
                           {t("task_history")}
                         </Link>
                       </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild className="hover:bg-muted/50">
                       <Link to="/profile?tab=settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
                         {t("settings")}
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem onClick={handleSignOut} className="hover:bg-muted/50 text-destructive hover:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
                       {t("logout")}
                     </DropdownMenuItem>
@@ -199,7 +200,7 @@ const Header = () => {
                 </DropdownMenu>
               </>
             ) : (
-              <Button variant="hero" size="sm" onClick={() => setShowAuthModal(true)}>
+              <Button variant="hero" size="sm" onClick={() => setShowAuthModal(true)} className="glow-effect">
                 {t("login")}
               </Button>
             )}

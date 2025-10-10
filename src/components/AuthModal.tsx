@@ -121,12 +121,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <Card className="w-full max-w-md mx-4 shadow-xl border-border">
+      <Card className="w-full max-w-md mx-4 shadow-xl border-border bg-card text-foreground">
         <CardHeader className="text-center">
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-4"
+            className="absolute left-4 top-4 text-muted-foreground hover:text-foreground"
             onClick={onClose}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -134,7 +134,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           
           <div className="flex items-center justify-center space-x-2 mb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-white">F</span>
+              <span className="text-sm font-bold text-primary-foreground">F</span>
             </div>
             <span className="text-xl font-bold text-foreground">Freelincer</span>
           </div>
@@ -142,7 +142,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <CardTitle className="text-2xl">
             {activeTab === "signin" ? t("enter") : activeTab === "signup" ? t("create_account") : t("recover_password")}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {activeTab === "signin" 
               ? t("enter_your_account") 
               : activeTab === "signup" 
@@ -155,12 +155,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         <CardContent>
           {activeTab !== "reset" ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">{t("enter")}</TabsTrigger>
-                <TabsTrigger value="signup">{t("signup")}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                <TabsTrigger value="signin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{t("enter")}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">{t("signup")}</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
+              <TabsContent value="signin" className="mt-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">{t("email")}</Label>
@@ -170,7 +170,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         id="signin-email"
                         type="email"
                         placeholder={t("your_email_placeholder")}
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signInForm.email}
                         onChange={(e) => setSignInForm(prev => ({ ...prev, email: e.target.value }))}
                         required
@@ -186,7 +186,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         id="signin-password"
                         type="password"
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signInForm.password}
                         onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
                         required
@@ -196,7 +196,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full glow-effect" 
                     variant="hero"
                     disabled={loading}
                   >
@@ -207,7 +207,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   <Button
                     type="button"
                     variant="link"
-                    className="w-full text-sm"
+                    className="w-full text-sm text-primary hover:text-primary-hover"
                     onClick={() => setActiveTab("reset")}
                   >
                     {t("forgot_password")}
@@ -215,7 +215,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="mt-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">{t("full_name")}</Label>
@@ -224,7 +224,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Input
                         id="signup-name"
                         placeholder={t("your_name_placeholder")}
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.name}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, name: e.target.value }))}
                         required
@@ -240,7 +240,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         id="signup-email"
                         type="email"
                         placeholder={t("your_email_placeholder")}
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.email}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
                         required
@@ -257,7 +257,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         id="signup-password"
                         type="password"
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.password}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
                         required
@@ -273,7 +273,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         id="signup-confirm"
                         type="password"
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.confirmPassword}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                         required
@@ -283,7 +283,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full glow-effect" 
                     variant="hero"
                     disabled={loading}
                   >
@@ -294,7 +294,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               </TabsContent>
             </Tabs>
           ) : (
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form onSubmit={handleResetPassword} className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="reset-email">{t("email")}</Label>
                 <div className="relative">
@@ -303,7 +303,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     id="reset-email"
                     type="email"
                     placeholder={t("your_email_placeholder")}
-                    className="pl-10"
+                    className="pl-10 bg-input border-border text-foreground"
                     value={resetForm.email}
                     onChange={(e) => setResetForm(prev => ({ ...prev, email: e.target.value }))}
                     required
@@ -313,7 +313,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full glow-effect" 
                 variant="hero"
                 disabled={loading}
               >
@@ -324,7 +324,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <Button
                 type="button"
                 variant="link"
-                className="w-full text-sm"
+                className="w-full text-sm text-primary hover:text-primary-hover"
                 onClick={() => setActiveTab("signin")}
               >
                 {t("back_to_login")}

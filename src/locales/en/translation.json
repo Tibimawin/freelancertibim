@@ -575,5 +575,8 @@
   "ana_santos_quote": "\"I work part-time as a freelancer and have already managed to buy my first notebook!\"",
   "ready_to_start": "Ready to Start?",
   "ready_to_start_description": "Join thousands of freelancers and companies who already trust our platform",
-  "register_as_freelancer": "Register as Freelancer"
+  "register_as_freelancer": "Register as Freelancer",
+  "applicants_count": "{{count}} applicants",
+  "posted_by": "by ",
+  "view_details": "View details"
 }

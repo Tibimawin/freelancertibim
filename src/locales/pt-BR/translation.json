@@ -278,7 +278,7 @@
   "growth": "Crescimento",
   "recent_activity": "Atividade Recente",
   "mobile_app_task": "Tarefa de App Mobile",
-  "completed_2_hours_ago": "Concluído há 2 horas",
+  "completed_2_horas_ago": "Concluído há 2 horas",
   "website_task": "Tarefa de Website",
   "awaiting_approval": "Aguardando aprovação",
   "view_full_history": "Ver Histórico Completo",
@@ -575,5 +575,8 @@
   "ana_santos_quote": "\"Trabalho meio período como freelancer e já consegui comprar meu primeiro notebook!\"",
   "ready_to_start": "Pronto para Começar?",
   "ready_to_start_description": "Junte-se a milhares de freelancers e empresas que já confiam na nossa plataforma",
-  "register_as_freelancer": "Cadastrar como Freelancer"
+  "register_as_freelancer": "Cadastrar como Freelancer",
+  "applicants_count": "{{count}} candidatos",
+  "posted_by": "por ",
+  "view_details": "Ver detalhes"
 }

@@ -3,13 +3,14 @@ import { Clock, Star, MapPin, Smartphone, Monitor, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import JobApplyButton from "./JobApplyButton";
+import { useTranslation } from 'react-i18next';
 
 interface JobCardProps {
   id: string;
   title: string;
   description: string;
   bounty: number;
-  platform: "iOS" | "Android" | "Web";
+  platform: "iOS" | "Android" | "Web" | "TikTok" | "Instagram" | "Facebook" | "OnlyFans" | "Play Store" | "App Store" | "Pornhub" | "X (Twitter)" | "Telegram" | "YouTube" | "WeChat" | "Snapchat" | "Pinterest" | "Threads" | "LinkedIn" | "Discord" | "Reddit";
   difficulty: "Fácil" | "Médio" | "Difícil";
   timeEstimate: string;
   rating?: number;
@@ -36,6 +37,7 @@ const JobCard = ({
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const isOwnJob = currentUser && posterId === currentUser.uid;
+  const { t } = useTranslation();
 
   const handleCardClick = () => {
     navigate(`/job/${id}`);
@@ -75,13 +77,13 @@ const JobCard = ({
         <div className="flex items-center space-x-2">
           {getPlatformIcon()}
           <Badge variant="outline" className={getDifficultyColor()}>
-            {difficulty}
+            {t(difficulty.toLowerCase())}
           </Badge>
           <Badge variant="secondary">{platform}</Badge>
         </div>
         <div className="text-right">
           <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} KZ</p>
-          <p className="text-sm text-muted-foreground">{applicants} candidatos</p>
+          <p className="text-sm text-muted-foreground">{t("applicants_count", { count: applicants })}</p>
         </div>
       </div>
 
@@ -116,14 +118,14 @@ const JobCard = ({
 
       <div className="flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-muted-foreground">por </span>
+          <span className="text-muted-foreground">{t("posted_by")} </span>
           <span className="font-medium text-foreground">{postedBy}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <JobApplyButton jobId={id} posterId={posterId} />
           <div className="text-sm text-muted-foreground">
-            Ver detalhes →
+            {t("view_details")} →
           </div>
         </div>
       </div>

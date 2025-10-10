@@ -59,7 +59,7 @@ const LandingContent = () => {
             <CardContent>
               <CardDescription>
                 {t("choose_tasks_description")}
-              </CardCDescription>
+              </CardDescription>
             </CardContent>
           </Card>
 

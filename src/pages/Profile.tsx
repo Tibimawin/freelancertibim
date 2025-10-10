@@ -23,7 +23,8 @@ import {
   Settings,
   Edit,
   Save,
-  X
+  X,
+  BarChart3 // Adicionado BarChart3 aqui
 } from "lucide-react";
 import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";

@@ -594,5 +594,5 @@
   "apply_now": "Apply Now",
   "your_own_job_short": "Your Own Job",
   "job_inactive_short": "Job Inactive",
-  "not_available": "Not Available"
+  "unauthenticated_apply": "You need to be logged in as a tester to apply"
 }

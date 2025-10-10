@@ -31,12 +31,14 @@ import {
   Link,
   Type
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const CreateJob = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     title: "",
@@ -130,10 +132,10 @@ const CreateJob = () => {
 
   const getPlaceholderForProofType = (type: 'text' | 'screenshot' | 'file' | 'url') => {
     switch (type) {
-      case 'text': return 'Digite sua resposta aqui...';
-      case 'url': return 'https://exemplo.com/seu-perfil';
-      case 'screenshot': return 'Upload da captura de tela';
-      case 'file': return 'Upload do arquivo solicitado';
+      case 'text': return t('proof_placeholder_text');
+      case 'url': return t('proof_placeholder_url');
+      case 'screenshot': return t('proof_placeholder_screenshot');
+      case 'file': return t('proof_placeholder_file');
       default: return '';
     }
   };
@@ -153,8 +155,8 @@ const CreateJob = () => {
     
     if (!currentUser || !userData) {
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar um anúncio.",
+        title: t("error"),
+        description: t("error_login_required"),
         variant: "destructive",
       });
       return;
@@ -163,8 +165,8 @@ const CreateJob = () => {
     // Validações básicas
     if (!formData.title || !formData.description || !formData.bounty || !formData.platform) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
+        title: t("error"),
+        description: t("fill_all_required_fields"),
         variant: "destructive",
       });
       return;
@@ -176,8 +178,8 @@ const CreateJob = () => {
     
     if (jobBounty < 5 || jobBounty > 50) {
       toast({
-        title: "Valor Inválido",
-        description: "O valor da tarefa deve estar entre 5 KZ e 50 KZ.",
+        title: t("task_value_invalid"),
+        description: t("task_value_range"),
         variant: "destructive",
       });
       return;
@@ -189,8 +191,8 @@ const CreateJob = () => {
     
     if (currentBalance < totalCost) {
       toast({
-        title: "Saldo Insuficiente", 
-        description: `Você precisa ter pelo menos ${totalCost.toFixed(2)} KZ para criar este anúncio (${jobBounty} KZ × ${maxApplicants} candidatos). Seu saldo atual: ${currentBalance.toFixed(2)} KZ`,
+        title: t("insufficient_balance"), 
+        description: t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) }),
         variant: "destructive",
       });
       return;
@@ -220,16 +222,16 @@ const CreateJob = () => {
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
       
       toast({
-        title: "Anúncio criado com sucesso!",
-        description: `Seu teste foi publicado. ${totalCost.toFixed(2)} KZ foi reservado para pagamentos.`,
+        title: t("job_created_success"),
+        description: t("job_created_description", { cost: totalCost.toFixed(2) }),
       });
       
       navigate("/");
     } catch (error) {
       console.error("Error creating job:", error);
       toast({
-        title: "Erro ao criar anúncio",
-        description: "Não foi possível publicar a tarefa. Tente novamente.",
+        title: t("error_creating_job"),
+        description: t("error_creating_job_description"),
         variant: "destructive",
       });
     } finally {
@@ -243,7 +245,7 @@ const CreateJob = () => {
         <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
-            <p className="text-muted-foreground">Você precisa estar logado para criar anúncios.</p>
+            <p className="text-muted-foreground">{t("error_login_required")}</p>
           </div>
         </div>
       </div>
@@ -263,8 +265,8 @@ const CreateJob = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Criar Anúncio de Tarefa</h1>
-                <p className="text-muted-foreground">Publique uma tarefa para sua aplicação e encontre freelancers qualificados</p>
+                <h1 className="text-3xl font-bold text-foreground">{t("create_job_title")}</h1>
+                <p className="text-muted-foreground">{t("create_job_description")}</p>
               </div>
             </div>
           </div>
@@ -278,15 +280,15 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <FileText className="h-5 w-5" />
-                      <span>Informações Básicas</span>
+                      <span>{t("basic_information")}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="title">Título da Tarefa *</Label>
+                      <Label htmlFor="title">{t("task_title")} *</Label>
                       <Input
                         id="title"
-                        placeholder="Ex: Testar novo app de delivery iOS"
+                        placeholder={t("task_title_placeholder")}
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                         required
@@ -294,10 +296,10 @@ const CreateJob = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="description">Descrição Detalhada *</Label>
+                      <Label htmlFor="description">{t("detailed_description")} *</Label>
                       <Textarea
                         id="description"
-                        placeholder="Descreva detalhadamente o que precisa ser feito, fluxos específicos, funcionalidades..."
+                        placeholder={t("detailed_description_placeholder")}
                         rows={5}
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -307,10 +309,10 @@ const CreateJob = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="platform">Plataforma *</Label>
+                        <Label htmlFor="platform">{t("platform")} *</Label>
                         <Select value={formData.platform} onValueChange={(value) => setFormData(prev => ({ ...prev, platform: value }))}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione a plataforma" />
+                            <SelectValue placeholder={t("select_platform")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="iOS">
@@ -353,15 +355,15 @@ const CreateJob = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="difficulty">Nível de Dificuldade *</Label>
+                        <Label htmlFor="difficulty">{t("difficulty_level")} *</Label>
                         <Select value={formData.difficulty} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione a dificuldade" />
+                            <SelectValue placeholder={t("select_difficulty")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Fácil">Fácil</SelectItem>
-                            <SelectItem value="Médio">Médio</SelectItem>
-                            <SelectItem value="Difícil">Difícil</SelectItem>
+                            <SelectItem value="Fácil">{t("easy")}</SelectItem>
+                            <SelectItem value="Médio">{t("medium")}</SelectItem>
+                            <SelectItem value="Difícil">{t("hard")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -374,16 +376,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <ListOrdered className="h-5 w-5" />
-                      <span>Instruções Detalhadas da Tarefa</span>
+                      <span>{t("detailed_instructions")}</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Descreva passo a passo exatamente o que o freelancer precisa fazer
+                      {t("detailed_instructions_description")}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
                       <Textarea
-                        placeholder="Ex: 1. Acesse o aplicativo e faça login com suas credenciais..."
+                        placeholder={t("instruction_placeholder")}
                         value={currentInstruction}
                         onChange={(e) => setCurrentInstruction(e.target.value)}
                         rows={2}
@@ -424,16 +426,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <ShieldCheck className="h-5 w-5" />
-                      <span>Provas Necessárias</span>
+                      <span>{t("proof_requirements")}</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Especifique que tipos de comprovação o freelancer deve fornecer
+                      {t("proof_requirements_description")}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="proofType">Tipo de Prova</Label>
+                        <Label htmlFor="proofType">{t("proof_type")}</Label>
                         <Select value={currentProofType} onValueChange={(value: 'text' | 'screenshot' | 'file' | 'url') => setCurrentProofType(value)}>
                           <SelectTrigger>
                             <SelectValue />
@@ -442,35 +444,35 @@ const CreateJob = () => {
                             <SelectItem value="text">
                               <div className="flex items-center space-x-2">
                                 <Type className="h-4 w-4" />
-                                <span>Texto/Resposta</span>
+                                <span>{t("text_response")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="screenshot">
                               <div className="flex items-center space-x-2">
                                 <Image className="h-4 w-4" />
-                                <span>Captura de Tela</span>
+                                <span>{t("screenshot")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="url">
                               <div className="flex items-center space-x-2">
                                 <Link className="h-4 w-4" />
-                                <span>Link/URL</span>
+                                <span>{t("link_url")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="file">
                               <div className="flex items-center space-x-2">
                                 <FileText className="h-4 w-4" />
-                                <span>Arquivo</span>
+                                <span>{t("file")}</span>
                               </div>
                             </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="proofLabel">Nome da Prova</Label>
+                        <Label htmlFor="proofLabel">{t("proof_name")}</Label>
                         <Input
                           id="proofLabel"
-                          placeholder="Ex: Username do TikTok"
+                          placeholder={t("proof_name_placeholder")}
                           value={currentProofLabel}
                           onChange={(e) => setCurrentProofLabel(e.target.value)}
                         />
@@ -478,10 +480,10 @@ const CreateJob = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="proofDescription">Descrição da Prova</Label>
+                      <Label htmlFor="proofDescription">{t("proof_description")}</Label>
                       <Textarea
                         id="proofDescription"
-                        placeholder="Ex: Informe seu nome de usuário do TikTok para que possamos verificar se você seguiu o perfil solicitado"
+                        placeholder={t("proof_description_placeholder")}
                         value={currentProofDescription}
                         onChange={(e) => setCurrentProofDescription(e.target.value)}
                         rows={2}
@@ -490,7 +492,7 @@ const CreateJob = () => {
                     
                     <Button type="button" onClick={handleAddProofRequirement} className="w-full">
                       <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Prova
+                      {t("add_proof")}
                     </Button>
                     
                     {formData.proofRequirements.length > 0 && (
@@ -504,10 +506,10 @@ const CreateJob = () => {
                               <div className="flex items-center space-x-2 mb-1">
                                 <span className="font-medium text-sm">{proof.label}</span>
                                 <Badge variant="secondary" className="text-xs">
-                                  {proof.type === 'text' && 'Texto'}
-                                  {proof.type === 'screenshot' && 'Captura'}
-                                  {proof.type === 'url' && 'Link'}
-                                  {proof.type === 'file' && 'Arquivo'}
+                                  {proof.type === 'text' && t('text_response')}
+                                  {proof.type === 'screenshot' && t('screenshot_short')}
+                                  {proof.type === 'url' && t('link_short')}
+                                  {proof.type === 'file' && t('file_short')}
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">{proof.description}</p>
@@ -531,15 +533,15 @@ const CreateJob = () => {
                 {/* Requisitos Gerais */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Requisitos Gerais</CardTitle>
+                    <CardTitle>{t("general_requirements")}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Requisitos técnicos ou de experiência necessários
+                      {t("general_requirements_description")}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
                       <Input
-                        placeholder="Ex: Dispositivo iOS 15+, experiência com e-commerce..."
+                        placeholder={t("requirement_placeholder")}
                         value={currentRequirement}
                         onChange={(e) => setCurrentRequirement(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddRequirement())}
@@ -571,25 +573,25 @@ const CreateJob = () => {
                 {/* Detalhes Adicionais */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Detalhes Adicionais</CardTitle>
+                    <CardTitle>{t("additional_details")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="timeEstimate">Tempo Estimado</Label>
+                        <Label htmlFor="timeEstimate">{t("time_estimate")}</Label>
                         <Input
                           id="timeEstimate"
-                          placeholder="Ex: 2-3 horas"
+                          placeholder={t("time_estimate_placeholder")}
                           value={formData.timeEstimate}
                           onChange={(e) => setFormData(prev => ({ ...prev, timeEstimate: e.target.value }))}
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="location">Localização</Label>
+                        <Label htmlFor="location">{t("location")}</Label>
                         <Input
                           id="location"
-                          placeholder="Ex: Remote, São Paulo, SP"
+                          placeholder={t("location_placeholder")}
                           value={formData.location}
                           onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                         />
@@ -598,18 +600,18 @@ const CreateJob = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="maxApplicants">Máximo de Candidatos</Label>
+                        <Label htmlFor="maxApplicants">{t("max_applicants")}</Label>
                         <Input
                           id="maxApplicants"
                           type="number"
-                          placeholder="Ex: 10"
+                          placeholder={t("max_applicants_placeholder")}
                           value={formData.maxApplicants}
                           onChange={(e) => setFormData(prev => ({ ...prev, maxApplicants: e.target.value }))}
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="dueDate">Data Limite</Label>
+                        <Label htmlFor="dueDate">{t("due_date")}</Label>
                         <Input
                           id="dueDate"
                           type="date"
@@ -629,25 +631,25 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <DollarSign className="h-5 w-5" />
-                      <span>Valor da Tarefa</span>
+                      <span>{t("bounty_value")}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div>
-                       <Label htmlFor="bounty">Valor em KZ *</Label>
+                       <Label htmlFor="bounty">{t("bounty_value_label")} *</Label>
                        <Input
                          id="bounty"
                          type="number"
                          step="0.01"
                          min="5"
                          max="50"
-                         placeholder="Entre 5 e 50 KZ"
+                         placeholder={t("bounty_value_placeholder")}
                          value={formData.bounty}
                          onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))}
                          required
                        />
                        <p className="text-xs text-muted-foreground mt-2">
-                         Mínimo: 5 KZ | Máximo: 50 KZ
+                         {t("bounty_value_min_max")}
                        </p>
                     </div>
                   </CardContent>
@@ -656,40 +658,40 @@ const CreateJob = () => {
                 {/* Resumo */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Resumo do Anúncio</CardTitle>
+                    <CardTitle>{t("job_summary")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Plataforma:</span>
+                      <span className="text-muted-foreground">{t("platform")}:</span>
                       <span className="font-medium">{formData.platform || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Dificuldade:</span>
+                      <span className="text-muted-foreground">{t("difficulty")}:</span>
                       <span className="font-medium">{formData.difficulty || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Valor:</span>
+                      <span className="text-muted-foreground">{t("value")}:</span>
                       <span className="font-medium">
                         {formData.bounty ? `${parseFloat(formData.bounty).toFixed(2)} KZ` : "-"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Instruções:</span>
+                      <span className="text-muted-foreground">{t("detailed_instructions")}:</span>
                       <span className="font-medium">{formData.detailedInstructions.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Provas:</span>
+                      <span className="text-muted-foreground">{t("proof_requirements")}:</span>
                       <span className="font-medium">{formData.proofRequirements.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Requisitos:</span>
+                      <span className="text-muted-foreground">{t("general_requirements")}:</span>
                       <span className="font-medium">{formData.requirements.length}</span>
                     </div>
                     <Separator />
                     <div className="flex items-center justify-between text-sm font-medium">
-                      <span>Total do projeto:</span>
+                      <span>{t("total_project_cost")}:</span>
                       <span className="text-primary">
-                        {formData.bounty ? `${parseFloat(formData.bounty).toFixed(2)} KZ` : "0,00 KZ"}
+                        {formData.bounty ? `${(parseFloat(formData.bounty) * (parseInt(formData.maxApplicants) || 1)).toFixed(2)} KZ` : "0,00 KZ"}
                       </span>
                     </div>
                   </CardContent>
@@ -704,7 +706,7 @@ const CreateJob = () => {
                     size="lg"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? "Publicando..." : "Publicar Anúncio"}
+                    {isLoading ? t("publishing") : t("publish_job")}
                   </Button>
                   
                   <Button 
@@ -713,7 +715,7 @@ const CreateJob = () => {
                     onClick={() => navigate("/")}
                     className="w-full"
                   >
-                    Cancelar
+                    {t("cancel")}
                   </Button>
                 </div>
               </div>

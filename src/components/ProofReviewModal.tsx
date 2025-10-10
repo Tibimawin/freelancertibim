@@ -33,7 +33,7 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
       
       toast({
         title: "Tarefa aprovada!",
-        description: "O pagamento foi processado e o testador foi notificado.",
+        description: "O pagamento foi processado e o freelancer foi notificado.",
       });
       
       onReviewed();
@@ -70,7 +70,7 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
       
       toast({
         title: "Tarefa rejeitada",
-        description: "O testador foi notificado sobre a rejeição.",
+        description: "O freelancer foi notificado sobre a rejeição.",
       });
       
       onReviewed();
@@ -116,7 +116,7 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
             <h3 className="font-semibold mb-2">Informações da Tarefa</h3>
             <p className="text-sm text-muted-foreground mb-2">{application.job?.description}</p>
             <div className="flex items-center space-x-4 text-sm">
-              <span>Testador: <strong>{application.testerName}</strong></span>
+              <span>Freelancer: <strong>{application.testerName}</strong></span>
               <span>Valor: <strong>{application.job?.bounty.toFixed(2)} KZ</strong></span>
             </div>
           </div>

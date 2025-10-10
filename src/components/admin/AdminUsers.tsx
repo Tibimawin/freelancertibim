@@ -187,7 +187,7 @@ const AdminUsers = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Activity className="h-3 w-3" />
-                        {user.completedTests} testes
+                        {user.completedTests} tarefas
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />

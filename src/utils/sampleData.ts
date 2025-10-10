@@ -4,7 +4,7 @@ import { Job } from '@/types/firebase';
 const sampleJobs = [
   {
     title: "Testar novo app de delivery iOS",
-    description: "Precisamos de testadores para validar o fluxo de pedidos, pagamento e entrega de um novo aplicativo de delivery de comida. O teste deve incluir cadastro, busca de restaurantes, processo de pedido e acompanhamento da entrega.",
+    description: "Precisamos de freelancers para validar o fluxo de pedidos, pagamento e entrega de um novo aplicativo de delivery de comida. A tarefa deve incluir cadastro, busca de restaurantes, processo de pedido e acompanhamento da entrega.",
     posterId: "sample-poster-1",
     posterName: "FoodTech Startup",
     bounty: 850.00,
@@ -13,7 +13,7 @@ const sampleJobs = [
     requirements: [
       "iPhone com iOS 15 ou superior",
       "Localização em São Paulo ou Rio de Janeiro",
-      "Disponibilidade para teste durante horário comercial"
+      "Disponibilidade para tarefa durante horário comercial"
     ],
     attachments: [],
     status: "active" as const,
@@ -60,8 +60,8 @@ const sampleJobs = [
     ]
   },
   {
-    title: "Teste de usabilidade - App bancário",
-    description: "Teste completo de funcionalidades de um app bancário, incluindo transferências, PIX e investimentos. Foco especial em testes de segurança e usabilidade.",
+    title: "Tarefa de usabilidade - App bancário",
+    description: "Tarefa completo de funcionalidades de um app bancário, incluindo transferências, PIX e investimentos. Foco especial em tarefas de segurança e usabilidade.",
     posterId: "sample-poster-2",
     posterName: "FinTech Brasil",
     bounty: 1200.00,
@@ -95,8 +95,8 @@ const sampleJobs = [
       {
         id: "proof3",
         type: "file" as const,
-        label: "Relatório de testes",
-        description: "Documento detalhado com todos os testes realizados",
+        label: "Relatório de tarefas",
+        description: "Documento detalhado com todas as tarefas realizadas",
         isRequired: true,
         placeholder: "Upload do arquivo solicitado"
       }
@@ -104,7 +104,7 @@ const sampleJobs = [
   },
   {
     title: "Validação de e-commerce web",
-    description: "Testar jornada completa de compra em plataforma e-commerce, desde cadastro até finalização do pedido. Incluir testes em diferentes navegadores.",
+    description: "Trabalhar jornada completa de compra em plataforma e-commerce, desde cadastro até finalização do pedido. Incluir tarefas em diferentes navegadores.",
     posterId: "sample-poster-3",
     posterName: "Commerce Solutions",
     bounty: 650.00,
@@ -152,8 +152,8 @@ const sampleJobs = [
       {
         id: "proof5",
         type: "text" as const,
-        label: "Navegadores testados",
-        description: "Liste todos os navegadores onde você testou o site",
+        label: "Navegadores trabalhados",
+        description: "Liste todos os navegadores onde você trabalhou no site",
         isRequired: true,
         placeholder: "Ex: Chrome 119, Firefox 120, Safari 17"
       }
@@ -161,7 +161,7 @@ const sampleJobs = [
   },
   {
     title: "Beta test - App de fitness",
-    description: "Teste de nova versão de aplicativo de fitness com rastreamento de atividades e planos de treino personalizados. Validar precisão dos dados e usabilidade.",
+    description: "Tarefa de nova versão de aplicativo de fitness com rastreamento de atividades e planos de treino personalizados. Validar precisão dos dados e usabilidade.",
     posterId: "sample-poster-4",
     posterName: "FitTech Co",
     bounty: 950.00,
@@ -231,8 +231,8 @@ const sampleJobs = [
     ]
   },
   {
-    title: "Teste de app educacional Android",
-    description: "Validar funcionalidades de um aplicativo educacional para crianças. Testar jogos interativos, sistema de recompensas e controles parentais.",
+    title: "Tarefa de app educacional Android",
+    description: "Validar funcionalidades de um aplicativo educacional para crianças. Trabalhar jogos interativos, sistema de recompensas e controles parentais.",
     posterId: "sample-poster-5",
     posterName: "EduKids Tech",
     bounty: 750.00,
@@ -240,8 +240,8 @@ const sampleJobs = [
     difficulty: "Fácil" as const,
     requirements: [
       "Android 9 ou superior",
-      "Acesso a crianças entre 6-12 anos para testes",
-      "Paciência para testar com público infantil"
+      "Acesso a crianças entre 6-12 anos para tarefas",
+      "Paciência para trabalhar com público infantil"
     ],
     attachments: [],
     status: "active" as const,
@@ -270,7 +270,7 @@ const sampleJobs = [
       {
         id: "inst16",
         step: 4,
-        instruction: "Teste as funcionalidades de recompensas e progresso",
+        instruction: "Teste o rastreamento de atividades durante exercícios",
         isRequired: true
       }
     ],
@@ -294,8 +294,8 @@ const sampleJobs = [
       {
         id: "proof11",
         type: "text" as const,
-        label: "Idade da criança testadora",
-        description: "Informe a idade da criança que participou do teste",
+        label: "Idade da criança freelancer",
+        description: "Informe a idade da criança que participou da tarefa",
         isRequired: true,
         placeholder: "Ex: 8 anos"
       },

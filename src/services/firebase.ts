@@ -146,13 +146,13 @@ export class JobService {
     }
   }
 
-  static async applyToJob(jobId: string, testerId: string, testerName: string) {
+  static async applyToJob(jobId: string, freelancerId: string, freelancerName: string) {
     try {
       // Verificar se o usuário já aplicou para esta tarefa
       const existingApplicationQuery = query(
         collection(db, 'applications'),
         where('jobId', '==', jobId),
-        where('testerId', '==', testerId)
+        where('testerId', '==', freelancerId)
       );
       
       const existingApplications = await getDocs(existingApplicationQuery);
@@ -164,8 +164,8 @@ export class JobService {
       // Create application
       const applicationData: Omit<Application, 'id'> = {
         jobId,
-        testerId,
-        testerName,
+        testerId: freelancerId,
+        testerName: freelancerName,
         status: 'applied',
         appliedAt: Timestamp.now() as any,
       };

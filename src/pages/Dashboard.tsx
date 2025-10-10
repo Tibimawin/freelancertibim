@@ -43,8 +43,8 @@ const Dashboard = () => {
     );
   }
 
-  const isTester = userData.currentMode === 'tester';
-  const wallet = isTester ? userData.testerWallet : userData.posterWallet;
+  const isFreelancer = userData.currentMode === 'tester';
+  const wallet = isFreelancer ? userData.testerWallet : userData.posterWallet;
 
   // Dados simulados para demonstração
   const monthlyEarnings = [120, 180, 240, 320, 280, 390, 450];
@@ -80,7 +80,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Dashboard {isTester ? 'Testador' : 'Contratante'}
+            Dashboard {isFreelancer ? 'Freelancer' : 'Contratante'}
           </h1>
           <p className="text-muted-foreground">
             Bem-vindo de volta, {userData.name}! Aqui está um resumo da sua atividade.
@@ -92,19 +92,19 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isTester ? 'Saldo Disponível' : 'Saldo da Conta'}
+                {isFreelancer ? 'Saldo Disponível' : 'Saldo da Conta'}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {isTester 
+                {isFreelancer 
                   ? ((wallet as any)?.availableBalance || 0).toFixed(2) 
                   : ((wallet as any)?.balance || 0).toFixed(2)
                 } KZ
               </div>
               <p className="text-xs text-muted-foreground">
-                {isTester && (wallet as any)?.pendingBalance 
+                {isFreelancer && (wallet as any)?.pendingBalance 
                   ? `${(wallet as any).pendingBalance.toFixed(2)} KZ pendente`
                   : 'Disponível para uso'
                 }
@@ -115,13 +115,13 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isTester ? 'Testes Completados' : 'Tarefas Criadas'}
+                {isFreelancer ? 'Tarefas Completadas' : 'Tarefas Criadas'}
               </CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {isTester ? userData.completedTests || 0 : (userData as any).jobsPosted || 0}
+                {isFreelancer ? userData.completedTests || 0 : (userData as any).jobsPosted || 0}
               </div>
               <p className="text-xs text-success">
                 <TrendingUp className="w-3 h-3 inline mr-1" />
@@ -157,7 +157,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isTester ? 'Taxa de Aprovação' : 'Taxa de Conclusão'}
+                {isFreelancer ? 'Taxa de Aprovação' : 'Taxa de Conclusão'}
               </CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -172,9 +172,9 @@ const Dashboard = () => {
 
         {/* Seção específica para cada tipo de usuário */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {isTester ? (
+          {isFreelancer ? (
             <>
-              {/* Ganhos Mensais para Testador */}
+              {/* Ganhos Mensais para Freelancer */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -215,7 +215,7 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Teste de App Mobile</p>
+                        <p className="font-medium text-sm">Tarefa de App Mobile</p>
                         <p className="text-xs text-muted-foreground">Concluído há 2 horas</p>
                       </div>
                       <Badge variant="outline" className="bg-success/10 text-success border-success/20">
@@ -225,7 +225,7 @@ const Dashboard = () => {
                     
                     <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div>
-                        <p className="font-medium text-sm">Teste de Website</p>
+                        <p className="font-medium text-sm">Tarefa de Website</p>
                         <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
                       </div>
                       <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
@@ -324,13 +324,13 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {isTester ? (
+              {isFreelancer ? (
                 <>
                   <div className="flex items-center space-x-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                     <Award className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium text-sm">Parabéns! Você alcançou 100 testes completados!</p>
-                      <p className="text-xs text-muted-foreground">Você desbloqueou o badge "Testador Expert"</p>
+                      <p className="font-medium text-sm">Parabéns! Você alcançou 100 tarefas completadas!</p>
+                      <p className="text-xs text-muted-foreground">Você desbloqueou o badge "Freelancer Expert"</p>
                     </div>
                   </div>
                   
@@ -348,7 +348,7 @@ const Dashboard = () => {
                     <Clock className="h-5 w-5 text-warning" />
                     <div>
                       <p className="font-medium text-sm">5 tarefas aguardando sua aprovação</p>
-                      <p className="text-xs text-muted-foreground">Testadores estão aguardando feedback sobre suas submissões</p>
+                      <p className="text-xs text-muted-foreground">Freelancers estão aguardando feedback sobre suas submissões</p>
                     </div>
                   </div>
                   
@@ -356,7 +356,7 @@ const Dashboard = () => {
                     <Users className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium text-sm">12 novos candidatos para suas tarefas</p>
-                      <p className="text-xs text-muted-foreground">Revise os perfis e selecione os melhores testadores</p>
+                      <p className="text-xs text-muted-foreground">Revise os perfis e selecione os melhores freelancers</p>
                     </div>
                   </div>
                 </>

@@ -52,8 +52,8 @@ const Index = () => {
             {/* Filter Section */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">Testes Disponíveis</h2>
-                <p className="text-muted-foreground">Encontre oportunidades para ganhar dinheiro testando apps</p>
+                <h2 className="text-2xl font-bold text-foreground mb-2">Tarefas Disponíveis</h2>
+                <p className="text-muted-foreground">Encontre oportunidades para ganhar dinheiro como freelancer de apps</p>
               </div>
               
               <FilterDialog 
@@ -107,8 +107,8 @@ const Index = () => {
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
                       {difficultyFilter 
-                        ? `Nenhum teste encontrado com dificuldade "${difficultyFilter}"`
-                        : "Nenhum teste disponível no momento"}
+                        ? `Nenhuma tarefa encontrada com dificuldade "${difficultyFilter}"`
+                        : "Nenhuma tarefa disponível no momento"}
                     </p>
                   </div>
                 )}
@@ -142,7 +142,7 @@ const Index = () => {
             {/* Load More */}
             <div className="text-center mt-8">
               <Button variant="outline" size="lg">
-                Carregar Mais Testes
+                Carregar Mais Tarefas
               </Button>
             </div>
           </div>
@@ -159,7 +159,7 @@ const Index = () => {
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Testes Completados</span>
+                    <span className="text-sm text-muted-foreground">Tarefas Completadas</span>
                     <span className="font-semibold text-foreground">{userData.completedTests || 0}</span>
                   </div>
                   
@@ -225,7 +225,7 @@ const Index = () => {
             <div className="rounded-xl bg-gradient-secondary p-6 border border-border/50">
               <h3 className="text-lg font-semibold text-card-foreground mb-3">💡 Dica do Dia</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Teste aplicativos durante horários de pico para encontrar mais bugs e aumentar suas chances de receber bônus!
+                Trabalhe em aplicativos durante horários de pico para encontrar mais bugs e aumentar suas chances de receber bônus!
               </p>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                 Dica #12

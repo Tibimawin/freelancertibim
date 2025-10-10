@@ -27,7 +27,7 @@ const LandingContent = () => {
             Simples, Rápido e Seguro
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Em apenas 3 passos você pode começar a ganhar dinheiro testando aplicativos
+            Em apenas 3 passos você pode começar a ganhar dinheiro como freelancer de aplicativos
           </p>
         </div>
 
@@ -51,11 +51,11 @@ const LandingContent = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Smartphone className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle>2. Escolha Testes</CardTitle>
+              <CardTitle>2. Escolha Tarefas</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Navegue pelos testes disponíveis e escolha os que mais se adequam ao seu perfil
+                Navegue pelas tarefas disponíveis e escolha as que mais se adequam ao seu perfil
               </CardDescription>
             </CardContent>
           </Card>
@@ -69,19 +69,19 @@ const LandingContent = () => {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Complete os testes e receba seu pagamento de forma rápida e segura
+                Complete as tarefas e receba seu pagamento de forma rápida e segura
               </CardDescription>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Benefícios para Testadores */}
+      {/* Benefícios para Freelancers */}
       <section className="bg-gradient-secondary py-20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <Badge variant="outline" className="mb-4">Para Testadores</Badge>
+              <Badge variant="outline" className="mb-4">Para Freelancers</Badge>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
                 Ganhe Dinheiro no Seu Tempo Livre
               </h2>
@@ -93,7 +93,7 @@ const LandingContent = () => {
               <div className="space-y-4 mb-8">
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Pagamentos de 250 a 5000 KZ por teste</span>
+                  <span>Pagamentos de 250 a 5000 KZ por tarefa</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
@@ -110,7 +110,7 @@ const LandingContent = () => {
               </div>
 
               <Button size="lg" className="text-lg px-8">
-                Começar a Testar Agora
+                Começar a Trabalhar Agora
               </Button>
             </div>
 
@@ -122,7 +122,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Teste quando quiser, sem compromissos fixos
+                    Trabalhe quando quiser, sem compromissos fixos
                   </p>
                 </CardContent>
               </Card>
@@ -146,7 +146,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Testes de 30 minutos a 4 horas
+                    Tarefas de 30 minutos a 4 horas
                   </p>
                 </CardContent>
               </Card>
@@ -158,7 +158,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Testes relevantes para seu perfil
+                    Tarefas relevantes para seu perfil
                   </p>
                 </CardContent>
               </Card>
@@ -176,14 +176,14 @@ const LandingContent = () => {
               Validação Profissional para Seus Apps
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Conecte-se com testadores qualificados e obtenha feedback valioso 
+              Conecte-se com freelancers qualificados e obtenha feedback valioso 
               antes do lançamento do seu produto.
             </p>
 
             <div className="space-y-4 mb-8">
               <div className="flex items-center space-x-3">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                <span>Testadores pré-qualificados</span>
+                <span>Freelancers pré-qualificados</span>
               </div>
               <div className="flex items-center space-x-3">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
@@ -195,12 +195,12 @@ const LandingContent = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                <span>Testes em múltiplas plataformas</span>
+                <span>Tarefas em múltiplas plataformas</span>
               </div>
             </div>
 
             <Button variant="outline" size="lg" className="text-lg px-8">
-              Postar um Teste
+              Postar uma Tarefa
             </Button>
           </div>
 
@@ -218,7 +218,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-white/90">
-                    Teste em todas as plataformas com uma única postagem
+                    Trabalhe em todas as plataformas com uma única postagem
                   </p>
                 </CardContent>
               </Card>
@@ -270,7 +270,7 @@ const LandingContent = () => {
                   </div>
                   <div>
                     <CardTitle className="text-sm">Maria Silva</CardTitle>
-                    <p className="text-xs text-muted-foreground">Testadora</p>
+                    <p className="text-xs text-muted-foreground">Freelancer</p>
                   </div>
                 </div>
               </CardHeader>
@@ -281,7 +281,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  "Consegui uma renda extra excelente testando apps. A plataforma é super fácil de usar!"
+                  "Consegui uma renda extra excelente trabalhando em apps. A plataforma é super fácil de usar!"
                 </p>
               </CardContent>
             </Card>
@@ -305,7 +305,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  "Os testadores encontraram bugs críticos antes do lançamento. Economizamos muito dinheiro!"
+                  "Os freelancers encontraram bugs críticos antes do lançamento. Economizamos muito dinheiro!"
                 </p>
               </CardContent>
             </Card>
@@ -329,7 +329,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  "Trabalho meio período testando e já consegui comprar meu primeiro notebook!"
+                  "Trabalho meio período como freelancer e já consegui comprar meu primeiro notebook!"
                 </p>
               </CardContent>
             </Card>
@@ -344,19 +344,19 @@ const LandingContent = () => {
             Pronto para Começar?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Junte-se a milhares de testadores e empresas que já confiam na nossa plataforma
+            Junte-se a milhares de freelancers e empresas que já confiam na nossa plataforma
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="hero" size="lg" className="text-lg px-8 py-4">
-              Cadastrar como Testador
+              Cadastrar como Freelancer
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-4 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
             >
-              Postar um Teste
+              Postar uma Tarefa
             </Button>
           </div>
         </div>

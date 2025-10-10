@@ -229,7 +229,7 @@ const CreateJob = () => {
       console.error("Error creating job:", error);
       toast({
         title: "Erro ao criar anúncio",
-        description: "Não foi possível publicar o teste. Tente novamente.",
+        description: "Não foi possível publicar a tarefa. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -263,8 +263,8 @@ const CreateJob = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Criar Anúncio de Teste</h1>
-                <p className="text-muted-foreground">Publique um teste para sua aplicação e encontre testadores qualificados</p>
+                <h1 className="text-3xl font-bold text-foreground">Criar Anúncio de Tarefa</h1>
+                <p className="text-muted-foreground">Publique uma tarefa para sua aplicação e encontre freelancers qualificados</p>
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ const CreateJob = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="title">Título do Teste *</Label>
+                      <Label htmlFor="title">Título da Tarefa *</Label>
                       <Input
                         id="title"
                         placeholder="Ex: Testar novo app de delivery iOS"
@@ -297,7 +297,7 @@ const CreateJob = () => {
                       <Label htmlFor="description">Descrição Detalhada *</Label>
                       <Textarea
                         id="description"
-                        placeholder="Descreva detalhadamente o que precisa ser testado, fluxos específicos, funcionalidades..."
+                        placeholder="Descreva detalhadamente o que precisa ser feito, fluxos específicos, funcionalidades..."
                         rows={5}
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -377,7 +377,7 @@ const CreateJob = () => {
                       <span>Instruções Detalhadas da Tarefa</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Descreva passo a passo exatamente o que o testador precisa fazer
+                      Descreva passo a passo exatamente o que o freelancer precisa fazer
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -427,7 +427,7 @@ const CreateJob = () => {
                       <span>Provas Necessárias</span>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Especifique que tipos de comprovação o testador deve fornecer
+                      Especifique que tipos de comprovação o freelancer deve fornecer
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -629,7 +629,7 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <DollarSign className="h-5 w-5" />
-                      <span>Valor do Teste</span>
+                      <span>Valor da Tarefa</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

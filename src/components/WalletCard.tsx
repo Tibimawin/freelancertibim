@@ -87,7 +87,7 @@ const WalletCard = () => {
         <div className="flex items-center justify-center space-x-2 mb-2">
           <h2 className="text-lg font-semibold text-card-foreground">Carteira</h2>
           <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
-            {userData.currentMode === 'tester' ? 'Testador' : 'Contratante'}
+            {userData.currentMode === 'tester' ? 'Freelancer' : 'Contratante'}
           </Badge>
         </div>
         <div className="balance-display text-4xl font-bold mb-2">
@@ -147,7 +147,7 @@ const WalletCard = () => {
               onClick={() => setDepositModal({ open: true, method: 'iban' })}
             >
               <Banknote className="h-4 w-4 mr-2" />
-              Depositar Via IBAM
+              Depositar Via IBAN
             </Button>
           </div>
         )}
@@ -196,7 +196,7 @@ const WalletCard = () => {
               <div className="text-center py-6">
                 <p className="text-muted-foreground text-sm">Nenhuma transação ainda</p>
                 <p className="text-muted-foreground text-xs mt-1">
-                  Complete seu primeiro teste para ver suas transações aqui
+                  Complete sua primeira tarefa para ver suas transações aqui
                 </p>
               </div>
             )}

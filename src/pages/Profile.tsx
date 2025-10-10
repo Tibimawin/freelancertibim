@@ -122,7 +122,7 @@ const Profile = () => {
                     <div className="flex items-center space-x-3">
                       <h1 className="text-3xl font-bold text-foreground">{userData.name}</h1>
                       <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
-                        {userData.currentMode === 'tester' ? 'Testador' : 'Contratante'}
+                        {userData.currentMode === 'tester' ? 'Freelancer' : 'Contratante'}
                       </Badge>
                     </div>
                     
@@ -292,7 +292,7 @@ const Profile = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Testes Completados</span>
+                        <span className="text-sm text-muted-foreground">Tarefas Completadas</span>
                         <span className="font-semibold text-foreground">{userData.completedTests}</span>
                       </div>
                       
@@ -328,7 +328,7 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Testes Completados</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Tarefas Completadas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{userData.completedTests}</div>
@@ -401,12 +401,12 @@ const Profile = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="tester">Testador</SelectItem>
+                        <SelectItem value="tester">Freelancer</SelectItem>
                         <SelectItem value="poster">Contratante</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Use o botão "Alternar Modo" para mudar entre testador e contratante
+                      Use o botão "Alternar Modo" para mudar entre freelancer e contratante
                     </p>
                   </div>
 

@@ -79,7 +79,7 @@ export class ApplicationService {
           const jobData = jobDoc.data();
           const bounty = jobData.bounty;
 
-          // Mover saldo do testador: pendente para disponível
+          // Mover saldo do freelancer: pendente para disponível
           const testerRef = doc(db, 'users', appData.testerId);
           const testerDoc = await getDoc(testerRef);
           
@@ -110,7 +110,7 @@ export class ApplicationService {
               });
             }
 
-            // Criar transação para o testador
+            // Criar transação para o freelancer
             await TransactionService.createTransaction({
               userId: appData.testerId,
               type: 'payout',
@@ -228,7 +228,7 @@ export class ApplicationService {
         const jobData = jobDoc.data();
         const bounty = jobData.bounty;
 
-        // Adicionar valor ao saldo pendente do testador
+        // Adicionar valor ao saldo pendente do freelancer
         const userRef = doc(db, 'users', appData.testerId);
         const userDoc = await getDoc(userRef);
         

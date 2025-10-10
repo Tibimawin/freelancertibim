@@ -21,7 +21,7 @@ const HeroSection = () => {
           <div className="max-w-4xl mx-auto text-center text-white">
             {/* Badge */}
             <Badge variant="secondary" className="mb-6 bg-white/10 text-white border-white/20 backdrop-blur-sm">
-              🚀 Plataforma #1 para Testes de Apps
+              🚀 Plataforma #1 para Freelancers de Apps
             </Badge>
 
             {/* Main Heading */}
@@ -35,21 +35,21 @@ const HeroSection = () => {
 
             {/* Description */}
             <p className="text-xl md:text-2xl mb-8 text-white/90 animate-slide-up max-w-3xl mx-auto">
-              Conectamos testadores talentosos com empresas que precisam validar seus aplicativos. 
+              Conectamos freelancers talentosos com empresas que precisam validar seus aplicativos. 
               Trabalhe quando quiser, de onde estiver.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-scale-in">
               <Button variant="hero" size="lg" className="text-lg px-8 py-4">
-                Começar a Testar
+                Começar a Trabalhar
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-4 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
               >
-                Postar um Teste
+                Postar uma Tarefa
               </Button>
             </div>
 
@@ -60,7 +60,7 @@ const HeroSection = () => {
                   <Users className="h-6 w-6 mr-2" />
                   <span className="text-2xl font-bold">5,000+</span>
                 </div>
-                <p className="text-sm text-white/80">Testadores Ativos</p>
+                <p className="text-sm text-white/80">Freelancers Ativos</p>
               </div>
               
               <div className="text-center animate-fade-in">
@@ -68,7 +68,7 @@ const HeroSection = () => {
                   <DollarSign className="h-6 w-6 mr-2" />
                   <span className="text-2xl font-bold">2M+ KZ</span>
                 </div>
-                <p className="text-sm text-white/80">Pagos aos Testadores</p>
+                <p className="text-sm text-white/80">Pagos aos Freelancers</p>
               </div>
               
               <div className="text-center animate-fade-in">

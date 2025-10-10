@@ -111,7 +111,7 @@ export interface Application {
   rejectionReason?: string;
 }
 
-// Provas submetidas pelo testador
+// Provas submetidas pelo freelancer
 export interface ProofSubmission {
   requirementId: string;
   type: 'text' | 'screenshot' | 'file' | 'url';

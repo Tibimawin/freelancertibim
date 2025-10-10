@@ -23,7 +23,7 @@ const ModeToggle = () => {
       
       toast({
         title: "Modo alterado com sucesso!",
-        description: `Você agora está no modo ${newMode === 'tester' ? 'Testador' : 'Contratante'}.`,
+        description: `Você agora está no modo ${newMode === 'tester' ? 'Freelancer' : 'Contratante'}.`,
       });
     } catch (error: any) {
       toast({
@@ -41,7 +41,7 @@ const ModeToggle = () => {
       <div className="flex items-center space-x-2">
         <Users className="h-4 w-4 text-primary" />
         <Label htmlFor="mode-toggle" className="text-sm">
-          Testador
+          Freelancer
         </Label>
       </div>
       

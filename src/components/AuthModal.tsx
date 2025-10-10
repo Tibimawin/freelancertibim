@@ -144,7 +144,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             {activeTab === "signin" 
               ? "Entre na sua conta para continuar" 
               : activeTab === "signup" 
-              ? "Junte-se à comunidade de testadores" 
+              ? "Junte-se à comunidade de freelancers" 
               : "Digite seu email para recuperar a senha"
             }
           </CardDescription>

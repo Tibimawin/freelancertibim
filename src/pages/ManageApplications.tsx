@@ -126,7 +126,7 @@ const ManageApplications = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-foreground">Gerenciar Aplicações</h1>
-              <p className="text-muted-foreground">Revise e aprove as provas enviadas pelos testadores</p>
+              <p className="text-muted-foreground">Revise e aprove as provas enviadas pelos freelancers</p>
             </div>
           </div>
 

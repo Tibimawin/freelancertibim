@@ -13,7 +13,7 @@ import {
 import { db } from '@/lib/firebase';
 import { Application, ProofSubmission } from '@/types/firebase';
 import { NotificationService } from './notificationService';
-import { TransactionService } from './firebase';
+import { TransactionService, JobService } from './firebase'; // Import JobService
 
 export class ApplicationService {
   static async hasUserApplied(jobId: string, userId: string): Promise<boolean> {
@@ -42,6 +42,31 @@ export class ApplicationService {
         'proofSubmission.submittedAt': Timestamp.now(),
         status: 'submitted',
       });
+
+      // Fetch application data to get jobId and testerId
+      const appDoc = await getDoc(appRef);
+      if (!appDoc.exists()) {
+        throw new Error('Application not found after submission');
+      }
+      const appData = appDoc.data() as Application;
+
+      // Fetch job data to get posterId and job title
+      const job = await JobService.getJobById(appData.jobId);
+      if (job) {
+        // Create notification for the poster (contractor)
+        await NotificationService.createNotification({
+          userId: job.posterId,
+          type: 'task_submitted',
+          title: 'Nova Tarefa Submetida!',
+          message: `O freelancer ${appData.testerName} enviou as provas para a tarefa "${job.title}".`,
+          read: false,
+          metadata: {
+            jobId: job.id,
+            applicationId: applicationId,
+          },
+        });
+      }
+
     } catch (error) {
       console.error('Error submitting proofs:', error);
       throw error;
@@ -72,12 +97,14 @@ export class ApplicationService {
         ...(rejectionReason && { rejectionReason }),
       });
 
+      // Fetch job data to get job title
+      const job = await JobService.getJobById(appData.jobId);
+      const jobTitle = job?.title || 'Sua Tarefa';
+
       if (decision === 'approved') {
         // Buscar dados do job para obter o valor
-        const jobDoc = await getDoc(doc(db, 'jobs', appData.jobId));
-        if (jobDoc.exists()) {
-          const jobData = jobDoc.data();
-          const bounty = jobData.bounty;
+        if (job) {
+          const bounty = job.bounty;
 
           // Mover saldo do freelancer: pendente para disponível
           const testerRef = doc(db, 'users', appData.testerId);
@@ -97,7 +124,7 @@ export class ApplicationService {
             });
 
             // Reduzir saldo pendente do contratante
-            const posterRef = doc(db, 'users', jobData.posterId);
+            const posterRef = doc(db, 'users', job.posterId);
             const posterDoc = await getDoc(posterRef);
             
             if (posterDoc.exists()) {
@@ -117,7 +144,7 @@ export class ApplicationService {
               amount: bounty,
               currency: 'KZ',
               status: 'completed',
-              description: `Pagamento pela tarefa: ${jobData.title}`,
+              description: `Pagamento pela tarefa: ${jobTitle}`,
               metadata: {
                 jobId: appData.jobId,
                 applicationId: applicationId,
@@ -126,12 +153,12 @@ export class ApplicationService {
           }
         }
 
-        // Criar notificação de aprovação
+        // Criar notificação de aprovação para o freelancer
         await NotificationService.createNotification({
           userId: appData.testerId,
           type: 'task_approved',
           title: 'Tarefa Aprovada!',
-          message: 'Suas provas foram aprovadas e o pagamento foi processado.',
+          message: `Suas provas para a tarefa "${jobTitle}" foram aprovadas e o pagamento foi processado.`,
           read: false,
           metadata: {
             jobId: appData.jobId,
@@ -139,12 +166,12 @@ export class ApplicationService {
           },
         });
       } else {
-        // Criar notificação de rejeição
+        // Criar notificação de rejeição para o freelancer
         await NotificationService.createNotification({
           userId: appData.testerId,
           type: 'task_rejected',
           title: 'Tarefa Rejeitada',
-          message: rejectionReason || 'Suas provas foram rejeitadas. Verifique os comentários do contratante.',
+          message: rejectionReason ? `Suas provas para a tarefa "${jobTitle}" foram rejeitadas: ${rejectionReason}` : `Suas provas para a tarefa "${jobTitle}" foram rejeitadas. Verifique os comentários do contratante.`,
           read: false,
           metadata: {
             jobId: appData.jobId,

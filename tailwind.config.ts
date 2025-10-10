@@ -70,6 +70,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Novas cores para o tema "Nebulosa Profunda"
+        'nebula-bg': 'hsl(var(--nebula-bg))',
+        'nebula-fg': 'hsl(var(--nebula-fg))',
+        'electric-purple': 'hsl(var(--electric-purple))',
+        'cosmic-blue': 'hsl(var(--cosmic-blue))',
+        'star-glow': 'hsl(var(--star-glow))',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -93,15 +99,6 @@ export default {
             height: "0",
           },
         },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.6s ease-out",
-        "slide-up": "slide-up 0.5s ease-out",
-        "scale-in": "scale-in 0.3s ease-out",
-      },
-      keyframes: {
         "fade-in": {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
@@ -114,14 +111,24 @@ export default {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        // Novos keyframes para efeitos "mágicos"
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.8", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.02)" },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        "float-subtle": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-5px)" },
         },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.6s ease-out",
+        "slide-up": "slide-up 0.5s ease-out",
+        "scale-in": "scale-in 0.3s ease-out",
+        "pulse-glow": "pulse-glow 2s infinite ease-in-out",
+        "float-subtle": "float-subtle 4s infinite ease-in-out",
       },
     },
   },

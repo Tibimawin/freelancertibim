@@ -4,13 +4,13 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Freelincer Design System - Modern Marketplace Theme */
+/* Freelincer Design System - Deep Nebula Theme */
 
 @layer base {
   :root {
-    /* Core Colors - Deep Purple & Blue Theme */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Colors - Light Mode (Soft Nebula) */
+    --background: 220 14% 98%; /* Light gray-blue */
+    --foreground: 222.2 84% 4.9%; /* Dark text */
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -18,16 +18,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Primary - Deep Purple */
+    /* Primary - Soft Purple */
     --primary: 259 83% 57%;
     --primary-foreground: 0 0% 98%;
     --primary-hover: 259 83% 47%;
 
-    /* Secondary - Light Purple */
-    --secondary: 259 15% 95%;
-    --secondary-foreground: 259 83% 47%;
+    /* Secondary - Light Blue-Gray */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 8.9% 46.1%;
 
-    /* Success - Green for positive actions */
+    /* Success - Green */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 98%;
     --success-hover: 142 76% 26%;
@@ -52,11 +52,18 @@
 
     --radius: 0.75rem;
 
-    /* Custom Gradients */
+    /* Custom Gradients - Light Mode */
     --gradient-primary: linear-gradient(135deg, hsl(259 83% 57%), hsl(217 91% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(259 15% 98%), hsl(220 14% 96%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 20% 98%), hsl(220 14% 96%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
     
+    /* Deep Nebula Specific Colors (Light Mode - subtle versions) */
+    --nebula-bg: 220 14% 98%;
+    --nebula-fg: 222.2 84% 4.9%;
+    --electric-purple: 259 83% 57%;
+    --cosmic-blue: 217 91% 60%;
+    --star-glow: 40 100% 70%; /* Soft yellow glow */
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -68,62 +75,78 @@
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Core Colors - Dark Mode (Deep Nebula) */
+    --background: 220 20% 8%; /* Very dark blue-purple */
+    --foreground: 210 40% 98%; /* Bright white */
 
-    --card: 222.2 84% 4.9%;
+    --card: 220 18% 12%; /* Slightly lighter dark card */
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 220 18% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 259 83% 57%;
+    /* Primary - Electric Purple */
+    --primary: 270 80% 60%; /* More vibrant purple */
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 259 83% 47%;
+    --primary-hover: 270 80% 50%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary - Deep Teal */
+    --secondary: 180 50% 20%;
+    --secondary-foreground: 180 60% 80%;
 
-    --success: 142 76% 36%;
+    /* Success - Glowing Green */
+    --success: 140 70% 45%;
     --success-foreground: 0 0% 98%;
+    --success-hover: 140 70% 35%;
 
-    --muted: 217.2 32.6% 17.5%;
+    /* Warning - Vibrant Orange */
+    --warning: 35 90% 60%;
+    --warning-foreground: 0 0% 98%;
+
+    /* Muted colors */
+    --muted: 220 15% 15%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 220 15% 15%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 259 83% 57%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 220 15% 20%; /* Subtle glowing border */
+    --input: 220 15% 15%;
+    --ring: 270 80% 60%;
+
+    /* Custom Gradients - Dark Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(270 80% 60%), hsl(200 80% 40%)); /* Purple to Blue */
+    --gradient-secondary: linear-gradient(135deg, hsl(220 18% 12%), hsl(220 15% 15%));
+    --gradient-success: linear-gradient(135deg, hsl(140 70% 45%), hsl(160 60% 50%));
+    
+    /* Deep Nebula Specific Colors (Dark Mode) */
+    --nebula-bg: 220 20% 8%;
+    --nebula-fg: 210 40% 98%;
+    --electric-purple: 270 80% 60%;
+    --cosmic-blue: 200 80% 40%;
+    --star-glow: 40 100% 70%; /* Vibrant yellow glow */
+
+    --sidebar-background: 220 18% 12%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 270 80% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 270 80% 60%;
   }
 }
 
@@ -180,5 +203,27 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 700;
+  }
+
+  /* New "magical" effects */
+  .glow-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-effect::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, hsl(var(--star-glow) / 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    pointer-events: none;
+  }
+  .glow-effect:hover::before {
+    opacity: 1;
+    animation: pulse-glow 2s infinite ease-in-out;
   }
 }

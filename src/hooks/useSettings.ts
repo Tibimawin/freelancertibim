@@ -45,7 +45,7 @@ export interface UserSettings {
 }
 
 export const useSettings = () => {
-  const { userData, currentUser } = useAuth();
+  const { userData, currentUser, updateUserData: updateAuthUserData } = useAuth();
   const [settings, setSettings] = useState<UserSettings>({
     emailNotifications: true,
     pushNotifications: true,
@@ -82,6 +82,8 @@ export const useSettings = () => {
     });
     
     setSettings(updatedSettings);
+    // Also update the user data in AuthContext to reflect changes globally
+    await updateAuthUserData({ settings: updatedSettings });
   };
 
   const resetPassword = async (currentPassword: string, newPassword: string) => {

@@ -110,14 +110,17 @@ const Profile = () => {
     setIsEditing(false);
   };
 
+  // --- DEBUG START ---
+  console.log('Profile Page Render Check: userData', userData, 'currentUser', currentUser);
+  // --- DEBUG END ---
+
   if (!userData || !currentUser) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Header />
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center">
-            <p className="text-muted-foreground">{t("loading_profile")}</p>
-          </div>
+        <div className="text-center text-foreground p-8 bg-card rounded-lg shadow-lg"> {/* Added styling for visibility */}
+          <p className="text-2xl font-bold mb-4 text-red-500">DEBUG: Profile Loading State</p> {/* Distinct color */}
+          <p className="text-muted-foreground">{t("loading_profile")}</p>
         </div>
       </div>
     );
@@ -129,6 +132,13 @@ const Profile = () => {
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
+          {/* --- DEBUG START --- */}
+          <div className="p-4 mb-4 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-lg">
+            <p className="font-bold">DEBUG: Profile Content Loaded!</p>
+            <p>User: {userData.name}, Mode: {userData.currentMode}</p>
+          </div>
+          {/* --- DEBUG END --- */}
+
           {/* Header do Perfil */}
           <Card className="mb-8 bg-card border-border shadow-md">
             <CardHeader>

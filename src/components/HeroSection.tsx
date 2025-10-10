@@ -29,7 +29,7 @@ const HeroSection = () => {
               Ganhe Dinheiro
               <br />
               <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                Testando Apps
+                Com Tarefas Digitais
               </span>
             </h1>
 

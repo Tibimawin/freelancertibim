@@ -623,5 +623,7 @@
   "bounty_value_label": "Valor por Tarefa (KZ)",
   "bounty_value_placeholder": "Ex: 25.00",
   "bounty_value_min_max": "O valor deve ser entre 5 KZ e 50 KZ por tarefa.",
-  "fill_all_required_fields": "Por favor, preencha todos os campos obrigatórios."
+  "fill_all_required_fields": "Por favor, preencha todos os campos obrigatórios.",
+  "error_loading_tasks_applications": "Erro ao carregar suas tarefas e aplicações.",
+  "no_applications_for_task": "Ainda não há aplicações para esta tarefa"
 }

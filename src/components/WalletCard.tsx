@@ -8,18 +8,20 @@ import { Transaction } from "@/types/firebase";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DepositModal from "./DepositModal";
+import { useTranslation } from 'react-i18next';
 
 const WalletCard = () => {
   const { userData } = useAuth();
   const { transactions, loading, refetch } = useTransactions();
   const [depositModal, setDepositModal] = useState<{ open: boolean; method?: 'express' | 'iban' }>({ open: false });
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   if (!userData) {
     return (
       <Card className="p-6 bg-gradient-secondary border-border/50">
         <div className="text-center">
-          <p className="text-muted-foreground">Faça login para ver sua carteira</p>
+          <p className="text-muted-foreground">{t("login_to_see_wallet")}</p>
         </div>
       </Card>
     );
@@ -70,11 +72,11 @@ const WalletCard = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Concluído</Badge>;
+        return <Badge variant="outline" className="bg-success/10 text-success border-success/20">{t("completed")}</Badge>;
       case "pending":
-        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Pendente</Badge>;
+        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">{t("pending")}</Badge>;
       case "failed":
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Falhou</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">{t("failed")}</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -85,25 +87,25 @@ const WalletCard = () => {
       {/* Balance Section */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center space-x-2 mb-2">
-          <h2 className="text-lg font-semibold text-card-foreground">Carteira</h2>
+          <h2 className="text-lg font-semibold text-card-foreground">{t("wallet")}</h2>
           <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
-            {userData.currentMode === 'tester' ? 'Freelancer' : 'Contratante'}
+            {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
           </Badge>
         </div>
         <div className="balance-display text-4xl font-bold mb-2">
           {currentBalance.toFixed(2)} KZ
         </div>
         <p className="text-sm text-muted-foreground">
-          {userData.currentMode === 'tester' ? 'Saldo disponível' : 'Saldo atual'}
+          {userData.currentMode === 'tester' ? t("available_balance") : t("current_balance")}
         </p>
         
         {userData.currentMode === 'tester' && userData.testerWallet?.pendingBalance && userData.testerWallet.pendingBalance > 0 && (
           <div className="mt-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
             <p className="text-sm text-warning">
-              + {userData.testerWallet.pendingBalance.toFixed(2)} KZ pendente
+              + {userData.testerWallet.pendingBalance.toFixed(2)} KZ {t("pending")}
             </p>
             <p className="text-xs text-muted-foreground">
-              Aguardando aprovação das tarefas
+              {t("awaiting_task_approval")}
             </p>
           </div>
         )}
@@ -119,8 +121,8 @@ const WalletCard = () => {
             onClick={() => {
               if (currentBalance < 2000) {
                 toast({
-                  title: "Limite de saque insuficiente",
-                  description: "Você precisa ter pelo menos 2000 KZ para solicitar um saque.",
+                  title: t("minimum_withdrawal_not_reached"),
+                  description: t("minimum_withdrawal_is", { amount: 2000 }),
                   variant: "destructive",
                 });
               } else {
@@ -129,7 +131,7 @@ const WalletCard = () => {
             }}
           >
             <TrendingDown className="h-4 w-4 mr-2" />
-            {currentBalance < 2000 ? "Limite de saque insuficiente" : "Sacar"}
+            {currentBalance < 2000 ? t("minimum_withdrawal_not_reached") : t("withdraw")}
           </Button>
         ) : (
           <div className="space-y-3">
@@ -139,7 +141,7 @@ const WalletCard = () => {
               onClick={() => setDepositModal({ open: true, method: 'express' })}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Depositar Via Express
+              {t("deposit_express")}
             </Button>
             <Button 
               variant="outline" 
@@ -147,7 +149,7 @@ const WalletCard = () => {
               onClick={() => setDepositModal({ open: true, method: 'iban' })}
             >
               <Banknote className="h-4 w-4 mr-2" />
-              Depositar Via IBAN
+              {t("deposit_iban")}
             </Button>
           </div>
         )}
@@ -155,7 +157,7 @@ const WalletCard = () => {
 
       {/* Recent Transactions */}
       <div>
-        <h3 className="text-sm font-semibold text-card-foreground mb-3">Transações Recentes</h3>
+        <h3 className="text-sm font-semibold text-card-foreground mb-3">{t("recent_transactions")}</h3>
         
         {loading ? (
           <div className="flex items-center justify-center py-6">
@@ -194,9 +196,9 @@ const WalletCard = () => {
               )) 
             ) : (
               <div className="text-center py-6">
-                <p className="text-muted-foreground text-sm">Nenhuma transação ainda</p>
+                <p className="text-muted-foreground text-sm">{t("no_transactions")}</p>
                 <p className="text-muted-foreground text-xs mt-1">
-                  Complete sua primeira tarefa para ver suas transações aqui
+                  {t("complete_first_task")}
                 </p>
               </div>
             )}
@@ -207,7 +209,7 @@ const WalletCard = () => {
       {transactions.length > 3 && (
         <div className="mt-4 pt-4 border-t border-border">
           <Button variant="ghost" className="w-full text-sm">
-            Ver Todas as Transações
+            {t("view_all_transactions")}
           </Button>
         </div>
       )}

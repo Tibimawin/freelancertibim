@@ -578,5 +578,8 @@
   "register_as_freelancer": "Register as Freelancer",
   "applicants_count": "{{count}} applicants",
   "posted_by": "by ",
-  "view_details": "View details"
+  "view_details": "View details",
+  "login_to_see_wallet": "Log in to see your wallet",
+  "awaiting_task_approval": "Awaiting task approval",
+  "failed": "Failed"
 }

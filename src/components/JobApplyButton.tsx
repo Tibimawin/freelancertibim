@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ApplicationService } from '@/services/applicationService';
 import { Play, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface JobApplyButtonProps {
   jobId: string;
@@ -16,6 +17,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isApplying, setIsApplying] = useState(false);
+  const { t } = useTranslation();
 
   const canApply = currentUser && 
     userData?.currentMode === 'tester' && 
@@ -24,8 +26,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
   const handleApply = async () => {
     if (!currentUser || !userData || !canApply) {
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado como testador para aplicar",
+        title: t("error"),
+        description: t("unauthenticated_apply"),
         variant: "destructive",
       });
       return;
@@ -39,8 +41,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       
       if (hasApplied) {
         toast({
-          title: "Já aplicado",
-          description: "Você já se candidatou a esta tarefa",
+          title: t("already_applied"),
+          description: t("already_applied_description"),
           variant: "destructive",
         });
         return;
@@ -52,8 +54,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
     } catch (error) {
       console.error('Error checking application:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao verificar candidatura",
+        title: t("error"),
+        description: t("error_checking_application"),
         variant: "destructive",
       });
     } finally {
@@ -76,12 +78,12 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       {isApplying ? (
         <>
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Verificando...
+          {t("checking")}
         </>
       ) : (
         <>
           <Play className="h-4 w-4 mr-2" />
-          Fazer Tarefa
+          {t("do_task")}
         </>
       )}
     </Button>

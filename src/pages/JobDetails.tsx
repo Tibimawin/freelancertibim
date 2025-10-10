@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft } from "lucide-react";
+import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import { Job } from "@/types/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { JobService } from "@/services/firebase";
@@ -20,7 +20,7 @@ const JobDetails = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
-  const [proofs, setProofs] = useState<{ [key: number]: { text: string; file: File | null; comment: string } }>({});
+  const [proofs, setProofs] = useState<{ [key: string]: { text: string; file: File | null; comment: string } }>({});
   const [actualApplicantCount, setActualApplicantCount] = useState(0);
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
@@ -33,11 +33,6 @@ const JobDetails = () => {
       try {
         const jobData = await JobService.getJobById(id);
         if (jobData) {
-          console.log('Job Data:', jobData);
-          console.log('Detailed Instructions:', jobData.detailedInstructions);
-          console.log('Proof Requirements:', jobData.proofRequirements);
-          
-          // Garantir que arrays existam mesmo se vazios
           const normalizedJob = {
             ...jobData,
             detailedInstructions: jobData.detailedInstructions || [],
@@ -45,9 +40,16 @@ const JobDetails = () => {
           };
           setJob(normalizedJob);
           
-          // Buscar número real de aplicações
           const applications = await ApplicationService.getApplicationsForJob(id);
           setActualApplicantCount(applications.length);
+
+          // Initialize proofs state based on requirements
+          const initialProofs: { [key: string]: { text: string; file: null; comment: string } } = {};
+          normalizedJob.proofRequirements.forEach(req => {
+            initialProofs[req.id] = { text: '', file: null, comment: '' };
+          });
+          setProofs(initialProofs);
+
         } else {
           navigate('/');
         }
@@ -110,25 +112,25 @@ const JobDetails = () => {
 
   const canApply = currentUser && job.posterId !== currentUser.uid && job.status === 'active';
 
-  const handleProofChange = (requirementIndex: number, field: 'text' | 'comment', value: string) => {
+  const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
     setProofs(prev => ({
       ...prev,
-      [requirementIndex]: {
-        ...prev[requirementIndex],
+      [requirementId]: {
+        ...prev[requirementId],
         [field]: value,
-        file: prev[requirementIndex]?.file || null
+        file: prev[requirementId]?.file || null
       }
     }));
   };
 
-  const handleFileChange = (requirementIndex: number, file: File | null) => {
+  const handleFileChange = (requirementId: string, file: File | null) => {
     setProofs(prev => ({
       ...prev,
-      [requirementIndex]: {
-        ...prev[requirementIndex],
+      [requirementId]: {
+        ...prev[requirementId],
         file,
-        text: prev[requirementIndex]?.text || '',
-        comment: prev[requirementIndex]?.comment || ''
+        text: prev[requirementId]?.text || '',
+        comment: prev[requirementId]?.comment || ''
       }
     }));
   };
@@ -143,11 +145,9 @@ const JobDetails = () => {
       return;
     }
 
-    // Validar provas obrigatórias
     const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
     const missingProofs = requiredProofs.filter(req => {
-      const proofIndex = job.proofRequirements?.findIndex(p => p.id === req.id) ?? -1;
-      const proof = proofs[proofIndex];
+      const proof = proofs[req.id];
       return !proof || (!proof.text && !proof.file);
     });
 
@@ -160,24 +160,23 @@ const JobDetails = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
-      setIsApplying(true);
-      
       // Primeiro, criar a aplicação
       const applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
       
       // Preparar provas para envio
-      const proofsToSubmit: any[] = job.proofRequirements?.map((req, index) => {
-        const proof = proofs[index];
+      const proofsToSubmit: any[] = job.proofRequirements?.map((req) => {
+        const proof = proofs[req.id];
         return {
           requirementId: req.id,
           type: req.type,
-          content: proof?.text || proof?.file?.name || '',
+          content: proof?.text || proof?.file?.name || '', // TODO: Implement file upload to storage
           comment: proof?.comment || ''
         };
       }) || [];
 
-      // Enviar provas (implementar upload de arquivos aqui se necessário)
+      // Enviar provas
       await ApplicationService.submitProofs(applicationId, proofsToSubmit);
       
       toast({
@@ -194,7 +193,7 @@ const JobDetails = () => {
         variant: "destructive",
       });
     } finally {
-      setIsApplying(false);
+      setIsLoading(false);
     }
   };
 
@@ -220,7 +219,7 @@ const JobDetails = () => {
         </div>
 
         {/* Job Info Card */}
-        <Card className="mb-8">
+        <Card className="mb-8 bg-card border-border shadow-md">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
@@ -228,8 +227,8 @@ const JobDetails = () => {
                 <Badge variant="outline" className={getDifficultyColor()}>
                   {t(job.difficulty.toLowerCase())}
                 </Badge>
-                <Badge variant="secondary">{job.platform}</Badge>
-                <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
+                <Badge variant="secondary" className="bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">{job.platform}</Badge>
+                <Badge variant={job.status === 'active' ? 'default' : 'secondary'} className={job.status === 'active' ? 'bg-success/10 text-success border-success/20' : 'bg-muted/30 text-muted-foreground border-border'}>
                   {job.status === 'active' ? t('active') : t('inactive')}
                 </Badge>
               </div>
@@ -252,11 +251,11 @@ const JobDetails = () => {
               <h3 className="font-semibold mb-4 text-foreground">{t("detailed_instructions_label")}</h3>
               {job.detailedInstructions && job.detailedInstructions.length > 0 ? (
                 <div className="space-y-3">
-                  {job.detailedInstructions.map((instruction, index) => (
-                    <div key={instruction.id} className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg">
-                      <span className="font-semibold text-primary text-sm mt-0.5 min-w-[24px]">
-                        {instruction.step}.
-                      </span>
+                  {job.detailedInstructions.map((instruction) => (
+                    <div key={instruction.id} className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+                      <div className="bg-electric-purple/10 text-electric-purple rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                        {instruction.step}
+                      </div>
                       <div className="flex-1">
                         <p className="text-sm text-foreground leading-relaxed">{instruction.instruction}</p>
                         {instruction.isRequired && (
@@ -269,7 +268,7 @@ const JobDetails = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                   <p className="text-sm text-muted-foreground italic">
                     {t("no_detailed_instructions")}
                   </p>
@@ -341,10 +340,10 @@ const JobDetails = () => {
         </Card>
 
         {/* Proof Requirements Section */}
-        <Card>
+        <Card className="bg-card border-border shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Upload className="h-5 w-5" />
+              <Upload className="h-5 w-5 text-star-glow" />
               <span>{t("proof_requirements")}</span>
             </CardTitle>
           </CardHeader>
@@ -357,18 +356,16 @@ const JobDetails = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       {t("submit_your_proofs")}
                     </p>
-                    {job.proofRequirements.map((proofReq, index) => (
-                      <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg">
+                    {job.proofRequirements.map((proofReq) => (
+                      <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
-                            <span className="font-semibold text-primary text-sm mt-0.5 min-w-[24px]">
-                              {index + 1}.
-                            </span>
+                            {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
                             <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
                             {proofReq.isRequired && (
-                              <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
+                              <Badge variant="destructive" className="text-xs">
                                 {t("required")}
-                              </span>
+                              </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
@@ -382,8 +379,8 @@ const JobDetails = () => {
                               </label>
                               <Textarea
                                 placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                value={proofs[index]?.text || ''}
-                                onChange={(e) => handleProofChange(index, 'text', e.target.value)}
+                                value={proofs[proofReq.id]?.text || ''}
+                                onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
                                 className="min-h-[80px]"
                               />
                             </div>
@@ -397,12 +394,12 @@ const JobDetails = () => {
                               <Input
                                 type="file"
                                 accept={proofReq.type === 'screenshot' ? 'image/*' : 'image/*,.pdf,.doc,.docx'}
-                                onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
+                                onChange={(e) => handleFileChange(proofReq.id, e.target.files?.[0] || null)}
                                 className="cursor-pointer"
                               />
-                              {proofs[index]?.file && (
+                              {proofs[proofReq.id]?.file && (
                                 <p className="text-sm text-muted-foreground">
-                                  {t("file_selected")}: {proofs[index].file?.name}
+                                  {t("file_selected")}: {proofs[proofReq.id].file?.name}
                                 </p>
                               )}
                             </div>
@@ -414,8 +411,8 @@ const JobDetails = () => {
                             </label>
                             <Textarea
                               placeholder={t("optional_comment_placeholder")}
-                              value={proofs[index]?.comment || ''}
-                              onChange={(e) => handleProofChange(index, 'comment', e.target.value)}
+                              value={proofs[proofReq.id]?.comment || ''}
+                              onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
                               className="min-h-[60px]"
                             />
                           </div>
@@ -430,7 +427,7 @@ const JobDetails = () => {
                       <Button 
                         onClick={handleSubmitProofs} 
                         disabled={isApplying}
-                        className="min-w-[140px]"
+                        className="min-w-[140px] glow-effect"
                       >
                         {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
                       </Button>
@@ -441,15 +438,15 @@ const JobDetails = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       {t("contractor_requested_proofs")}
                     </p>
-                    {job.proofRequirements.map((proofReq, index) => (
-                      <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg">
+                    {job.proofRequirements.map((proofReq) => (
+                      <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
                         <div className="flex items-center space-x-2 mb-2">
-                          <span className="font-semibold text-primary text-sm">{index + 1}.</span>
-                          <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
+                          {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                          <span className="font-medium text-foreground">{proofReq.label}</span>
                           {proofReq.isRequired && (
-                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">
+                            <Badge variant="destructive" className="text-xs">
                               {t("required")}
-                            </span>
+                            </Badge>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
@@ -466,7 +463,7 @@ const JobDetails = () => {
                 )}
               </>
             ) : (
-              <div className="p-4 bg-muted/30 rounded-lg">
+              <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                 <p className="text-sm text-muted-foreground italic">
                   {t("no_proof_requirements")}
                 </p>
@@ -477,7 +474,7 @@ const JobDetails = () => {
 
         {/* Message for users who can't apply */}
         {!canApply && (
-          <Card>
+          <Card className="bg-card border-border shadow-md">
             <CardContent className="text-center py-8">
               <p className="text-muted-foreground">
                 {currentUser && job.posterId === currentUser.uid 
@@ -488,7 +485,7 @@ const JobDetails = () => {
                 }
               </p>
               {!currentUser && (
-                <Button className="mt-4" onClick={() => navigate('/')}>
+                <Button className="mt-4 glow-effect" onClick={() => navigate('/')}>
                   {t("login_button")}
                 </Button>
               )}

@@ -29,6 +29,7 @@ import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Profile = () => {
   const { userData, currentUser, updateUserData } = useAuth();
@@ -38,6 +39,7 @@ const Profile = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialTab = queryParams.get('tab') || 'overview';
+  const { t } = useTranslation(); // Initialize useTranslation
 
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -83,13 +85,13 @@ const Profile = () => {
 
       setIsEditing(false);
       toast({
-        title: "Perfil atualizado!",
-        description: "Suas informações foram salvas com sucesso.",
+        title: t("profile_updated"),
+        description: t("profile_updated_description"),
       });
     } catch (error) {
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações. Tente novamente.",
+        title: t("error_saving"),
+        description: t("error_saving_description"),
         variant: "destructive",
       });
     } finally {
@@ -114,7 +116,7 @@ const Profile = () => {
         <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
-            <p className="text-muted-foreground">Carregando perfil...</p>
+            <p className="text-muted-foreground">{t("loading_profile")}</p>
           </div>
         </div>
       </div>
@@ -143,7 +145,7 @@ const Profile = () => {
                     <div className="flex items-center space-x-3">
                       <h1 className="text-3xl font-bold text-foreground">{userData.name}</h1>
                       <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
-                        {userData.currentMode === 'tester' ? 'Freelancer' : 'Contratante'}
+                        {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
                       </Badge>
                     </div>
                     
@@ -162,7 +164,7 @@ const Profile = () => {
                       
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>Membro desde {new Date(userData.createdAt).toLocaleDateString('pt-BR')}</span>
+                        <span>{t("member_since")} {new Date(userData.createdAt).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>
                     
@@ -178,7 +180,7 @@ const Profile = () => {
                   className="flex items-center space-x-2"
                 >
                   {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                  <span>{isEditing ? "Cancelar" : "Editar Perfil"}</span>
+                  <span>{isEditing ? t("cancel") : t("edit_profile")}</span>
                 </Button>
               </div>
             </CardHeader>
@@ -186,9 +188,9 @@ const Profile = () => {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
-              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-              <TabsTrigger value="settings">Configurações</TabsTrigger>
+              <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+              <TabsTrigger value="stats">{t("stats")}</TabsTrigger>
+              <TabsTrigger value="settings">{t("settings")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -199,14 +201,14 @@ const Profile = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <User className="h-5 w-5" />
-                        <span>Informações Pessoais</span>
+                        <span>{t("personal_information")}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {isEditing ? (
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="name">Nome Completo</Label>
+                            <Label htmlFor="name">{t("full_name")}</Label>
                             <Input
                               id="name"
                               value={formData.name}
@@ -215,17 +217,17 @@ const Profile = () => {
                           </div>
                           
                           <div>
-                            <Label htmlFor="bio">Biografia</Label>
+                            <Label htmlFor="bio">{t("bio")}</Label>
                             <Textarea
                               id="bio"
-                              placeholder="Conte um pouco sobre você..."
+                              placeholder={t("tell_about_yourself")}
                               value={formData.bio}
                               onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                             />
                           </div>
                           
                           <div>
-                            <Label htmlFor="phone">Telefone</Label>
+                            <Label htmlFor="phone">{t("phone")}</Label>
                             <Input
                               id="phone"
                               placeholder="(11) 99999-9999"
@@ -235,7 +237,7 @@ const Profile = () => {
                           </div>
                           
                           <div>
-                            <Label htmlFor="location">Localização</Label>
+                            <Label htmlFor="location">{t("location")}</Label>
                             <Input
                               id="location"
                               placeholder="São Paulo, SP"
@@ -245,7 +247,7 @@ const Profile = () => {
                           </div>
                           
                           <div>
-                            <Label htmlFor="skills">Habilidades (separadas por vírgula)</Label>
+                            <Label htmlFor="skills">{t("skills")}</Label>
                             <Input
                               id="skills"
                               placeholder="React, JavaScript, Mobile Testing..."
@@ -256,40 +258,40 @@ const Profile = () => {
                           
                           <Button onClick={handleSave} disabled={isLoading} className="w-full">
                             <Save className="h-4 w-4 mr-2" />
-                            {isLoading ? "Salvando..." : "Salvar Alterações"}
+                            {isLoading ? t("saving") : t("save_changes")}
                           </Button>
                         </div>
                       ) : (
                         <div className="space-y-4">
                           <div>
-                            <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
+                            <Label className="text-sm font-medium text-muted-foreground">{t("name")}</Label>
                             <p className="text-foreground">{userData.name}</p>
                           </div>
                           
                           {userData.bio && (
                             <div>
-                              <Label className="text-sm font-medium text-muted-foreground">Biografia</Label>
+                              <Label className="text-sm font-medium text-muted-foreground">{t("bio")}</Label>
                               <p className="text-foreground">{userData.bio}</p>
                             </div>
                           )}
                           
                           {userData.phone && (
                             <div>
-                              <Label className="text-sm font-medium text-muted-foreground">Telefone</Label>
+                              <Label className="text-sm font-medium text-muted-foreground">{t("phone")}</Label>
                               <p className="text-foreground">{userData.phone}</p>
                             </div>
                           )}
                           
                           {userData.location && (
                             <div>
-                              <Label className="text-sm font-medium text-muted-foreground">Localização</Label>
+                              <Label className="text-sm font-medium text-muted-foreground">{t("location")}</Label>
                               <p className="text-foreground">{userData.location}</p>
                             </div>
                           )}
                           
                           {userData.skills && userData.skills.length > 0 && (
                             <div>
-                              <Label className="text-sm font-medium text-muted-foreground">Habilidades</Label>
+                              <Label className="text-sm font-medium text-muted-foreground">{t("skills")}</Label>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {userData.skills.map((skill, index) => (
                                   <Badge key={index} variant="outline">
@@ -309,16 +311,16 @@ const Profile = () => {
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Estatísticas Rápidas</CardTitle>
+                      <CardTitle className="text-lg">{t("your_stats")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Tarefas Completadas</span>
+                        <span className="text-sm text-muted-foreground">{t("completed_tasks")}</span>
                         <span className="font-semibold text-foreground">{userData.completedTests}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Avaliação</span>
+                        <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
                         <div className="flex items-center space-x-1">
                           <Star className="h-4 w-4 fill-primary text-primary" />
                           <span className="font-semibold text-foreground">{(userData.rating || 0).toFixed(1)}</span>
@@ -326,12 +328,12 @@ const Profile = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Taxa de Aprovação</span>
+                        <span className="text-sm text-muted-foreground">{t("approval_rate")}</span>
                         <span className="font-semibold text-success">{userData.approvalRate || 0}%</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Saldo Atual</span>
+                        <span className="text-sm text-muted-foreground">{t("current_balance")}</span>
                         <span className="font-semibold text-foreground">
                           {(userData.currentMode === 'tester' 
                             ? userData.testerWallet?.availableBalance || 0 
@@ -349,52 +351,52 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Tarefas Completadas</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_completed_tasks")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{userData.completedTests}</div>
                     <div className="flex items-center text-xs text-success">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      +12% este mês
+                      +12% {t("this_month")}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Ganhos Totais</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_earnings")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{(userData.testerWallet?.totalEarnings || 0).toFixed(2)} KZ</div>
                     <div className="flex items-center text-xs text-success">
                       <DollarSign className="h-3 w-3 mr-1" />
-                      +340 KZ este mês
+                      +340 KZ {t("this_month")}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Avaliação Média</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("average_rating_label")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{(userData.rating || 0).toFixed(1)}</div>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Star className="h-3 w-3 mr-1 fill-primary text-primary" />
-                      Excelente
+                      {t("excellent")}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Aprovação</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("approval_rate_label")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{userData.approvalRate}%</div>
                     <div className="flex items-center text-xs text-success">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      Acima da média
+                      {t("above_average")}
                     </div>
                   </CardContent>
                 </Card>
@@ -408,51 +410,51 @@ const Profile = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Settings className="h-5 w-5" />
-                      <span>Configurações da Conta</span>
+                      <span>{t("account_settings")}</span>
                     </CardTitle>
                     <CardDescription>
-                      Gerencie suas preferências e configurações básicas
+                      {t("manage_preferences_basic_settings")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Modo Atual</Label>
+                    <Label>{t("current_mode_label")}</Label>
                     <Select value={userData.currentMode} disabled>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="tester">Freelancer</SelectItem>
-                        <SelectItem value="poster">Contratante</SelectItem>
+                        <SelectItem value="tester">{t("freelancer")}</SelectItem>
+                        <SelectItem value="poster">{t("contractor")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Use o botão "Alternar Modo" para mudar entre freelancer e contratante
+                      {t("use_toggle_to_change_mode")}
                     </p>
                   </div>
 
                     <div className="space-y-2">
-                      <Label>Email da Conta</Label>
+                      <Label>{t("account_email")}</Label>
                       <Input value={currentUser.email || ""} disabled />
                       <p className="text-xs text-muted-foreground">
-                        O email não pode ser alterado
+                        {t("email_cannot_be_changed")}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Status da Conta</Label>
+                      <Label>{t("account_status")}</Label>
                       <div className="flex items-center space-x-2">
                         <Badge variant="outline" className="bg-success/10 text-success">
-                          Verificada
+                          {t("verified")}
                         </Badge>
                         <Badge variant="outline">
-                          Premium
+                          {t("premium")}
                         </Badge>
                       </div>
                     </div>
 
                     <Button variant="outline" className="w-full">
-                      Alterar Senha
+                      {t("change_password")}
                     </Button>
                     
                     <ModeToggle />
@@ -462,9 +464,9 @@ const Profile = () => {
                 {/* Redes Sociais */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Redes Sociais</CardTitle>
+                    <CardTitle>{t("social_media")}</CardTitle>
                     <CardDescription>
-                      Conecte suas redes sociais para compartilhar conquistas
+                      {t("connect_social_media")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

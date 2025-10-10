@@ -10,12 +10,14 @@ import ModeToggle from "./ModeToggle";
 import WithdrawalModal from "./WithdrawalModal";
 import { useNotifications } from "@/hooks/useNotifications"; // Import useNotifications
 import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Header = () => {
   const { currentUser, userData, signOut } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, loading: notificationsLoading } = useNotifications(); // Use the hook
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const { t } = useTranslation(); // Initialize useTranslation
 
   const handleSignOut = async () => {
     try {
@@ -32,10 +34,10 @@ const Header = () => {
     const diffHours = Math.round(diffMs / (1000 * 60 * 60));
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMinutes < 1) return "agora mesmo";
-    if (diffMinutes < 60) return `${diffMinutes} min atrás`;
-    if (diffHours < 24) return `${diffHours} h atrás`;
-    if (diffDays < 7) return `${diffDays} d atrás`;
+    if (diffMinutes < 1) return t("just_now");
+    if (diffMinutes < 60) return t("ago_minutes", { count: diffMinutes });
+    if (diffHours < 24) return t("ago_hours", { count: diffHours });
+    if (diffDays < 7) return t("ago_days", { count: diffDays });
     return date.toLocaleDateString('pt-BR');
   };
 
@@ -59,7 +61,7 @@ const Header = () => {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Buscar tarefas de aplicativos..."
+                placeholder={t("search_tasks_placeholder")}
                 className="w-full rounded-lg border border-input bg-background pl-10 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -73,7 +75,7 @@ const Header = () => {
                   <Button variant="outline" size="sm" asChild className="hidden md:flex">
                     <Link to="/create-job">
                       <Plus className="h-4 w-4 mr-2" />
-                      Criar Anúncio
+                      {t("create_job")}
                     </Link>
                   </Button>
                 )}
@@ -93,17 +95,17 @@ const Header = () => {
                    </DropdownMenuTrigger>
                    <DropdownMenuContent align="end" className="w-80">
                      <div className="flex items-center justify-between p-2">
-                       <p className="text-sm font-medium">Notificações ({unreadCount})</p>
+                       <p className="text-sm font-medium">{t("notifications_count", { count: unreadCount })}</p>
                        {unreadCount > 0 && (
                          <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto px-2 py-1 text-xs">
-                           Marcar todas como lidas
+                           {t("mark_all_as_read")}
                          </Button>
                        )}
                      </div>
                      <DropdownMenuSeparator />
                      <ScrollArea className="h-[200px]">
                        {notificationsLoading ? (
-                         <div className="p-4 text-center text-muted-foreground text-sm">Carregando...</div>
+                         <div className="p-4 text-center text-muted-foreground text-sm">{t("loading_notifications")}</div>
                        ) : notifications.length > 0 ? (
                          notifications.map((notification) => (
                            <DropdownMenuItem 
@@ -117,7 +119,7 @@ const Header = () => {
                            </DropdownMenuItem>
                          ))
                        ) : (
-                         <div className="p-4 text-center text-muted-foreground text-sm">Nenhuma notificação</div>
+                         <div className="p-4 text-center text-muted-foreground text-sm">{t("no_notifications")}</div>
                        )}
                      </ScrollArea>
                    </DropdownMenuContent>
@@ -154,11 +156,11 @@ const Header = () => {
                          <div className="text-xs text-muted-foreground space-y-1">
                            {userData.currentMode === 'tester' ? (
                              <>
-                               <div>Disponível: {(userData.testerWallet?.availableBalance || 0).toFixed(2)} KZ</div>
-                               <div>Pendente: {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ</div>
+                               <div>{t("available_balance")}: {(userData.testerWallet?.availableBalance || 0).toFixed(2)} KZ</div>
+                               <div>{t("pending_balance")}: {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ</div>
                              </>
                            ) : (
-                             <div>Saldo: {(userData.posterWallet?.balance || 0).toFixed(2)} KZ</div>
+                             <div>{t("current_balance")}: {(userData.posterWallet?.balance || 0).toFixed(2)} KZ</div>
                            )}
                          </div>
                       </div>
@@ -167,38 +169,38 @@ const Header = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
-                        Perfil
+                        {t("profile")}
                       </Link>
                     </DropdownMenuItem>
                      <DropdownMenuItem asChild>
                         <Link to="/dashboard" className="flex items-center">
                           <BarChart3 className="mr-2 h-4 w-4" />
-                          Dashboard
+                          {t("dashboard")}
                         </Link>
                       </DropdownMenuItem>
                      <DropdownMenuItem asChild>
                         <Link to="/task-history" className="flex items-center">
                           <History className="mr-2 h-4 w-4" />
-                          Histórico de Tarefas
+                          {t("task_history")}
                         </Link>
                       </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/profile?tab=settings" className="flex items-center">
                         <Settings className="mr-2 h-4 w-4" />
-                        Configurações
+                        {t("settings")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
-                      Sair
+                      {t("logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
               <Button variant="hero" size="sm" onClick={() => setShowAuthModal(true)}>
-                Entrar
+                {t("login")}
               </Button>
             )}
           </nav>

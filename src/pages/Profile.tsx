@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,19 @@ import {
 import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
+import { useLocation } from "react-router-dom";
 
 const Profile = () => {
   const { userData, currentUser, updateUserData } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'overview';
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
   const [formData, setFormData] = useState({
     name: userData?.name || "",
     bio: userData?.bio || "",
@@ -41,6 +48,20 @@ const Profile = () => {
     location: userData?.location || "",
     skills: userData?.skills?.join(", ") || "",
   });
+
+  useEffect(() => {
+    setFormData({
+      name: userData?.name || "",
+      bio: userData?.bio || "",
+      phone: userData?.phone || "",
+      location: userData?.location || "",
+      skills: userData?.skills?.join(", ") || "",
+    });
+  }, [userData]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleSave = async () => {
     if (!currentUser) return;
@@ -163,7 +184,7 @@ const Profile = () => {
             </CardHeader>
           </Card>
 
-          <Tabs defaultValue="overview" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
               <TabsTrigger value="overview">Visão Geral</TabsTrigger>
               <TabsTrigger value="stats">Estatísticas</TabsTrigger>

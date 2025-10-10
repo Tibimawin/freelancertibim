@@ -129,9 +129,11 @@ const Header = () => {
                           Histórico de Tarefas
                         </Link>
                       </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Configurações
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile?tab=settings" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configurações
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>

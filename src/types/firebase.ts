@@ -1,5 +1,4 @@
-// User types
-export interface User {
+interface User {
   id: string;
   name: string;
   email: string;
@@ -44,6 +43,13 @@ export interface UserSettings {
   twoFactorAuth: boolean;
   loginAlerts: boolean;
   sessionTimeout: string;
+  socialAccounts?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    tiktok?: string;
+    linkedin?: string;
+  };
 }
 
 // Job types
@@ -200,7 +206,7 @@ export interface WithdrawalRequest {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'task_approved' | 'task_rejected' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task';
+  type: 'task_approved' | 'task_rejected' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed';
   title: string;
   message: string;
   read: boolean;
@@ -208,6 +214,30 @@ export interface Notification {
     jobId?: string;
     applicationId?: string;
     withdrawalId?: string;
+    reportId?: string;
   };
   createdAt: Date;
 }
+
+// Report types
+export interface Report {
+  id: string;
+  reporterId: string;
+  reporterName: string;
+  reporterEmail: string;
+  reportedUserId: string;
+  reportedUserName: string;
+  reportedUserEmail: string;
+  applicationId?: string; // Optional: if the report is related to a specific application
+  jobId?: string; // Optional: if the report is related to a specific job
+  reason: string; // Short reason/category
+  description: string; // Detailed explanation
+  status: 'pending' | 'in_review' | 'approved' | 'rejected';
+  submittedAt: Date;
+  reviewedAt?: Date;
+  reviewedBy?: string;
+  adminNotes?: string;
+  resolution?: string; // Admin's decision/action taken
+}
+
+export { User };

@@ -25,7 +25,7 @@ import {
   AdminStatistics, 
   UserAction 
 } from '@/types/admin';
-import { User, Job, Transaction } from '@/types/firebase';
+import { User, Job, Transaction, Report } from '@/types/firebase'; // Import Report
 
 export class AdminService {
   // Admin authentication
@@ -326,15 +326,17 @@ export class AdminService {
 
   static async getStatistics(): Promise<AdminStatistics> {
     try {
-      const [usersSnapshot, jobsSnapshot, transactionsSnapshot] = await Promise.all([
+      const [usersSnapshot, jobsSnapshot, transactionsSnapshot, reportsSnapshot] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collection(db, 'jobs')),
-        getDocs(collection(db, 'transactions'))
+        getDocs(collection(db, 'transactions')),
+        getDocs(query(collection(db, 'reports'), where('status', '==', 'pending'))) // Fetch only pending reports
       ]);
 
       const users = usersSnapshot.docs.map(doc => doc.data());
       const jobs = jobsSnapshot.docs.map(doc => doc.data());
       const transactions = transactionsSnapshot.docs.map(doc => doc.data());
+      const pendingReports = reportsSnapshot.docs.map(doc => doc.data());
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -365,7 +367,8 @@ export class AdminService {
           newUsersToday: users.filter(u => u.createdAt?.toDate() >= today).length,
           newJobsToday: jobs.filter(j => j.createdAt?.toDate() >= today).length,
           withdrawalsToday: transactions.filter(t => t.type === 'payout' && t.createdAt?.toDate() >= today).length,
-          transactionsToday: transactions.filter(t => t.createdAt?.toDate() >= today).length
+          transactionsToday: transactions.filter(t => t.createdAt?.toDate() >= today).length,
+          pendingReports: pendingReports.length, // Add pending reports count
         }
       };
     } catch (error) {

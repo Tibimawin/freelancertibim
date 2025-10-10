@@ -12,20 +12,25 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  DollarSign 
+  DollarSign,
+  Flag // Adicionado Flag para o ícone de denúncia
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
-import { useAdminStatistics } from '@/hooks/useAdmin';
+import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; // Import useAdminReports
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
 import AdminVerifications from '@/components/admin/AdminVerifications';
 import AdminBalances from '@/components/admin/AdminBalances';
 import AdminBanking from '@/components/admin/AdminBanking';
+import AdminReports from '@/components/admin/AdminReports'; // Import AdminReports
+import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
+  const { reports, fetchReports } = useAdminReports(); // Use reports hook
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Refresh stats every 30 seconds
@@ -38,7 +43,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando permissões...</p>
+          <p className="text-muted-foreground">{t("loading_dashboard")}</p>
         </div>
       </div>
     );
@@ -47,6 +52,8 @@ const AdminDashboard = () => {
   if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
+
+  const pendingReportsCount = reports.filter(r => r.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +64,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("total_users")}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -67,7 +74,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    {statistics.users.active} ativos, {statistics.users.suspended} suspensos
+                    {statistics.users.active} {t("active")}, {statistics.users.suspended} {t("suspended")}
                   </>
                 )}
               </p>
@@ -76,7 +83,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("total_balance")}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -86,7 +93,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    R$ {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} pendentes
+                    R$ {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {t("pending_withdrawals")}
                   </>
                 )}
               </p>
@@ -95,7 +102,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Jobs Ativos</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("active_jobs")}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -105,7 +112,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    {statistics.jobs.completed} concluídos hoje
+                    {statistics.jobs.completed} {t("completed_today")}
                   </>
                 )}
               </p>
@@ -114,7 +121,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Atividade Hoje</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("activity_today")}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -124,7 +131,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    {statistics.activities.newUsersToday} novos usuários
+                    {statistics.activities.newUsersToday} {t("new_users_today")}
                   </>
                 )}
               </p>
@@ -134,13 +141,21 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="withdrawals">Saques</TabsTrigger>
-            <TabsTrigger value="verifications">Verificações</TabsTrigger>
-            <TabsTrigger value="balances">Saldos</TabsTrigger>
-            <TabsTrigger value="banking">Dados Bancários</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-7"> {/* Increased grid-cols to 7 */}
+            <TabsTrigger value="overview">{t("overview_tab")}</TabsTrigger>
+            <TabsTrigger value="users">{t("users_tab")}</TabsTrigger>
+            <TabsTrigger value="withdrawals">{t("withdrawals_tab")}</TabsTrigger>
+            <TabsTrigger value="verifications">{t("verifications_tab")}</TabsTrigger>
+            <TabsTrigger value="balances">{t("balances_tab")}</TabsTrigger>
+            <TabsTrigger value="banking">{t("banking_data_tab")}</TabsTrigger>
+            <TabsTrigger value="reports"> {/* New tab for reports */}
+              {t("reports_tab")}
+              {pendingReportsCount > 0 && (
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {pendingReportsCount}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -149,17 +164,17 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                    Ações Pendentes
+                    {t("pending_actions")}
                   </CardTitle>
                   <CardDescription>
-                    Itens que precisam da sua atenção
+                    {t("items_need_attention")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      <span className="text-sm">Saques pendentes</span>
+                      <span className="text-sm">{t("pending_withdrawals_short")}</span>
                     </div>
                     <Badge variant="secondary">
                       {statsLoading ? '...' : '5'}
@@ -168,7 +183,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <FileCheck className="h-4 w-4" />
-                      <span className="text-sm">Verificações pendentes</span>
+                      <span className="text-sm">{t("pending_verifications")}</span>
                     </div>
                     <Badge variant="secondary">
                       {statsLoading ? '...' : '12'}
@@ -177,10 +192,19 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span className="text-sm">Usuários suspensos</span>
+                      <span className="text-sm">{t("suspended_users")}</span>
                     </div>
                     <Badge variant="destructive">
                       {statsLoading ? '...' : statistics?.users.suspended}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm">{t("pending_reports")}</span>
+                    </div>
+                    <Badge variant="destructive">
+                      {pendingReportsCount}
                     </Badge>
                   </div>
                 </CardContent>
@@ -190,27 +214,27 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    Resumo Financeiro
+                    {t("financial_summary")}
                   </CardTitle>
                   <CardDescription>
-                    Movimentação financeira da plataforma
+                    {t("platform_financial_movement")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Depósitos totais</span>
+                    <span className="text-sm">{t("total_deposits")}</span>
                     <span className="font-medium">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.totalDeposits.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Saques realizados</span>
+                    <span className="text-sm">{t("total_withdrawals")}</span>
                     <span className="font-medium">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.totalWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Taxas da plataforma</span>
+                    <span className="text-sm">{t("platform_fees")}</span>
                     <span className="font-medium text-green-600">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
@@ -238,6 +262,10 @@ const AdminDashboard = () => {
           
           <TabsContent value="banking">
             <AdminBanking />
+          </TabsContent>
+
+          <TabsContent value="reports"> {/* New tab content */}
+            <AdminReports />
           </TabsContent>
         </Tabs>
       </div>

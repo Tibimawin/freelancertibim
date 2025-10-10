@@ -1,4 +1,5 @@
 import { User } from './firebase';
+import { Report } from './firebase'; // Import Report type from firebase.ts
 
 // Admin types
 export interface AdminUser {
@@ -12,7 +13,7 @@ export interface AdminUser {
 }
 
 export interface AdminPermission {
-  resource: 'users' | 'withdrawals' | 'jobs' | 'transactions' | 'statistics';
+  resource: 'users' | 'withdrawals' | 'jobs' | 'transactions' | 'statistics' | 'reports'; // Added 'reports'
   actions: ('read' | 'write' | 'delete' | 'approve')[];
 }
 
@@ -94,6 +95,7 @@ export interface AdminStatistics {
     newJobsToday: number;
     withdrawalsToday: number;
     transactionsToday: number;
+    pendingReports: number; // Added pending reports count
   };
 }
 
@@ -122,3 +124,5 @@ export interface AdminUserView extends User {
   pendingWithdrawals: number;
   riskScore: number; // 0-100, calculado baseado em atividades
 }
+
+export { Report }; // Export Report type for use in admin hooks

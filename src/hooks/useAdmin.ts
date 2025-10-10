@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { AdminService } from '@/services/admin';
 import { AdminWithdrawalService } from '@/services/adminWithdrawals';
 import { AdminVerificationService } from '@/services/adminVerification';
+import { ReportService } from '@/services/reportService'; // Import ReportService
 import { 
   AdminUserView, 
   WithdrawalRequest, 
   UserVerification, 
-  AdminStatistics 
+  AdminStatistics,
+  Report // Import Report type
 } from '@/types/admin';
 
 export const useAdminUsers = () => {
@@ -208,6 +210,55 @@ export const useAdminVerifications = () => {
     fetchVerifications,
     approveVerification,
     rejectVerification
+  };
+};
+
+export const useAdminReports = () => {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReports = async (options?: { status?: 'pending' | 'in_review' | 'approved' | 'rejected' | 'all'; limit?: number }) => {
+    try {
+      setLoading(true);
+      const fetchedReports = await ReportService.getReports(options);
+      setReports(fetchedReports);
+      setError(null);
+    } catch (err) {
+      setError('Erro ao carregar denúncias');
+      console.error('Error fetching reports:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reviewReport = async (
+    reportId: string,
+    decision: 'approved' | 'rejected',
+    reviewerId: string,
+    reviewerName: string,
+    adminNotes?: string,
+    resolution?: string
+  ) => {
+    try {
+      await ReportService.reviewReport(reportId, decision, reviewerId, reviewerName, adminNotes, resolution);
+      await fetchReports(); // Refresh the list
+    } catch (err) {
+      console.error('Error reviewing report:', err);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  return {
+    reports,
+    loading,
+    error,
+    fetchReports,
+    reviewReport
   };
 };
 

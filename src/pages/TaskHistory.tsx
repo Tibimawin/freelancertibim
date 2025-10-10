@@ -13,7 +13,8 @@ import {
   Monitor, 
   Globe, 
   DollarSign,
-  Calendar
+  Calendar,
+  Flag // Adicionado Flag para o ícone de denúncia
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ import { ApplicationService } from "@/services/applicationService";
 import { JobService } from "@/services/firebase";
 import { Application, Job } from "@/types/firebase";
 import Header from "@/components/Header";
+import ReportModal from "@/components/ReportModal"; // Importar o ReportModal
 import { useTranslation } from 'react-i18next';
 
 const TaskHistory = () => {
@@ -29,6 +31,8 @@ const TaskHistory = () => {
   const [applications, setApplications] = useState<(Application & { job?: Job })[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedApplicationForReport, setSelectedApplicationForReport] = useState<(Application & { job?: Job }) | null>(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -116,6 +120,11 @@ const TaskHistory = () => {
       default:
         return applications;
     }
+  };
+
+  const handleReportClick = (app: Application & { job?: Job }) => {
+    setSelectedApplicationForReport(app);
+    setShowReportModal(true);
   };
 
   if (loading) {
@@ -224,6 +233,21 @@ const TaskHistory = () => {
                           </span>
                         </div>
                       )}
+
+                      {/* Botão de Denúncia */}
+                      {app.job?.posterId && app.job?.posterId !== currentUser?.uid && (app.status === 'submitted' || app.status === 'rejected') && (
+                        <div className="mt-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                            onClick={() => handleReportClick(app)}
+                          >
+                            <Flag className="h-4 w-4 mr-2" />
+                            {t("report_contractor")}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -298,6 +322,20 @@ const TaskHistory = () => {
                       {t("submit_proofs")}
                     </Button>
                   )}
+                  {/* Botão de Denúncia para tarefas pendentes */}
+                  {app.job?.posterId && app.job?.posterId !== currentUser?.uid && (
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                        onClick={() => handleReportClick(app)}
+                      >
+                        <Flag className="h-4 w-4 mr-2" />
+                        {t("report_contractor")}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -336,12 +374,38 @@ const TaskHistory = () => {
                       </div>
                     )}
                   </div>
+                  {/* Botão de Denúncia para tarefas rejeitadas */}
+                  {app.job?.posterId && app.job?.posterId !== currentUser?.uid && (
+                    <div className="mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                        onClick={() => handleReportClick(app)}
+                      >
+                        <Flag className="h-4 w-4 mr-2" />
+                        {t("report_contractor")}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedApplicationForReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          applicationId={selectedApplicationForReport.id}
+          jobId={selectedApplicationForReport.jobId}
+          reportedUserId={selectedApplicationForReport.job?.posterId}
+          reportedUserName={selectedApplicationForReport.job?.posterName}
+          reportedUserEmail={selectedApplicationForReport.job?.posterId ? "email-do-contratante@example.com" : undefined} // Placeholder, ideally fetch from user data
+        />
+      )}
     </div>
   );
 };

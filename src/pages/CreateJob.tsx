@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +29,8 @@ import {
   ShieldCheck,
   Image,
   Link,
-  Type
+  Type,
+  Info
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
@@ -163,10 +164,10 @@ const CreateJob = () => {
     }
 
     // Validações básicas
-    if (!formData.title || !formData.description || !formData.bounty || !formData.platform) {
+    if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty) {
       toast({
         title: t("error"),
-        description: t("fill_all_required_fields"),
+        description: t("fill_all_required_fields"), // Assuming this translation exists
         variant: "destructive",
       });
       return;
@@ -206,8 +207,8 @@ const CreateJob = () => {
         posterId: currentUser.uid,
         posterName: userData.name,
         bounty: parseFloat(formData.bounty),
-        platform: formData.platform as 'iOS' | 'Android' | 'Web',
-        difficulty: formData.difficulty as 'Fácil' | 'Médio' | 'Difícil',
+        platform: formData.platform as 'iOS' | 'Android' | 'Web', // Explicit cast
+        difficulty: formData.difficulty as 'Fácil' | 'Médio' | 'Difícil', // Explicit cast
         requirements: formData.requirements,
         attachments: [],
         status: 'active' as const,
@@ -259,15 +260,14 @@ const CreateJob = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">{t("create_job_title")}</h1>
-                <p className="text-muted-foreground">{t("create_job_description")}</p>
-              </div>
+          <div className="flex items-center mb-8">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mr-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("back")}
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">{t("create_job")}</h1>
+              <p className="text-muted-foreground">{t("create_job_description")}</p>
             </div>
           </div>
 
@@ -282,6 +282,7 @@ const CreateJob = () => {
                       <FileText className="h-5 w-5 text-electric-purple" />
                       <span>{t("basic_information")}</span>
                     </CardTitle>
+                    <CardDescription>{t("basic_information_description")}</CardDescription> {/* Assuming this translation exists */}
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -378,9 +379,9 @@ const CreateJob = () => {
                       <ListOrdered className="h-5 w-5 text-cosmic-blue" />
                       <span>{t("detailed_instructions")}</span>
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <CardDescription>
                       {t("detailed_instructions_description")}
-                    </p>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
@@ -399,7 +400,7 @@ const CreateJob = () => {
                       <div className="space-y-3">
                         {formData.detailedInstructions.map((instruction) => (
                           <div key={instruction.id} className="flex items-start space-x-3 p-3 border rounded-lg bg-muted/50">
-                            <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                            <div className="bg-electric-purple/10 text-electric-purple border border-electric-purple/20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
                               {instruction.step}
                             </div>
                             <div className="flex-1">
@@ -428,9 +429,9 @@ const CreateJob = () => {
                       <ShieldCheck className="h-5 w-5 text-star-glow" />
                       <span>{t("proof_requirements")}</span>
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <CardDescription>
                       {t("proof_requirements_description")}
-                    </p>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -533,10 +534,13 @@ const CreateJob = () => {
                 {/* Requisitos Gerais */}
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>
-                    <CardTitle>{t("general_requirements")}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Info className="h-5 w-5 text-cosmic-blue" />
+                      <span>{t("general_requirements")}</span>
+                    </CardTitle>
+                    <CardDescription>
                       {t("general_requirements_description")}
-                    </p>
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
@@ -573,7 +577,13 @@ const CreateJob = () => {
                 {/* Detalhes Adicionais */}
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>
-                    <CardTitle>{t("additional_details")}</CardTitle>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5 text-star-glow" />
+                      <span>{t("additional_details")}</span>
+                    </CardTitle>
+                    <CardDescription>
+                      {t("additional_details_description")} {/* Assuming this translation exists */}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -633,6 +643,7 @@ const CreateJob = () => {
                       <DollarSign className="h-5 w-5 text-electric-purple" />
                       <span>{t("bounty_value")}</span>
                     </CardTitle>
+                    <CardDescription>{t("bounty_value_description")}</CardDescription> {/* Assuming this translation exists */}
                   </CardHeader>
                   <CardContent>
                     <div>
@@ -658,7 +669,10 @@ const CreateJob = () => {
                 {/* Resumo */}
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>
-                    <CardTitle>{t("job_summary")}</CardTitle>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="h-5 w-5 text-cosmic-blue" />
+                      <span>{t("job_summary")}</span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">

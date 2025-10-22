@@ -25,6 +25,9 @@ interface User {
   updatedAt: Date;
   jobsPosted?: number;
   settings?: UserSettings;
+  // Campos de Referência
+  referralCode?: string;
+  referredBy?: string;
 }
 
 export interface UserSettings {
@@ -129,12 +132,12 @@ export interface ProofSubmission {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'escrow' | 'payout' | 'fee' | 'refund';
+  type: 'deposit' | 'escrow' | 'payout' | 'fee' | 'refund' | 'referral_reward';
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed';
   description: string;
-  provider?: 'coinbase' | 'pix' | 'bank';
+  provider?: 'coinbase' | 'pix' | 'bank' | 'system';
   metadata?: {
     jobId?: string;
     applicationId?: string;
@@ -238,6 +241,17 @@ export interface Report {
   reviewedBy?: string;
   adminNotes?: string;
   resolution?: string; // Admin's decision/action taken
+}
+
+// Referral types
+export interface Referral {
+  id: string;
+  referrerId: string;
+  referredId: string;
+  status: 'pending' | 'completed' | 'failed';
+  rewardAmount: number;
+  createdAt: Date;
+  completedAt?: Date;
 }
 
 export { User };

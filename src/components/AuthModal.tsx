@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, Users } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface AuthModalProps {
@@ -28,7 +28,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     name: "", 
     email: "", 
     password: "", 
-    confirmPassword: ""
+    confirmPassword: "",
+    referralCode: "" // Novo campo
   });
   const [resetForm, setResetForm] = useState({ email: "" });
 
@@ -80,7 +81,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setLoading(true);
 
     try {
-      await signUp(signUpForm.email, signUpForm.password, signUpForm.name);
+      await signUp(signUpForm.email, signUpForm.password, signUpForm.name, signUpForm.referralCode.toUpperCase());
       toast({
         title: t("account_created_success"),
         description: t("welcome_freelincer_journey"),
@@ -277,6 +278,21 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         value={signUpForm.confirmPassword}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                         required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Novo campo de código de referência */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-referral">{t("referral_code_optional")}</Label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="signup-referral"
+                        placeholder={t("referral_code_placeholder")}
+                        className="pl-10 bg-input border-border text-foreground uppercase"
+                        value={signUpForm.referralCode}
+                        onChange={(e) => setSignUpForm(prev => ({ ...prev, referralCode: e.target.value }))}
                       />
                     </div>
                   </div>

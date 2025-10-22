@@ -11,15 +11,28 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/firebase';
 import { NotificationService } from './notificationService'; // Import NotificationService
+import { ReferralService } from './referralService'; // Import ReferralService
 
 export class AuthService {
-  static async signUp(email: string, password: string, name: string) {
+  static async signUp(email: string, password: string, name: string, referralCode?: string) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
       // Update Firebase Auth profile
       await updateProfile(firebaseUser, { displayName: name });
+
+      // 1. Gerar código de referência único para o novo usuário
+      const newReferralCode = await ReferralService.generateUniqueCode();
+      
+      // 2. Verificar se há um código de indicação sendo usado
+      let referredBy: string | undefined;
+      if (referralCode) {
+        const referrerId = await ReferralService.getReferrerIdByCode(referralCode);
+        if (referrerId) {
+          referredBy = referrerId;
+        }
+      }
 
       // Create user document in Firestore
       const userData: Omit<User, 'id'> = {
@@ -33,9 +46,16 @@ export class AuthService {
         approvalRate: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        referralCode: newReferralCode, // Salvar o código gerado
+        referredBy: referredBy, // Salvar quem indicou, se houver
       };
 
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+      
+      // 3. Registrar a referência se o usuário foi indicado
+      if (referredBy) {
+        await ReferralService.registerReferral(referredBy, firebaseUser.uid);
+      }
 
       return { user: firebaseUser, userData };
     } catch (error) {
@@ -124,6 +144,8 @@ export class AuthService {
           location: raw.location,
           skills: raw.skills ?? [],
           settings: raw.settings, // Ensure settings are loaded
+          referralCode: raw.referralCode,
+          referredBy: raw.referredBy,
         } as User;
         
         return user;

@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminSetup from "./pages/AdminSetup";
 import TaskHistory from "./pages/TaskHistory";
 import ManageApplications from "./pages/ManageApplications";
+import Referral from "./pages/Referral";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/task-history" element={<TaskHistory />} />
             <Route path="/manage-applications" element={<ManageApplications />} />
             <Route path="/admin-setup" element={<AdminSetup />} />
+            <Route path="/referral" element={<Referral />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

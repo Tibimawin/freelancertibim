@@ -83,7 +83,7 @@ const JobCard = ({
         </div>
         <div className="text-right">
           <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} KZ</p>
-          <p className="text-sm text-muted-foreground">{t("applicants count", { count: applicants })}</p>
+          <p className="text-sm text-muted-foreground">{t("applicants_count", { count: applicants })}</p>
         </div>
       </div>
 
@@ -118,14 +118,14 @@ const JobCard = ({
 
       <div className="flex items-center justify-between">
         <div className="text-sm">
-          <span className="text-muted-foreground">{t("posted by")} </span>
+          <span className="text-muted-foreground">{t("posted_by")} </span>
           <span className="font-medium text-foreground">{postedBy}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <JobApplyButton jobId={id} posterId={posterId} />
           <div className="text-sm text-primary hover:text-primary-hover transition-colors">
-            {t("view details")} →
+            {t("view_details")} →
           </div>
         </div>
       </div>

@@ -55,16 +55,16 @@ const Index = () => {
             {/* Quick Stats */}
             {userData && (
               <div className="rounded-xl bg-card p-6 shadow-md border border-border">
-                <h3 className="text-lg font-semibold text-card-foreground mb-4">{t("your stats")}</h3>
+                <h3 className="text-lg font-semibold text-card-foreground mb-4">{t("your_stats")}</h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t("completed tasks")}</span>
+                    <span className="text-sm text-muted-foreground">{t("completed_tasks")}</span>
                     <span className="font-semibold text-foreground">{userData.completedTests || 0}</span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t("average rating")}</span>
+                    <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
                     <div className="flex items-center space-x-1">
                       <span className="font-semibold text-foreground">{(userData.rating || 0).toFixed(1)}</span>
                       <TrendingUp className="h-3 w-3 text-success" />
@@ -72,14 +72,14 @@ const Index = () => {
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t("approval rate")}</span>
+                    <span className="text-sm text-muted-foreground">{t("approval_rate")}</span>
                     <span className="font-semibold text-success">{userData.approvalRate || 0}%</span>
                   </div>
                   
                    <div className="space-y-2">
                      <div className="flex items-center justify-between">
                        <span className="text-sm text-muted-foreground">
-                         {userData.currentMode === 'tester' ? t("available balance") : t("current balance")}
+                         {userData.currentMode === 'tester' ? t("available_balance") : t("current_balance")}
                        </span>
                        <span className="font-semibold text-foreground">
                          {userData.currentMode === 'tester' 
@@ -91,7 +91,7 @@ const Index = () => {
                      
                      {userData.currentMode === 'tester' && (
                        <div className="flex items-center justify-between">
-                         <span className="text-sm text-muted-foreground">{t("pending balance")}</span>
+                         <span className="text-sm text-muted-foreground">{t("pending_balance")}</span>
                          <span className="font-medium text-warning">
                            {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ
                          </span>
@@ -107,14 +107,14 @@ const Index = () => {
                     className="flex-1 glow-effect"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    {t("create job")}
+                    {t("create_job")}
                   </Button>
                   <Button 
                     onClick={() => navigate('/manage-applications')}
                     variant="outline"
                     className="flex-1 border-primary/50 text-primary hover:bg-primary/10"
                   >
-                    {t("manage applications")}
+                    {t("manage_applications")}
                   </Button>
                 </div>
               )}
@@ -123,12 +123,12 @@ const Index = () => {
 
             {/* Tips Card */}
             <div className="rounded-xl bg-gradient-secondary p-6 border border-border/50">
-              <h3 className="text-lg font-semibold text-card-foreground mb-3">💡 {t("tip of the day")}</h3>
+              <h3 className="text-lg font-semibold text-card-foreground mb-3">💡 {t("tip_of_the_day")}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {t("tip message")}
+                {t("tip_message")}
               </p>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                {t("tip number")}
+                {t("tip_number")}
               </Badge>
             </div>
           </div>
@@ -138,8 +138,8 @@ const Index = () => {
             {/* Filter Section */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">{t("available tasks")}</h2>
-                <p className="text-muted-foreground">{t("find opportunities")}</p>
+                <h2 className="text-2xl font-bold text-foreground mb-2">{t("available_tasks")}</h2>
+                <p className="text-muted-foreground">{t("find_opportunities")}</p>
               </div>
               
               {/* Mostrar o botão de filtro em mobile também */}
@@ -237,8 +237,8 @@ const Index = () => {
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
                       {difficultyFilter 
-                        ? t("no tasks for difficulty", { difficulty: difficultyFilter })
-                        : t("no tasks found")}
+                        ? t("no_tasks_for_difficulty", { difficulty: difficultyFilter })
+                        : t("no_tasks_found")}
                     </p>
                   </div>
                 )}
@@ -260,8 +260,8 @@ const Index = () => {
                     <div className="text-center py-12">
                       <p className="text-muted-foreground">
                         {difficultyFilter 
-                          ? t("no tasks for platform difficulty", { platform: platform, difficulty: difficultyFilter })
-                          : t("no tasks for platform", { platform: platform })}
+                          ? t("no_tasks_for_platform_difficulty", { platform: platform, difficulty: difficultyFilter })
+                          : t("no_tasks_for_platform", { platform: platform })}
                       </p>
                     </div>
                   )}
@@ -272,7 +272,7 @@ const Index = () => {
             {/* Load More */}
             <div className="text-center mt-8">
               <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10">
-                {t("load more tasks")}
+                {t("load_more_tasks")}
               </Button>
             </div>
           </div>

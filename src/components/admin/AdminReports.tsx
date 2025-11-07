@@ -62,13 +62,13 @@ const AdminReports = () => {
         adminNotes,
         resolution
       );
-      toast.success(actionDialog.type === 'approve' ? t('report approved success') : t('report rejected success'));
+      toast.success(actionDialog.type === 'approve' ? t('report_approved_success') : t('report_rejected_success'));
       
       setActionDialog({ type: null, report: null });
       setAdminNotes('');
       setResolution('');
     } catch (error) {
-      toast.error(t('error processing report'));
+      toast.error(t('error_processing_report'));
       console.error('Error processing report:', error);
     }
   };
@@ -82,10 +82,10 @@ const AdminReports = () => {
     };
     
     const labels: Record<string, string> = {
-      pending: t('pending status'),
-      in_review: t('in review status'),
-      approved: t('approved status'),
-      rejected: t('rejected status')
+      pending: t('pending_status'),
+      in_review: t('in_review_status'),
+      approved: t('approved_status'),
+      rejected: t('rejected_status')
     };
 
     return (
@@ -117,7 +117,7 @@ const AdminReports = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder={t('search reports placeholder')}
+                  placeholder={t('search_reports_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -127,14 +127,14 @@ const AdminReports = () => {
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder={t('filter by status')} />
+                <SelectValue placeholder={t('filter_by_status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('all statuses')}</SelectItem>
-                <SelectItem value="pending">{t('pending status')}</SelectItem>
-                <SelectItem value="in_review">{t('in review status')}</SelectItem>
-                <SelectItem value="approved">{t('approved status')}</SelectItem>
-                <SelectItem value="rejected">{t('rejected status')}</SelectItem>
+                <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                <SelectItem value="pending">{t('pending_status')}</SelectItem>
+                <SelectItem value="in_review">{t('in_review_status')}</SelectItem>
+                <SelectItem value="approved">{t('approved_status')}</SelectItem>
+                <SelectItem value="rejected">{t('rejected_status')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -145,7 +145,7 @@ const AdminReports = () => {
       <div className="grid gap-4">
         {filteredReports.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">{t('no reports found')}</p>
+            <p className="text-muted-foreground">{t('no_reports_found')}</p>
           </div>
         ) : (
           filteredReports.map((report) => (
@@ -169,13 +169,13 @@ const AdminReports = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {t('submitted on')}: {report.submittedAt.toLocaleDateString('pt-BR')}
+                        {t('submitted_on')}: {report.submittedAt.toLocaleDateString('pt-BR')}
                       </div>
                     </div>
                     
                     {report.adminNotes && (
                       <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                        <strong>{t('admin notes')}:</strong> {report.adminNotes}
+                        <strong>{t('admin_notes')}:</strong> {report.adminNotes}
                       </div>
                     )}
                   </div>
@@ -187,7 +187,7 @@ const AdminReports = () => {
                       onClick={() => setSelectedReport(report)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      {t('view details')}
+                      {t('view_details')}
                     </Button>
                     
                     {report.status === 'pending' && (
@@ -198,7 +198,7 @@ const AdminReports = () => {
                           onClick={() => setActionDialog({ type: 'approve', report })}
                         >
                           <Check className="h-4 w-4 mr-1" />
-                          {t('approve button')}
+                          {t('approve_button')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -206,7 +206,7 @@ const AdminReports = () => {
                           onClick={() => setActionDialog({ type: 'reject', report })}
                         >
                           <X className="h-4 w-4 mr-1" />
-                          {t('reject button')}
+                          {t('reject_button')}
                         </Button>
                       </>
                     )}
@@ -225,9 +225,9 @@ const AdminReports = () => {
       >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t('report details')}</DialogTitle>
+            <DialogTitle>{t('report_details')}</DialogTitle>
             <DialogDescription>
-              {t('full report info')}
+              {t('full_report_info')}
             </DialogDescription>
           </DialogHeader>
 
@@ -250,7 +250,7 @@ const AdminReports = () => {
                   <p className="font-medium">{selectedReport.reason}</p>
                 </div>
                 <div>
-                  <Label>{t('overall status')}</Label>
+                  <Label>{t('overall_status')}</Label>
                   <div className="pt-1">
                     {getStatusBadge(selectedReport.status)}
                   </div>
@@ -259,20 +259,20 @@ const AdminReports = () => {
 
               {/* Description */}
               <div>
-                <Label>{t('detailed description')}</Label>
+                <Label>{t('detailed_description')}</Label>
                 <p className="bg-muted p-3 rounded text-sm mt-1">{selectedReport.description}</p>
               </div>
 
               {/* Related Info */}
               {(selectedReport.applicationId || selectedReport.jobId) && (
                 <div>
-                  <Label>{t('related info')}</Label>
+                  <Label>{t('related_info')}</Label>
                   <div className="bg-muted p-3 rounded text-sm mt-1 space-y-1">
                     {selectedReport.jobId && (
-                      <p><strong>{t('job id')}:</strong> {selectedReport.jobId}</p>
+                      <p><strong>{t('job_id')}:</strong> {selectedReport.jobId}</p>
                     )}
                     {selectedReport.applicationId && (
-                      <p><strong>{t('application id')}:</strong> {selectedReport.applicationId}</p>
+                      <p><strong>{t('application_id')}:</strong> {selectedReport.applicationId}</p>
                     )}
                   </div>
                 </div>
@@ -284,12 +284,12 @@ const AdminReports = () => {
                 <div className="mt-2 space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>{t('submitted at')}: {selectedReport.submittedAt.toLocaleString('pt-BR')}</span>
+                    <span>{t('submitted_at')}: {selectedReport.submittedAt.toLocaleString('pt-BR')}</span>
                   </div>
                   {selectedReport.reviewedAt && (
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4" />
-                      <span>{t('reviewed at')}: {selectedReport.reviewedAt.toLocaleString('pt-BR')}</span>
+                      <span>{t('reviewed_at')}: {selectedReport.reviewedAt.toLocaleString('pt-BR')}</span>
                     </div>
                   )}
                 </div>
@@ -297,7 +297,7 @@ const AdminReports = () => {
 
               {selectedReport.adminNotes && (
                 <div>
-                  <Label>{t('admin notes label')}</Label>
+                  <Label>{t('admin_notes_label')}</Label>
                   <p className="bg-muted p-3 rounded text-sm mt-1">{selectedReport.adminNotes}</p>
                 </div>
               )}
@@ -321,12 +321,12 @@ const AdminReports = () => {
                   onClick={() => setActionDialog({ type: 'reject', report: selectedReport })}
                   variant="destructive"
                 >
-                  {t('reject button')}
+                  {t('reject_button')}
                 </Button>
                 <Button
                   onClick={() => setActionDialog({ type: 'approve', report: selectedReport })}
                 >
-                  {t('approve button')}
+                  {t('approve_button')}
                 </Button>
               </>
             )}
@@ -342,12 +342,12 @@ const AdminReports = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {actionDialog.type === 'approve' ? t('approve report') : t('reject report')}
+              {actionDialog.type === 'approve' ? t('approve_report') : t('reject_report')}
             </DialogTitle>
             <DialogDescription>
               {actionDialog.type === 'approve' 
-                ? t('confirm report approval')
-                : t('confirm report rejection')
+                ? t('confirm_report_approval')
+                : t('confirm_report_rejection')
               }
             </DialogDescription>
           </DialogHeader>
@@ -355,10 +355,10 @@ const AdminReports = () => {
           <div className="space-y-4">
             {actionDialog.type === 'approve' && (
               <div>
-                <Label htmlFor="resolution">{t('resolution action')}</Label>
+                <Label htmlFor="resolution">{t('resolution_action')}</Label>
                 <Textarea
                   id="resolution"
-                  placeholder={t('resolution action placeholder')}
+                  placeholder={t('resolution_action_placeholder')}
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
                   className="min-h-[80px]"
@@ -367,10 +367,10 @@ const AdminReports = () => {
             )}
 
             <div>
-              <Label htmlFor="adminNotes">{t('admin notes label')}</Label>
+              <Label htmlFor="adminNotes">{t('admin_notes_label')}</Label>
               <Textarea
                 id="adminNotes"
-                placeholder={t('admin notes placeholder')}
+                placeholder={t('admin_notes_placeholder')}
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 className="min-h-[80px]"

@@ -30,8 +30,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
     if (!currentUser || !userData || !canApply) {
       if (!isVerified) {
         toast({
-          title: t("verification required"),
-          description: t("verification required apply description"),
+          title: t("verification_required"),
+          description: t("verification_required_apply_description"),
           variant: "destructive",
         });
         navigate('/profile?tab=overview');
@@ -40,7 +40,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       
       toast({
         title: t("error"),
-        description: t("unauthenticated apply"),
+        description: t("unauthenticated_apply"),
         variant: "destructive",
       });
       return;
@@ -54,8 +54,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       
       if (hasApplied) {
         toast({
-          title: t("already applied"),
-          description: t("already applied description"),
+          title: t("already_applied"),
+          description: t("already_applied_description"),
           variant: "destructive",
         });
         return;
@@ -68,7 +68,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       console.error('Error checking application:', error);
       toast({
         title: t("error"),
-        description: t("error checking application"),
+        description: t("error_checking_application"),
         variant: "destructive",
       });
     } finally {
@@ -90,7 +90,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
         className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
       >
         <Lock className="h-4 w-4 mr-2" />
-        {t("verification required short")}
+        {t("verification_required_short")}
       </Button>
     );
   }
@@ -111,7 +111,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       ) : (
         <>
           <Play className="h-4 w-4 mr-2" />
-          {t("do task")}
+          {t("do_task")}
         </>
       )}
     </Button>

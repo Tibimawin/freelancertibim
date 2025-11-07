@@ -45,9 +45,9 @@ const FilterDialog = ({ onFilterChange, currentFilter }: FilterDialogProps) => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("filter tasks")}</DialogTitle>
+          <DialogTitle>{t("filter_tasks")}</DialogTitle>
           <DialogDescription>
-            {t("choose criteria to filter tasks")}
+            {t("choose_criteria_to_filter_tasks")}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,7 +58,7 @@ const FilterDialog = ({ onFilterChange, currentFilter }: FilterDialogProps) => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="" id="all" />
                 <Label htmlFor="all" className="font-normal cursor-pointer">
-                  {t("all difficulties")}
+                  {t("all_difficulties")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -85,7 +85,7 @@ const FilterDialog = ({ onFilterChange, currentFilter }: FilterDialogProps) => {
 
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={handleClear}>
-            {t("clear filters")}
+            {t("clear_filters")}
           </Button>
           <Button onClick={handleApply}>
             {t("apply")}

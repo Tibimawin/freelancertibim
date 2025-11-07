@@ -21,7 +21,7 @@ const WalletCard = () => {
     return (
       <Card className="p-6 bg-gradient-secondary border-border/50">
         <div className="text-center">
-          <p className="text-muted-foreground">{t("login to see wallet")}</p>
+          <p className="text-muted-foreground">{t("login_to_see_wallet")}</p>
         </div>
       </Card>
     );
@@ -90,8 +90,8 @@ const WalletCard = () => {
   const handleWithdrawalClick = () => {
     if (!isVerified) {
       toast({
-        title: t("verification required"),
-        description: t("verification required withdrawal description"),
+        title: t("verification_required"),
+        description: t("verification_required_withdrawal_description"),
         variant: "destructive",
       });
       return;
@@ -99,8 +99,8 @@ const WalletCard = () => {
     
     if (currentBalance < minWithdrawal) {
       toast({
-        title: t("minimum withdrawal not reached"),
-        description: t("minimum withdrawal is", { amount: minWithdrawal }),
+        title: t("minimum_withdrawal_not_reached"),
+        description: t("minimum_withdrawal_is", { amount: minWithdrawal }),
         variant: "destructive",
       });
       return;
@@ -124,7 +124,7 @@ const WalletCard = () => {
           {currentBalance.toFixed(2)} KZ
         </div>
         <p className="text-sm text-muted-foreground">
-          {userData.currentMode === 'tester' ? t("available balance") : t("current balance")}
+          {userData.currentMode === 'tester' ? t("available_balance") : t("current_balance")}
         </p>
         
         {userData.currentMode === 'tester' && userData.testerWallet?.pendingBalance && userData.testerWallet.pendingBalance > 0 && (
@@ -133,7 +133,7 @@ const WalletCard = () => {
               + {userData.testerWallet.pendingBalance.toFixed(2)} KZ {t("pending")}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t("awaiting task approval")}
+              {t("awaiting_task_approval")}
             </p>
           </div>
         )}
@@ -151,12 +151,12 @@ const WalletCard = () => {
             {!isVerified ? (
               <>
                 <Lock className="h-4 w-4 mr-2" />
-                {t("verification required short")}
+                {t("verification_required_short")}
               </>
             ) : (
               <>
                 <TrendingDown className="h-4 w-4 mr-2" />
-                {currentBalance < minWithdrawal ? t("minimum withdrawal not reached") : t("withdraw")}
+                {currentBalance < minWithdrawal ? t("minimum_withdrawal_not_reached") : t("withdraw")}
               </>
             )}
           </Button>
@@ -168,7 +168,7 @@ const WalletCard = () => {
               onClick={() => setDepositModal({ open: true, method: 'express' })}
             >
               <Plus className="h-4 w-4 mr-2" />
-              {t("deposit express")}
+              {t("deposit_express")}
             </Button>
             <Button 
               variant="outline" 
@@ -176,7 +176,7 @@ const WalletCard = () => {
               onClick={() => setDepositModal({ open: true, method: 'iban' })}
             >
               <Banknote className="h-4 w-4 mr-2" />
-              {t("deposit iban")}
+              {t("deposit_iban")}
             </Button>
           </div>
         )}
@@ -184,7 +184,7 @@ const WalletCard = () => {
 
       {/* Recent Transactions */}
       <div>
-        <h3 className="text-sm font-semibold text-card-foreground mb-3">{t("recent transactions")}</h3>
+        <h3 className="text-sm font-semibold text-card-foreground mb-3">{t("recent_transactions")}</h3>
         
         {loading ? (
           <div className="flex items-center justify-center py-6">
@@ -223,9 +223,9 @@ const WalletCard = () => {
               )) 
             ) : (
               <div className="text-center py-6">
-                <p className="text-muted-foreground text-sm">{t("no transactions")}</p>
+                <p className="text-muted-foreground text-sm">{t("no_transactions")}</p>
                 <p className="text-muted-foreground text-xs mt-1">
-                  {t("complete first task")}
+                  {t("complete_first_task")}
                 </p>
               </div>
             )}
@@ -236,7 +236,7 @@ const WalletCard = () => {
       {transactions.length > 3 && (
         <div className="mt-4 pt-4 border-t border-border">
           <Button variant="ghost" className="w-full text-sm text-primary hover:bg-primary/10">
-            {t("view all transactions")}
+            {t("view_all_transactions")}
           </Button>
         </div>
       )}

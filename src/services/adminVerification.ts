@@ -14,7 +14,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserVerification } from '@/types/admin';
-import { NotificationService } from './notificationService'; // Importando NotificationService
 
 export class AdminVerificationService {
   
@@ -52,18 +51,6 @@ export class AdminVerificationService {
       batch.update(userRef, {
         verificationStatus: 'pending',
         updatedAt: Timestamp.now()
-      });
-      
-      // 3. Notificar o Admin sobre nova submissão
-      await NotificationService.createNotification({
-        userId: 'admin',
-        type: 'report_submitted', // Reutilizando o tipo, idealmente seria 'verification_submitted'
-        title: 'Nova Verificação Pendente',
-        message: `O usuário ${userName} submeteu documentos para verificação.`,
-        read: false,
-        metadata: {
-          verificationId: userId,
-        },
       });
 
       await batch.commit();
@@ -201,18 +188,6 @@ export class AdminVerificationService {
         reason: adminNotes || 'Documents approved',
         createdAt: Timestamp.now()
       });
-      
-      // NOTIFICAÇÃO DE APROVAÇÃO
-      await NotificationService.createNotification({
-        userId: verificationData.userId,
-        type: 'verification_approved',
-        title: 'Verificação Aprovada!',
-        message: 'Sua identidade foi verificada com sucesso. Você tem acesso total à plataforma.',
-        read: false,
-        metadata: {
-          verificationId: verificationId,
-        },
-      });
 
       await batch.commit();
     } catch (error) {
@@ -265,20 +240,6 @@ export class AdminVerificationService {
       });
 
       await batch.commit();
-      
-      // NOTIFICAÇÃO DE REJEIÇÃO
-      const reasonMessage = Object.values(rejectionReasons).join('; ') || 'Documentos inválidos ou incompletos.';
-      await NotificationService.createNotification({
-        userId: verificationData.userId,
-        type: 'verification_rejected',
-        title: 'Verificação Rejeitada',
-        message: `Sua verificação foi rejeitada. Motivo: ${reasonMessage}`,
-        read: false,
-        metadata: {
-          verificationId: verificationId,
-        },
-      });
-
     } catch (error) {
       console.error('Error rejecting verification:', error);
       throw error;

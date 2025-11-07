@@ -278,17 +278,21 @@ const AdminWithdrawals = () => {
               <div>
                 <Label>Informações da Conta</Label>
                 <div className="bg-muted p-3 rounded text-sm mt-1">
-                  {selectedWithdrawal.method === 'express' && (
+                  {selectedWithdrawal.method === 'pix' && (
+                    <p><strong>Chave PIX:</strong> {selectedWithdrawal.accountInfo.pixKey}</p>
+                  )}
+                  {selectedWithdrawal.method === 'bank' && selectedWithdrawal.accountInfo.bankAccount && (
                     <>
-                      <p><strong>Nome do Banco:</strong> {selectedWithdrawal.accountInfo.bankName}</p>
-                      <p><strong>Número da Conta:</strong> {selectedWithdrawal.accountInfo.accountNumber}</p>
-                      <p><strong>Titular:</strong> {selectedWithdrawal.accountInfo.accountHolder}</p>
+                      <p><strong>Banco:</strong> {selectedWithdrawal.accountInfo.bankAccount.bank}</p>
+                      <p><strong>Agência:</strong> {selectedWithdrawal.accountInfo.bankAccount.agency}</p>
+                      <p><strong>Conta:</strong> {selectedWithdrawal.accountInfo.bankAccount.account}</p>
+                      <p><strong>Tipo:</strong> {selectedWithdrawal.accountInfo.bankAccount.accountType === 'checking' ? 'Corrente' : 'Poupança'}</p>
                     </>
                   )}
-                  {selectedWithdrawal.method === 'iban' && (
+                  {selectedWithdrawal.method === 'crypto' && selectedWithdrawal.accountInfo.cryptoWallet && (
                     <>
-                      <p><strong>IBAN:</strong> {selectedWithdrawal.accountInfo.iban}</p>
-                      <p><strong>Titular:</strong> {selectedWithdrawal.accountInfo.accountHolder}</p>
+                      <p><strong>Endereço:</strong> {selectedWithdrawal.accountInfo.cryptoWallet.address}</p>
+                      <p><strong>Rede:</strong> {selectedWithdrawal.accountInfo.cryptoWallet.network}</p>
                     </>
                   )}
                 </div>

@@ -72,7 +72,7 @@ const TaskHistory = () => {
       case 'rejected':
         return <Badge className="bg-destructive/10 text-destructive border-destructive/20"><XCircle className="h-3 w-3 mr-1" />{t("rejected")}</Badge>;
       case 'submitted':
-        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />{t("pending analysis")}</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />{t("pending_analysis")}</Badge>;
       case 'accepted':
         return <Badge className="bg-primary/10 text-primary border-primary/20"><AlertCircle className="h-3 w-3 mr-1" />{t("accepted")}</Badge>;
       case 'applied':
@@ -132,7 +132,7 @@ const TaskHistory = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="animate-pulse text-muted-foreground">{t("loading history")}</div>
+          <div className="animate-pulse text-muted-foreground">{t("loading_history")}</div>
         </div>
       </div>
     );
@@ -153,7 +153,7 @@ const TaskHistory = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t("back")}
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">{t("task history")}</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("task_history")}</h1>
         </div>
 
         <Tabs defaultValue="all" className="space-y-6">
@@ -179,9 +179,9 @@ const TaskHistory = () => {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg text-foreground">{app.job?.title || t('task not found')}</CardTitle>
+                        <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {t("applied on")} {new Date(app.appliedAt).toLocaleDateString('pt-BR')}
+                          {t("applied_on")} {new Date(app.appliedAt).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       <div className="text-right space-y-2">
@@ -204,22 +204,22 @@ const TaskHistory = () => {
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                         <span className="flex items-center gap-1 text-muted-foreground">
                           {getPlatformIcon(app.job?.platform)}
-                          <span className="font-medium">{app.job?.platform || t('not available')}</span>
+                          <span className="font-medium">{app.job?.platform || t('not_available')}</span>
                         </span>
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <Badge variant="outline" className={getDifficultyColor(app.job?.difficulty)}>
-                            {t(app.job?.difficulty?.toLowerCase() || 'not available')}
+                            {t(app.job?.difficulty?.toLowerCase() || 'not_available')}
                           </Badge>
                         </span>
                         <span className="flex items-center gap-1 text-muted-foreground">
                           <Clock className="h-4 w-4" />
-                          <span className="font-medium">{app.job?.timeEstimate || t('not available')}</span>
+                          <span className="font-medium">{app.job?.timeEstimate || t('not_available')}</span>
                         </span>
                       </div>
 
                       {app.rejectionReason && (
                         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                          <p className="text-sm text-destructive font-medium">{t("rejection reason")}:</p>
+                          <p className="text-sm text-destructive font-medium">{t("rejection_reason")}:</p>
                           <p className="text-sm text-destructive mt-1">{app.rejectionReason}</p>
                         </div>
                       )}
@@ -228,7 +228,7 @@ const TaskHistory = () => {
                         <div className="text-xs text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           <span>
-                            {app.status === 'approved' ? t('completed on') : t('reviewed on')}{' '}
+                            {app.status === 'approved' ? t('completed_on') : t('reviewed_on')}{' '}
                             {new Date(app.reviewedAt).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
@@ -244,7 +244,7 @@ const TaskHistory = () => {
                             onClick={() => handleReportClick(app)}
                           >
                             <Flag className="h-4 w-4 mr-2" />
-                            {t("report contractor")}
+                            {t("report_contractor")}
                           </Button>
                         </div>
                       )}
@@ -254,7 +254,7 @@ const TaskHistory = () => {
               ))
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">{t("no tasks found history")}</p>
+                <p className="text-muted-foreground">{t("no_tasks_found_history")}</p>
               </div>
             )}
           </TabsContent>
@@ -265,9 +265,9 @@ const TaskHistory = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task not found')}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {t("completed on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date not available')}
+                        {t("completed_on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date_not_available')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
@@ -294,9 +294,9 @@ const TaskHistory = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task not found')}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {app.status === 'submitted' ? t('pending analysis') : t('task accepted submit proofs')}
+                        {app.status === 'submitted' ? t('pending_analysis') : t('task_accepted_submit_proofs')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
@@ -319,7 +319,7 @@ const TaskHistory = () => {
                       onClick={() => navigate(`/job/${app.jobId}`)}
                     >
                       <DollarSign className="h-4 w-4 mr-2" />
-                      {t("submit proofs")}
+                      {t("submit_proofs")}
                     </Button>
                   )}
                   {/* Botão de Denúncia para tarefas pendentes */}
@@ -332,7 +332,7 @@ const TaskHistory = () => {
                         onClick={() => handleReportClick(app)}
                       >
                         <Flag className="h-4 w-4 mr-2" />
-                        {t("report contractor")}
+                        {t("report_contractor")}
                       </Button>
                     </div>
                   )}
@@ -347,9 +347,9 @@ const TaskHistory = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task not found')}</CardTitle>
+                      <CardTitle className="text-lg text-foreground">{app.job?.title || t('task_not_found')}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {t("rejected on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date not available')}
+                        {t("rejected_on")} {app.reviewedAt ? new Date(app.reviewedAt).toLocaleDateString('pt-BR') : t('date_not_available')}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
@@ -369,7 +369,7 @@ const TaskHistory = () => {
                     
                     {app.rejectionReason && (
                       <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                        <p className="text-sm text-destructive font-medium">{t("rejection reason")}:</p>
+                        <p className="text-sm text-destructive font-medium">{t("rejection_reason")}:</p>
                         <p className="text-sm text-destructive mt-1">{app.rejectionReason}</p>
                       </div>
                     )}
@@ -384,7 +384,7 @@ const TaskHistory = () => {
                         onClick={() => handleReportClick(app)}
                       >
                         <Flag className="h-4 w-4 mr-2" />
-                        {t("report contractor")}
+                        {t("report_contractor")}
                       </Button>
                     </div>
                   )}

@@ -72,10 +72,10 @@ const AdminReferrals = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            {t("referral program")} - {t("admin dashboard")}
+            {t("referral_program")} - {t("admin_dashboard")}
           </CardTitle>
           <CardDescription>
-            {t("monitor referral program performance")}
+            Monitore o desempenho do programa de indicação e as recompensas pagas.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -83,7 +83,7 @@ const AdminReferrals = () => {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('search referrals placeholder')}
+                placeholder="Buscar por ID do indicador ou indicado..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
@@ -91,11 +91,11 @@ const AdminReferrals = () => {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t('filter by status')} />
+                <SelectValue placeholder={t('filter_by_status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('all statuses')}</SelectItem>
-                <SelectItem value="pending">{t('pending status')}</SelectItem>
+                <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                <SelectItem value="pending">{t('pending_status')}</SelectItem>
                 <SelectItem value="completed">{t('completed')}</SelectItem>
               </SelectContent>
             </Select>
@@ -108,11 +108,11 @@ const AdminReferrals = () => {
             {loading ? (
               <div className="text-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground mt-2">{t('loading referrals')}</p>
+                <p className="text-muted-foreground mt-2">Carregando referências...</p>
               </div>
             ) : filteredReferrals.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">{t('no referrals found')}</p>
+                <p className="text-muted-foreground">Nenhuma referência encontrada.</p>
               </div>
             ) : (
               filteredReferrals.map((ref) => (
@@ -130,17 +130,17 @@ const AdminReferrals = () => {
                     </div>
                     
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      <UserDisplay userId={ref.referrerId} label={t("referrer")} />
-                      <UserDisplay userId={ref.referredId} label={t("referred")} />
+                      <UserDisplay userId={ref.referrerId} label="Indicador" />
+                      <UserDisplay userId={ref.referredId} label="Indicado" />
                     </div>
                     
                     <p className="text-xs text-muted-foreground">
-                      {t('submitted on')}: {ref.createdAt.toLocaleDateString('pt-BR')}
+                      {t('submitted_on')}: {ref.createdAt.toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   
                   <Button variant="ghost" size="sm" disabled>
-                    {t('view details')}
+                    {t('view_details')}
                   </Button>
                 </div>
               ))

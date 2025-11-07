@@ -38,11 +38,15 @@ const AdminJobManager = () => {
       // Por enquanto, vamos usar o JobService.getJobs e aceitar a limitação, mas em um sistema real, o admin teria um endpoint para todos os jobs.
       // Para simular a busca de todos os jobs, vamos assumir que JobService.getJobs pode ser modificado para aceitar 'all' status.
       
+      // Nota: JobService.getJobs só retorna 'active'. Para o admin, precisamos de todos.
+      // Como não posso modificar JobService.getJobs para buscar todos sem um parâmetro 'status: all', vou simular a busca de todos os jobs aqui.
+      // Para fins de demonstração, vou listar os jobs ativos e permitir a filtragem por status.
+      
       const fetchedJobs = await JobService.getJobs({ status: statusFilter === 'all' ? undefined : statusFilter as any });
       setJobs(fetchedJobs);
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      toast.error(t('error loading tasks applications'));
+      toast.error(t('error_loading_tasks_applications'));
     } finally {
       setLoading(false);
     }
@@ -66,12 +70,12 @@ const AdminJobManager = () => {
     setIsDeleting(true);
     try {
       await JobService.deleteJob(jobToDelete.id);
-      toast.success(t('job deleted success', { title: jobToDelete.title }));
+      toast.success(t('job_deleted_success', { title: jobToDelete.title }));
       setJobToDelete(null);
       await fetchJobs(); // Refresh list
     } catch (error) {
       console.error('Error deleting job:', error);
-      toast.error(t('error deleting job'));
+      toast.error(t('error_deleting_job'));
     } finally {
       setIsDeleting(false);
     }
@@ -98,10 +102,10 @@ const AdminJobManager = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Briefcase className="h-5 w-5" />
-            {t("manage jobs")}
+            {t("manage_jobs")}
           </CardTitle>
           <CardDescription>
-            {t("review and manage contractor tasks")}
+            {t("review_and_manage_contractor_tasks")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,7 +113,7 @@ const AdminJobManager = () => {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('search jobs placeholder')}
+                placeholder={t('search_jobs_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
@@ -117,10 +121,10 @@ const AdminJobManager = () => {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t('filter by status')} />
+                <SelectValue placeholder={t('filter_by_status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('all statuses')}</SelectItem>
+                <SelectItem value="all">{t('all_statuses')}</SelectItem>
                 <SelectItem value="active">{t('active')}</SelectItem>
                 <SelectItem value="completed">{t('completed')}</SelectItem>
                 <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
@@ -135,11 +139,11 @@ const AdminJobManager = () => {
             {loading ? (
               <div className="text-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground mt-2">{t('loading jobs')}</p>
+                <p className="text-muted-foreground mt-2">{t('loading_jobs')}</p>
               </div>
             ) : filteredJobs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">{t('no jobs found')}</p>
+                <p className="text-muted-foreground">{t('no_jobs_found')}</p>
               </div>
             ) : (
               filteredJobs.map((job) => (
@@ -190,12 +194,12 @@ const AdminJobManager = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              {t('confirm job deletion')}
+              {t('confirm_job_deletion')}
             </DialogTitle>
             <DialogDescription>
-              {t('job deletion warning', { title: jobToDelete?.title })}
+              {t('job_deletion_warning', { title: jobToDelete?.title })}
               <p className="mt-2 font-medium text-sm text-destructive">
-                {t('job deletion consequence')}
+                {t('job_deletion_consequence')}
               </p>
             </DialogDescription>
           </DialogHeader>
@@ -213,7 +217,7 @@ const AdminJobManager = () => {
               onClick={handleDeleteJob}
               disabled={isDeleting}
             >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : t('confirm delete')}
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : t('confirm_delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

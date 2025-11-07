@@ -46,7 +46,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t("loading dashboard")}</p>
+          <p className="text-muted-foreground">{t("loading_dashboard")}</p>
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("total users")}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("total_users")}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -86,7 +86,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("total balance")}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("total_balance")}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -96,7 +96,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    R$ {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {t("pending withdrawals")}
+                    R$ {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {t("pending_withdrawals")}
                   </>
                 )}
               </p>
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("active jobs")}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("active_jobs")}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    {statistics.jobs.completed} {t("completed today")}
+                    {statistics.jobs.completed} {t("completed_today")}
                   </>
                 )}
               </p>
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("activity today")}</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("activity_today")}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    {statistics.activities.newUsersToday} {t("new users today")}
+                    {statistics.activities.newUsersToday} {t("new_users_today")}
                   </>
                 )}
               </p>
@@ -145,17 +145,17 @@ const AdminDashboard = () => {
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview">{t("overview tab")}</TabsTrigger>
-            <TabsTrigger value="users">{t("users tab")}</TabsTrigger>
+            <TabsTrigger value="overview">{t("overview_tab")}</TabsTrigger>
+            <TabsTrigger value="users">{t("users_tab")}</TabsTrigger>
             <TabsTrigger value="jobs">
               <Briefcase className="h-4 w-4 mr-2" />
-              {t("jobs tab")}
+              {t("jobs_tab")}
             </TabsTrigger>
-            <TabsTrigger value="withdrawals">{t("withdrawals tab")}</TabsTrigger>
-            <TabsTrigger value="verifications">{t("verifications tab")}</TabsTrigger>
-            <TabsTrigger value="balances">{t("balances tab")}</TabsTrigger>
+            <TabsTrigger value="withdrawals">{t("withdrawals_tab")}</TabsTrigger>
+            <TabsTrigger value="verifications">{t("verifications_tab")}</TabsTrigger>
+            <TabsTrigger value="balances">{t("balances_tab")}</TabsTrigger>
             <TabsTrigger value="reports">
-              {t("reports tab")}
+              {t("reports_tab")}
               {pendingReportsCount > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {pendingReportsCount}
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
               )}
             </TabsTrigger>
             <TabsTrigger value="referrals">
-              {t("referral program")}
+              {t("referral_program")}
             </TabsTrigger>
           </TabsList>
 
@@ -173,17 +173,17 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                    {t("pending actions")}
+                    {t("pending_actions")}
                   </CardTitle>
                   <CardDescription>
-                    {t("items need attention")}
+                    {t("items_need_attention")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      <span className="text-sm">{t("pending withdrawals short")}</span>
+                      <span className="text-sm">{t("pending_withdrawals_short")}</span>
                     </div>
                     <Badge variant="secondary">
                       {statsLoading ? '...' : '5'}
@@ -192,7 +192,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <FileCheck className="h-4 w-4" />
-                      <span className="text-sm">{t("pending verifications")}</span>
+                      <span className="text-sm">{t("pending_verifications")}</span>
                     </div>
                     <Badge variant="secondary">
                       {statsLoading ? '...' : '12'}
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span className="text-sm">{t("suspended users")}</span>
+                      <span className="text-sm">{t("suspended_users")}</span>
                     </div>
                     <Badge variant="destructive">
                       {statsLoading ? '...' : statistics?.users.suspended}
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Flag className="h-4 w-4" />
-                      <span className="text-sm">{t("pending reports")}</span>
+                      <span className="text-sm">{t("pending_reports")}</span>
                     </div>
                     <Badge variant="destructive">
                       {pendingReportsCount}
@@ -223,27 +223,27 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    {t("financial summary")}
+                    {t("financial_summary")}
                   </CardTitle>
                   <CardDescription>
-                    {t("platform financial movement")}
+                    {t("platform_financial_movement")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("total deposits")}</span>
+                    <span className="text-sm">{t("total_deposits")}</span>
                     <span className="font-medium">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.totalDeposits.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("total withdrawals")}</span>
+                    <span className="text-sm">{t("total_withdrawals")}</span>
                     <span className="font-medium">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.totalWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("platform fees")}</span>
+                    <span className="text-sm">{t("platform_fees")}</span>
                     <span className="font-medium text-green-600">
                       {statsLoading ? '...' : `R$ ${statistics?.finances.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>

@@ -38,10 +38,10 @@ const Header = () => {
     const diffHours = Math.round(diffMs / (1000 * 60 * 60));
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMinutes < 1) return t("just now");
-    if (diffMinutes < 60) return t("ago minutes", { count: diffMinutes });
-    if (diffHours < 24) return t("ago hours", { count: diffHours });
-    if (diffDays < 7) return t("ago days", { count: diffDays });
+    if (diffMinutes < 1) return t("just_now");
+    if (diffMinutes < 60) return t("ago_minutes", { count: diffMinutes });
+    if (diffHours < 24) return t("ago_hours", { count: diffHours });
+    if (diffDays < 7) return t("ago_days", { count: diffDays });
     return date.toLocaleDateString('pt-BR');
   };
 
@@ -67,11 +67,11 @@ const Header = () => {
             <div className="text-xs text-muted-foreground space-y-1">
               {userData?.currentMode === 'tester' ? (
                 <>
-                  <div>{t("available balance")}: {(userData.testerWallet?.availableBalance || 0).toFixed(2)} KZ</div>
-                  <div>{t("pending balance")}: {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ</div>
+                  <div>{t("available_balance")}: {(userData.testerWallet?.availableBalance || 0).toFixed(2)} KZ</div>
+                  <div>{t("pending_balance")}: {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ</div>
                 </>
               ) : (
-                <div>{t("current balance")}: {(userData?.posterWallet?.balance || 0).toFixed(2)} KZ</div>
+                <div>{t("current_balance")}: {(userData?.posterWallet?.balance || 0).toFixed(2)} KZ</div>
               )}
             </div>
           </div>
@@ -92,13 +92,13 @@ const Header = () => {
         <DropdownMenuItem asChild className="hover:bg-muted/50">
           <Link to="/task-history" className="flex items-center">
             <History className="mr-2 h-4 w-4" />
-            {t("task history")}
+            {t("task_history")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="hover:bg-muted/50">
           <Link to="/referral" className="flex items-center">
             <Users className="mr-2 h-4 w-4" />
-            {t("referral program")}
+            {t("referral_program")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="hover:bg-muted/50">
@@ -159,7 +159,7 @@ const Header = () => {
                 {/* Navigation Links */}
                 <Link to="/" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <Search className="h-4 w-4" />
-                  <span>{t("available tasks")}</span>
+                  <span>{t("available_tasks")}</span>
                 </Link>
                 <Link to="/dashboard" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <BarChart3 className="h-4 w-4" />
@@ -167,7 +167,7 @@ const Header = () => {
                 </Link>
                 <Link to="/task-history" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <History className="h-4 w-4" />
-                  <span>{t("task history")}</span>
+                  <span>{t("task_history")}</span>
                 </Link>
                 <Link to="/profile" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <User className="h-4 w-4" />
@@ -175,13 +175,13 @@ const Header = () => {
                 </Link>
                 <Link to="/referral" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <Users className="h-4 w-4" />
-                  <span>{t("referral program")}</span>
+                  <span>{t("referral_program")}</span>
                 </Link>
 
                 {userData.currentMode === 'poster' && (
                   <Link to="/create-job" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                     <Plus className="h-4 w-4" />
-                    <span>{t("create job")}</span>
+                    <span>{t("create_job")}</span>
                   </Link>
                 )}
                 
@@ -246,7 +246,7 @@ const Header = () => {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder={t("search tasks placeholder")}
+                placeholder={t("search_tasks_placeholder")}
                 className="w-full rounded-lg border border-input bg-input pl-10 pr-4 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground"
               />
             </div>
@@ -260,7 +260,7 @@ const Header = () => {
                   <Button variant="outline" size="sm" asChild className="hidden lg:flex border-primary/50 text-primary hover:bg-primary/10">
                     <Link to="/create-job">
                       <Plus className="h-4 w-4 mr-2" />
-                      {t("create job")}
+                      {t("create_job")}
                     </Link>
                   </Button>
                 )}
@@ -284,17 +284,17 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80 bg-card border-border text-foreground">
                     <div className="flex items-center justify-between p-2">
-                      <p className="text-sm font-medium">{t("notifications count", { count: unreadCount })}</p>
+                      <p className="text-sm font-medium">{t("notifications_count", { count: unreadCount })}</p>
                       {unreadCount > 0 && (
                         <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-auto px-2 py-1 text-xs text-primary hover:bg-primary/10">
-                          {t("mark all as read")}
+                          {t("mark_all_as_read")}
                         </Button>
                       )}
                     </div>
                     <DropdownMenuSeparator className="bg-border" />
                     <ScrollArea className="h-[200px]">
                       {notificationsLoading ? (
-                        <div className="p-4 text-center text-muted-foreground text-sm">{t("loading notifications")}</div>
+                        <div className="p-4 text-center text-muted-foreground text-sm">{t("loading_notifications")}</div>
                       ) : notifications.length > 0 ? (
                         notifications.map((notification) => (
                           <DropdownMenuItem 
@@ -308,7 +308,7 @@ const Header = () => {
                           </DropdownMenuItem>
                         ))
                       ) : (
-                        <div className="p-4 text-center text-muted-foreground text-sm">{t("no notifications")}</div>
+                        <div className="p-4 text-center text-muted-foreground text-sm">{t("no_notifications")}</div>
                       )}
                     </ScrollArea>
                   </DropdownMenuContent>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote, CreditCard, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote, CreditCard, DollarSign, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/hooks/useFirebase";
 import { Transaction } from "@/types/firebase";
@@ -33,6 +33,10 @@ const WalletCard = () => {
   const currentBalance = userData.currentMode === 'tester'
     ? (userData.testerWallet?.availableBalance || 0)
     : (userData.posterWallet?.balance || 0);
+    
+  const isVerified = userData.verificationStatus === 'approved';
+  const minWithdrawal = 2000;
+
   const formatDate = (date: any) => {
     if (date?.toDate) {
       return date.toDate().toLocaleString('pt-BR', {
@@ -83,6 +87,29 @@ const WalletCard = () => {
     }
   };
 
+  const handleWithdrawalClick = () => {
+    if (!isVerified) {
+      toast({
+        title: t("verification_required"),
+        description: t("verification_required_withdrawal_description"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentBalance < minWithdrawal) {
+      toast({
+        title: t("minimum_withdrawal_not_reached"),
+        description: t("minimum_withdrawal_is", { amount: minWithdrawal }),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Se verificado e com saldo, o modal de saque será aberto pelo botão no Header
+    // Aqui, apenas notificamos se o saldo for baixo, se não, o Header lida com isso.
+  };
+
   return (
     <Card className="p-6 bg-card border-border shadow-md">
       {/* Balance Section */}
@@ -117,22 +144,21 @@ const WalletCard = () => {
         {userData.currentMode === 'tester' ? (
           <Button 
             variant="outline" 
-            className="w-full border-primary/50 text-primary hover:bg-primary/10"
-            disabled={currentBalance < 2000}
-            onClick={() => {
-              if (currentBalance < 2000) {
-                toast({
-                  title: t("minimum_withdrawal_not_reached"),
-                  description: t("minimum_withdrawal_is", { amount: 2000 }),
-                  variant: "destructive",
-                });
-              } else {
-                // Open withdrawal modal - this will be handled by the header button
-              }
-            }}
+            className={`w-full ${isVerified && currentBalance >= minWithdrawal ? 'border-primary/50 text-primary hover:bg-primary/10' : 'border-destructive/50 text-destructive opacity-70 cursor-not-allowed'}`}
+            disabled={!isVerified || currentBalance < minWithdrawal}
+            onClick={handleWithdrawalClick}
           >
-            <TrendingDown className="h-4 w-4 mr-2" />
-            {currentBalance < 2000 ? t("minimum_withdrawal_not_reached") : t("withdraw")}
+            {!isVerified ? (
+              <>
+                <Lock className="h-4 w-4 mr-2" />
+                {t("verification_required_short")}
+              </>
+            ) : (
+              <>
+                <TrendingDown className="h-4 w-4 mr-2" />
+                {currentBalance < minWithdrawal ? t("minimum_withdrawal_not_reached") : t("withdraw")}
+              </>
+            )}
           </Button>
         ) : (
           <div className="space-y-3">

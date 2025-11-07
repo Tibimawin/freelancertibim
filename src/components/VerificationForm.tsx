@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Cloud, Upload, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { Clock, Upload, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { CloudinaryService } from '@/lib/cloudinary';
@@ -129,6 +129,7 @@ const VerificationForm = () => {
   };
 
   const verificationStatus = userData?.verificationStatus || 'incomplete';
+  const isVerificationLocked = verificationStatus === 'pending' || verificationStatus === 'approved';
 
   if (verificationStatus === 'pending') {
     return (
@@ -158,7 +159,7 @@ const VerificationForm = () => {
     <Card className="bg-card border-border shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Cloud className="h-5 w-5 text-cosmic-blue" />
+          <Clock className="h-5 w-5 text-cosmic-blue" />
           <span>{t("identity_verification")}</span>
         </CardTitle>
         <CardDescription>
@@ -189,7 +190,7 @@ const VerificationForm = () => {
                 accept="image/*,.pdf"
                 onChange={(e) => handleFileChange('id_front', e.target.files?.[0] || null)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || isVerificationLocked}
               />
             </div>
 
@@ -205,7 +206,7 @@ const VerificationForm = () => {
                 accept="image/*,.pdf"
                 onChange={(e) => handleFileChange('id_back', e.target.files?.[0] || null)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || isVerificationLocked}
               />
             </div>
 
@@ -221,7 +222,7 @@ const VerificationForm = () => {
                 accept="image/*"
                 onChange={(e) => handleFileChange('selfie', e.target.files?.[0] || null)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || isVerificationLocked}
               />
             </div>
 
@@ -236,12 +237,16 @@ const VerificationForm = () => {
                 type="file"
                 accept="image/*,.pdf"
                 onChange={(e) => handleFileChange('address_proof', e.target.files?.[0] || null)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isVerificationLocked}
               />
             </div>
           </div>
 
-          <Button type="submit" className="w-full glow-effect" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="w-full glow-effect" 
+            disabled={isSubmitting || isVerificationLocked}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ApplicationService } from '@/services/applicationService';
-import { Play, Loader2 } from 'lucide-react';
+import { Play, Loader2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface JobApplyButtonProps {
@@ -19,12 +19,25 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
   const [isApplying, setIsApplying] = useState(false);
   const { t } = useTranslation();
 
+  const isVerified = userData?.verificationStatus === 'approved';
+
   const canApply = currentUser && 
     userData?.currentMode === 'tester' && 
-    posterId !== currentUser.uid;
+    posterId !== currentUser.uid &&
+    isVerified;
 
   const handleApply = async () => {
     if (!currentUser || !userData || !canApply) {
+      if (!isVerified) {
+        toast({
+          title: t("verification_required"),
+          description: t("verification_required_apply_description"),
+          variant: "destructive",
+        });
+        navigate('/profile?tab=overview');
+        return;
+      }
+      
       toast({
         title: t("error"),
         description: t("unauthenticated_apply"),
@@ -63,8 +76,23 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
     }
   };
 
-  if (!canApply) {
+  if (!currentUser || userData?.currentMode !== 'tester' || posterId === currentUser.uid) {
     return null;
+  }
+  
+  if (!isVerified) {
+    return (
+      <Button 
+        onClick={handleApply}
+        disabled={true}
+        variant="outline"
+        size="sm"
+        className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
+      >
+        <Lock className="h-4 w-4 mr-2" />
+        {t("verification_required_short")}
+      </Button>
+    );
   }
 
   return (

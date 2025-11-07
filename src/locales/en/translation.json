@@ -497,8 +497,6 @@
   "referred_on": "Indicado em",
   "referral_code_optional": "Código de Indicação (Opcional)",
   "referral_code_placeholder": "Digite o código do seu amigo",
-  "share_title": "Junte-se ao Freelincer!",
-  "share_text": "Ganhe dinheiro como freelancer de apps! Use meu código {{code}} para se cadastrar e ganhar uma comissão de 5% dos seus ganhos. Link: {{link}}",
   "jobs_tab": "Tarefas",
   "manage_jobs": "Gerenciar Tarefas",
   "review_and_manage_contractor_tasks": "Revise e gerencie todas as tarefas criadas pelos contratantes.",
@@ -532,5 +530,9 @@
   "verification_approved": "Verified",
   "verification_approved_description": "Your identity has been successfully verified. You have full access to the platform.",
   "verification_rejected": "Verification Rejected",
-  "verification_rejected_description": "Your verification was rejected. Please review the requirements and resubmit the documents."
+  "verification_rejected_description": "Your verification was rejected. Please review the requirements and resubmit the documents.",
+  "verification_required": "Verification Required",
+  "verification_required_apply_description": "Your account must be verified before you can apply for tasks. Please complete identity verification.",
+  "verification_required_withdrawal_description": "Your account must be verified before you can make withdrawals. Please complete identity verification.",
+  "verification_required_short": "Verification Required"
 }

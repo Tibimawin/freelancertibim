@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserVerification } from '@/types/admin';
+import { NotificationService } from './notificationService'; // Importando NotificationService
 
 export class AdminVerificationService {
   
@@ -51,6 +52,18 @@ export class AdminVerificationService {
       batch.update(userRef, {
         verificationStatus: 'pending',
         updatedAt: Timestamp.now()
+      });
+
+      // 3. Notificar o Admin sobre a nova submissão (opcional, mas útil)
+      await NotificationService.createNotification({
+        userId: 'admin',
+        type: 'verification_pending',
+        title: 'Nova Verificação Pendente',
+        message: `O usuário ${userName} submeteu documentos para verificação.`,
+        read: false,
+        metadata: {
+          verificationId: userId,
+        },
       });
 
       await batch.commit();
@@ -189,6 +202,18 @@ export class AdminVerificationService {
         createdAt: Timestamp.now()
       });
 
+      // NOTIFICAÇÃO DE APROVAÇÃO
+      await NotificationService.createNotification({
+        userId: verificationData.userId,
+        type: 'verification_approved',
+        title: 'Verificação Aprovada!',
+        message: 'Sua identidade foi verificada com sucesso. Você agora tem acesso total à plataforma.',
+        read: false,
+        metadata: {
+          verificationId: verificationId,
+        },
+      });
+
       await batch.commit();
     } catch (error) {
       console.error('Error approving verification:', error);
@@ -237,6 +262,19 @@ export class AdminVerificationService {
       batch.update(userRef, {
         verificationStatus: 'rejected',
         updatedAt: Timestamp.now()
+      });
+
+      // NOTIFICAÇÃO DE REJEIÇÃO
+      const reasonMessage = Object.values(rejectionReasons).join('; ') || 'Motivo não especificado.';
+      await NotificationService.createNotification({
+        userId: verificationData.userId,
+        type: 'verification_rejected',
+        title: 'Verificação Rejeitada',
+        message: `Sua verificação foi rejeitada. Motivo: ${reasonMessage}`,
+        read: false,
+        metadata: {
+          verificationId: verificationId,
+        },
       });
 
       await batch.commit();

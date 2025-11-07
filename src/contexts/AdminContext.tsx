@@ -25,24 +25,34 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminData, setAdminData] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
 
   const checkAdminStatus = async (): Promise<boolean> => {
+    if (authLoading) {
+      // Ainda carregando o estado de autenticação, não faça nada ainda
+      return false;
+    }
+    
     if (!currentUser) {
+      console.log('Admin Check: No current user. Not Admin.');
       setIsAdmin(false);
       setAdminData(null);
       setLoading(false);
       return false;
     }
 
+    console.log('Admin Check: Checking status for UID:', currentUser.uid);
+
     try {
       const adminStatus = await AdminService.isAdmin(currentUser.uid);
       setIsAdmin(adminStatus);
 
       if (adminStatus) {
+        console.log('Admin Check: User IS Admin. Fetching data...');
         const data = await AdminService.getAdminData(currentUser.uid);
         setAdminData(data);
       } else {
+        console.log('Admin Check: User is NOT Admin.');
         setAdminData(null);
       }
 
@@ -59,7 +69,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     checkAdminStatus();
-  }, [currentUser]);
+  }, [currentUser, authLoading]);
 
   const value: AdminContextType = {
     isAdmin,

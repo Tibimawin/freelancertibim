@@ -28,6 +28,8 @@ interface User {
   // Campos de Referência
   referralCode?: string;
   referredBy?: string;
+  // Status de Verificação
+  verificationStatus: 'incomplete' | 'pending' | 'approved' | 'rejected';
 }
 
 export interface UserSettings {

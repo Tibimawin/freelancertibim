@@ -25,7 +25,10 @@ import {
   Save,
   X,
   BarChart3,
-  Globe // Adicionado Globe aqui
+  Globe,
+  CheckCircle,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
@@ -115,6 +118,39 @@ const Profile = () => {
     });
     setIsEditing(false);
   };
+  
+  const getVerificationBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return (
+          <Badge className="bg-success/10 text-success border-success/20">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            {t("verified")}
+          </Badge>
+        );
+      case 'pending':
+        return (
+          <Badge className="bg-warning/10 text-warning border-warning/20">
+            <Clock className="h-3 w-3 mr-1" />
+            {t("pending_status")}
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            {t("rejected_status")}
+          </Badge>
+        );
+      case 'incomplete':
+      default:
+        return (
+          <Badge variant="outline" className="text-muted-foreground">
+            {t("incomplete_status")}
+          </Badge>
+        );
+    }
+  };
 
   if (!userData || !currentUser) {
     return (
@@ -151,6 +187,7 @@ const Profile = () => {
                       <Badge variant={userData.currentMode === 'tester' ? 'default' : 'secondary'}>
                         {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
                       </Badge>
+                      {getVerificationBadge(userData.verificationStatus)}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -454,9 +491,7 @@ const Profile = () => {
                     <div className="space-y-2">
                       <Label>{t("account_status")}</Label>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                          {t("verified")}
-                        </Badge>
+                        {getVerificationBadge(userData.verificationStatus)}
                         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                           {t("premium")}
                         </Badge>

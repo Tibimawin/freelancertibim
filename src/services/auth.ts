@@ -48,6 +48,7 @@ export class AuthService {
         updatedAt: new Date(),
         referralCode: newReferralCode, // Salvar o código gerado
         referredBy: referredBy, // Salvar quem indicou, se houver
+        verificationStatus: 'incomplete' // Adicionando status inicial
       };
 
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
@@ -158,6 +159,7 @@ export class AuthService {
           settings: raw.settings, // Ensure settings are loaded
           referralCode: referralCode, // Usar o código garantido
           referredBy: raw.referredBy,
+          verificationStatus: raw.verificationStatus || 'incomplete', // GARANTIR O STATUS
         } as User;
         
         return user;

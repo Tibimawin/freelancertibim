@@ -54,6 +54,7 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    // Sincronizar formData com userData sempre que userData mudar
     setFormData({
       name: userData?.name || "",
       bio: userData?.bio || "",
@@ -91,6 +92,7 @@ const Profile = () => {
         description: t("profile_updated_description"),
       });
     } catch (error) {
+      console.error("Error saving profile:", error);
       toast({
         title: t("error_saving"),
         description: t("error_saving_description"),
@@ -102,6 +104,7 @@ const Profile = () => {
   };
 
   const handleCancel = () => {
+    // Resetar o formulário para os dados atuais do usuário
     setFormData({
       name: userData?.name || "",
       bio: userData?.bio || "",
@@ -112,16 +115,11 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  // --- DEBUG START ---
-  console.log('Profile Page Render Check: userData', userData, 'currentUser', currentUser);
-  // --- DEBUG END ---
-
   if (!userData || !currentUser) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Header />
-        <div className="text-center text-foreground p-8 bg-card rounded-lg shadow-lg"> {/* Added styling for visibility */}
-          <p className="text-2xl font-bold mb-4 text-red-500">DEBUG: Profile Loading State</p> {/* Distinct color */}
+        <div className="text-center text-foreground p-8 bg-card rounded-lg shadow-lg">
           <p className="text-muted-foreground">{t("loading_profile")}</p>
         </div>
       </div>
@@ -134,13 +132,6 @@ const Profile = () => {
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* --- DEBUG START --- */}
-          <div className="p-4 mb-4 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-lg">
-            <p className="font-bold">DEBUG: Profile Content Loaded!</p>
-            <p>User: {userData.name}, Mode: {userData.currentMode}</p>
-          </div>
-          {/* --- DEBUG END --- */}
-
           {/* Header do Perfil */}
           <Card className="mb-8 bg-card border-border shadow-md">
             <CardHeader>
@@ -468,8 +459,10 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10">
-                      {t("change_password")}
+                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
+                      <Link to="/profile?tab=settings">
+                        {t("change_password")}
+                      </Link>
                     </Button>
                     
                     <ModeToggle />

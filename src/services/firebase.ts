@@ -145,6 +145,18 @@ export class JobService {
       throw error;
     }
   }
+  
+  static async deleteJob(jobId: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'jobs', jobId);
+      await deleteDoc(docRef);
+      // Nota: Em um sistema real, a exclusão de um job ativo exigiria o reembolso dos fundos em escrow.
+      // Para simplificar, estamos apenas excluindo o documento do job.
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      throw error;
+    }
+  }
 
   static async applyToJob(jobId: string, freelancerId: string, freelancerName: string) {
     try {

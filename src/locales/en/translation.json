@@ -498,5 +498,18 @@
   "referral_code_optional": "Código de Indicação (Opcional)",
   "referral_code_placeholder": "Digite o código do seu amigo",
   "share_title": "Junte-se ao Freelincer!",
-  "share_text": "Ganhe dinheiro como freelancer de apps! Use meu código {{code}} para se cadastrar e ganhar uma comissão de 5% dos seus ganhos. Link: {{link}}"
+  "share_text": "Ganhe dinheiro como freelancer de apps! Use meu código {{code}} para se cadastrar e ganhar uma comissão de 5% dos seus ganhos. Link: {{link}}",
+  "jobs_tab": "Tarefas",
+  "manage_jobs": "Gerenciar Tarefas",
+  "review_and_manage_contractor_tasks": "Revise e gerencie todas as tarefas criadas pelos contratantes.",
+  "search_jobs_placeholder": "Buscar por título ou contratante...",
+  "loading_jobs": "Carregando tarefas...",
+  "no_jobs_found": "Nenhuma tarefa encontrada.",
+  "delete": "Excluir",
+  "confirm_job_deletion": "Confirmar Exclusão da Tarefa",
+  "job_deletion_warning": "Você tem certeza que deseja excluir a tarefa \"{{title}}\"? Esta ação é irreversível.",
+  "job_deletion_consequence": "A exclusão de uma tarefa ativa pode exigir reembolso manual dos fundos em escrow.",
+  "confirm_delete": "Confirmar Exclusão",
+  "job_deleted_success": "Tarefa \"{{title}}\" excluída com sucesso.",
+  "error_deleting_job": "Erro ao excluir tarefa."
 }

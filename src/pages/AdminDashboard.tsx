@@ -13,7 +13,8 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Flag 
+  Flag,
+  Briefcase // Importado Briefcase
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; 
@@ -24,7 +25,8 @@ import AdminVerifications from '@/components/admin/AdminVerifications';
 import AdminBalances from '@/components/admin/AdminBalances';
 import AdminBanking from '@/components/admin/AdminBanking';
 import AdminReports from '@/components/admin/AdminReports'; 
-import AdminReferrals from '@/components/admin/AdminReferrals'; // Import AdminReferrals
+import AdminReferrals from '@/components/admin/AdminReferrals';
+import AdminJobManager from '@/components/admin/AdminJobManager'; // Importado AdminJobManager
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
@@ -142,13 +144,16 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">{t("overview_tab")}</TabsTrigger>
             <TabsTrigger value="users">{t("users_tab")}</TabsTrigger>
+            <TabsTrigger value="jobs">
+              <Briefcase className="h-4 w-4 mr-2" />
+              {t("jobs_tab")}
+            </TabsTrigger>
             <TabsTrigger value="withdrawals">{t("withdrawals_tab")}</TabsTrigger>
             <TabsTrigger value="verifications">{t("verifications_tab")}</TabsTrigger>
             <TabsTrigger value="balances">{t("balances_tab")}</TabsTrigger>
-            <TabsTrigger value="banking">{t("banking_data_tab")}</TabsTrigger>
             <TabsTrigger value="reports">
               {t("reports_tab")}
               {pendingReportsCount > 0 && (
@@ -250,6 +255,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="users">
             <AdminUsers />
+          </TabsContent>
+          
+          <TabsContent value="jobs">
+            <AdminJobManager />
           </TabsContent>
 
           <TabsContent value="withdrawals">

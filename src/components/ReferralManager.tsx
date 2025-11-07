@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useReferrals } from "@/hooks/useReferrals";
+import { useUserName } from "@/hooks/useUserName"; // Importando o novo hook
+import { Referral } from '@/types/firebase';
 import { 
   Users, 
   Copy, 
@@ -19,6 +22,53 @@ import {
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { QRCode } from 'react-qrcode-logo';
+
+// Componente auxiliar para exibir cada item da referência
+interface ReferralItemProps {
+  referral: Referral;
+}
+
+const ReferralItem = ({ referral }: ReferralItemProps) => {
+  const { t } = useTranslation();
+  const { userName, loading } = useUserName(referral.referredId);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-success/10 text-success border-success/20"><CheckCircle className="h-3 w-3 mr-1" />{t("completed")}</Badge>;
+      case 'pending':
+        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />{t("pending")}</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-muted/30">
+      <div className="flex items-center space-x-3">
+        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-medium">
+          <Users className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-medium text-foreground">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : userName}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t("referred_on")} {referral.createdAt.toLocaleDateString('pt-BR')}
+          </p>
+        </div>
+      </div>
+      
+      <div className="text-right space-y-1">
+        {getStatusBadge(referral.status)}
+        <p className={`text-sm font-semibold ${referral.status === 'completed' ? 'text-success' : 'text-muted-foreground'}`}>
+          {referral.rewardAmount.toFixed(2)} KZ
+        </p>
+      </div>
+    </div>
+  );
+};
+
 
 const ReferralManager = () => {
   const { userData, currentUser } = useAuth();
@@ -56,23 +106,6 @@ const ReferralManager = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-success/10 text-success border-success/20"><CheckCircle className="h-3 w-3 mr-1" />{t("completed")}</Badge>;
-      case 'pending':
-        return <Badge className="bg-warning/10 text-warning border-warning/20"><Clock className="h-3 w-3 mr-1" />{t("pending")}</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-  
-  // Placeholder para buscar o nome do usuário indicado (em um app real, usaríamos um hook ou serviço)
-  const getReferredUserName = (referredId: string) => {
-    // Simulação: em um app real, você buscaria o nome do usuário pelo ID
-    return `Usuário #${referredId.substring(0, 4)}`;
   };
 
   return (
@@ -217,26 +250,7 @@ const ReferralManager = () => {
           ) : (
             <div className="space-y-3">
               {referrals.map((ref) => (
-                <div key={ref.id} className="flex items-center justify-between p-3 border border-border rounded-lg bg-muted/30">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-medium">
-                      <Users className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{getReferredUserName(ref.referredId)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t("referred_on")} {ref.createdAt.toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right space-y-1">
-                    {getStatusBadge(ref.status)}
-                    <p className={`text-sm font-semibold ${ref.status === 'completed' ? 'text-success' : 'text-muted-foreground'}`}>
-                      {ref.rewardAmount.toFixed(2)} KZ
-                    </p>
-                  </div>
-                </div>
+                <ReferralItem key={ref.id} referral={ref} />
               ))}
             </div>
           )}

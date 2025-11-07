@@ -43,7 +43,7 @@ export class ReferralService {
 
   static async registerReferral(referrerId: string, referredId: string): Promise<string> {
     try {
-      const rewardAmount = 500; // Exemplo: 500 KZ de recompensa
+      const rewardAmount = 500; // Exemplo: 500 KZ de recompensa inicial (pode ser ajustado para 0 se a comissão for baseada apenas em tarefas)
       
       const referralData: Omit<Referral, 'id' | 'createdAt'> = {
         referrerId,
@@ -92,6 +92,33 @@ export class ReferralService {
     }
   }
   
+  static async getAllReferrals(): Promise<Referral[]> {
+    try {
+      const q = query(
+        collection(db, 'referrals'),
+        orderBy('createdAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const referrals: Referral[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        referrals.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          completedAt: data.completedAt?.toDate(),
+        } as Referral);
+      });
+
+      return referrals;
+    } catch (error) {
+      console.error('Error fetching all referrals:', error);
+      throw error;
+    }
+  }
+
   static async getReferrerIdByCode(code: string): Promise<string | null> {
     try {
       const q = query(

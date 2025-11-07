@@ -13,23 +13,24 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Flag // Adicionado Flag para o ícone de denúncia
+  Flag 
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
-import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; // Import useAdminReports
+import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; 
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
 import AdminVerifications from '@/components/admin/AdminVerifications';
 import AdminBalances from '@/components/admin/AdminBalances';
 import AdminBanking from '@/components/admin/AdminBanking';
-import AdminReports from '@/components/admin/AdminReports'; // Import AdminReports
+import AdminReports from '@/components/admin/AdminReports'; 
+import AdminReferrals from '@/components/admin/AdminReferrals'; // Import AdminReferrals
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
-  const { reports, fetchReports } = useAdminReports(); // Use reports hook
+  const { reports, fetchReports } = useAdminReports(); 
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -141,20 +142,23 @@ const AdminDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7"> {/* Increased grid-cols to 7 */}
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">{t("overview_tab")}</TabsTrigger>
             <TabsTrigger value="users">{t("users_tab")}</TabsTrigger>
             <TabsTrigger value="withdrawals">{t("withdrawals_tab")}</TabsTrigger>
             <TabsTrigger value="verifications">{t("verifications_tab")}</TabsTrigger>
             <TabsTrigger value="balances">{t("balances_tab")}</TabsTrigger>
             <TabsTrigger value="banking">{t("banking_data_tab")}</TabsTrigger>
-            <TabsTrigger value="reports"> {/* New tab for reports */}
+            <TabsTrigger value="reports">
               {t("reports_tab")}
               {pendingReportsCount > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {pendingReportsCount}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="referrals">
+              {t("referral_program")}
             </TabsTrigger>
           </TabsList>
 
@@ -264,8 +268,12 @@ const AdminDashboard = () => {
             <AdminBanking />
           </TabsContent>
 
-          <TabsContent value="reports"> {/* New tab content */}
+          <TabsContent value="reports">
             <AdminReports />
+          </TabsContent>
+          
+          <TabsContent value="referrals">
+            <AdminReferrals />
           </TabsContent>
         </Tabs>
       </div>

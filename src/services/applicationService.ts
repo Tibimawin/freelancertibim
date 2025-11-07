@@ -8,7 +8,9 @@ import {
   query,
   where,
   orderBy,
-  Timestamp
+  Timestamp,
+  writeBatch,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Application, ProofSubmission } from '@/types/firebase';
@@ -80,6 +82,7 @@ export class ApplicationService {
     rejectionReason?: string
   ) {
     try {
+      const batch = writeBatch(db);
       const appRef = doc(db, 'applications', applicationId);
       const appDoc = await getDoc(appRef);
       
@@ -90,7 +93,7 @@ export class ApplicationService {
       const appData = appDoc.data() as Application;
       
       // Atualizar status da aplicação
-      await updateDoc(appRef, {
+      batch.update(appRef, {
         status: decision,
         reviewedAt: Timestamp.now(),
         reviewedBy: reviewerId,
@@ -105,40 +108,84 @@ export class ApplicationService {
         // Buscar dados do job para obter o valor
         if (job) {
           const bounty = job.bounty;
+          const commissionRate = 0.05; // 5% de comissão
 
-          // Mover saldo do freelancer: pendente para disponível
+          // 1. Atualizar saldo do freelancer (indicado)
           const testerRef = doc(db, 'users', appData.testerId);
-          const testerDoc = await getDoc(testerRef);
           
-          if (testerDoc.exists()) {
+          // Usar transação para garantir atomicidade
+          await db.runTransaction(async (transaction) => {
+            const testerDoc = await transaction.get(testerRef);
             const testerData = testerDoc.data();
+            
+            if (!testerData) throw new Error('Tester user not found');
+
             const currentPending = testerData.testerWallet?.pendingBalance || 0;
             const currentAvailable = testerData.testerWallet?.availableBalance || 0;
             const currentEarnings = testerData.testerWallet?.totalEarnings || 0;
 
-            await updateDoc(testerRef, {
+            // Atualizar carteira do freelancer
+            transaction.update(testerRef, {
               'testerWallet.pendingBalance': Math.max(0, currentPending - bounty),
               'testerWallet.availableBalance': currentAvailable + bounty,
               'testerWallet.totalEarnings': currentEarnings + bounty,
-              completedTests: (testerData.completedTests || 0) + 1,
+              completedTests: increment(1),
+              updatedAt: Timestamp.now(),
             });
 
-            // Reduzir saldo pendente do contratante
+            // 2. Processar comissão de indicação (se houver um indicador)
+            const referrerId = testerData.referredBy;
+            if (referrerId) {
+              const commissionAmount = bounty * commissionRate;
+              const referrerRef = doc(db, 'users', referrerId);
+              
+              // Pagar comissão ao indicador
+              transaction.update(referrerRef, {
+                'testerWallet.availableBalance': increment(commissionAmount),
+                updatedAt: Timestamp.now(),
+              });
+
+              // Criar transação de recompensa para o indicador
+              const referralTransactionRef = doc(collection(db, 'transactions'));
+              transaction.set(referralTransactionRef, {
+                userId: referrerId,
+                type: 'referral_reward',
+                amount: commissionAmount,
+                currency: 'KZ',
+                status: 'completed',
+                description: `Comissão de 5% pela tarefa de ${appData.testerName}`,
+                metadata: {
+                  jobId: appData.jobId,
+                  applicationId: applicationId,
+                  referredUserId: appData.testerId,
+                  originalBounty: bounty,
+                },
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+              });
+
+              // Atualizar status da referência para 'completed' (se for a primeira tarefa)
+              // Nota: A lógica de "primeira tarefa" é complexa de verificar aqui. Vamos assumir que a comissão é paga em todas as tarefas, a menos que a regra seja estritamente a primeira.
+              // Se a regra for "5% por cada trabalho concluído com sucesso", a lógica acima está correta.
+            }
+
+            // 3. Reduzir saldo pendente do contratante
             const posterRef = doc(db, 'users', job.posterId);
-            const posterDoc = await getDoc(posterRef);
+            const posterDoc = await transaction.get(posterRef);
             
             if (posterDoc.exists()) {
               const posterData = posterDoc.data();
               const currentPosterPending = posterData.posterWallet?.pendingBalance || 0;
 
-              await updateDoc(posterRef, {
+              transaction.update(posterRef, {
                 'posterWallet.pendingBalance': Math.max(0, currentPosterPending - bounty),
                 updatedAt: Timestamp.now(),
               });
             }
 
-            // Criar transação para o freelancer
-            await TransactionService.createTransaction({
+            // 4. Criar transação de pagamento para o freelancer
+            const transactionRef = doc(collection(db, 'transactions'));
+            transaction.set(transactionRef, {
               userId: appData.testerId,
               type: 'payout',
               amount: bounty,
@@ -149,8 +196,13 @@ export class ApplicationService {
                 jobId: appData.jobId,
                 applicationId: applicationId,
               },
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
             });
-          }
+
+            // 5. Atualizar status da aplicação (fora da transação de saldo, mas dentro do batch original)
+            // Como estamos usando uma transação para o saldo, vamos garantir que a atualização da aplicação seja feita no batch principal.
+          });
         }
 
         // Criar notificação de aprovação para o freelancer
@@ -179,6 +231,9 @@ export class ApplicationService {
           },
         });
       }
+      
+      // Commit do batch principal (apenas a atualização do status da aplicação)
+      await batch.commit();
 
     } catch (error) {
       console.error('Error reviewing application:', error);

@@ -13,7 +13,7 @@ export interface AdminUser {
 }
 
 export interface AdminPermission {
-  resource: 'users' | 'withdrawals' | 'jobs' | 'transactions' | 'statistics' | 'reports'; // Added 'reports'
+  resource: 'users' | 'withdrawals' | 'jobs' | 'transactions' | 'statistics' | 'reports' | 'referrals'; // Added 'referrals'
   actions: ('read' | 'write' | 'delete' | 'approve')[];
 }
 

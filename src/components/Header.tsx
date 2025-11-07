@@ -96,6 +96,12 @@ const Header = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="hover:bg-muted/50">
+          <Link to="/referral" className="flex items-center">
+            <Users className="mr-2 h-4 w-4" />
+            {t("referral_program")}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="hover:bg-muted/50">
           <Link to="/profile?tab=settings" className="flex items-center">
             <Settings className="mr-2 h-4 w-4" />
             {t("settings")}

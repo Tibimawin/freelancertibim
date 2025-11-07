@@ -31,7 +31,7 @@ import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
 import VerificationForm from "@/components/VerificationForm"; // Importando o novo componente
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
 const Profile = () => {

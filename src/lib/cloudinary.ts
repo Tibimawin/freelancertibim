@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Credenciais seguras para o frontend (Cloud Name e API Key)
-const CLOUD_NAME = "FREELANCER"; // Substitua pelo seu Cloud Name real
+const CLOUD_NAME = "freelancer"; // Usar minúsculas para garantir consistência no URL
 const UPLOAD_PRESET = "freelancer_unsigned_preset"; // Deve ser um preset unsigned
 
 export interface UploadResult {
@@ -37,8 +37,15 @@ export class CloudinaryService {
         url: response.data.secure_url,
         public_id: response.data.public_id,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao fazer upload para o Cloudinary:', error);
+      
+      // Adicionar log detalhado da resposta 400
+      if (error.response) {
+        console.error('Detalhes do Erro Cloudinary (400):', error.response.data);
+        throw new Error(`Falha no upload do documento: ${error.response.data.error?.message || 'Verifique o Cloud Name e o Upload Preset.'}`);
+      }
+      
       throw new Error('Falha no upload do documento.');
     }
   }

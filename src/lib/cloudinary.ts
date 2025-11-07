@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Credenciais seguras para o frontend (Cloud Name e API Key)
 const CLOUD_NAME = "frelincer"; // Usar minúsculas para garantir consistência no URL
-const UPLOAD_PRESET = "freelancer_unsigned_preset"; // Deve ser um preset unsigned
+const UPLOAD_PRESET = "chat_uploads"; // Corrigido para o preset não assinado existente
+// Deve ser um preset unsigned
 
 export interface UploadResult {
   url: string;

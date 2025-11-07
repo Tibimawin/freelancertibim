@@ -226,4 +226,16 @@
     opacity: 1;
     animation: pulse-glow 2s infinite ease-in-out;
   }
+  
+  /* Utility to hide scrollbar */
+  .scrollbar-hide {
+    /* For IE and Edge */
+    -ms-overflow-style: none;
+    /* For Firefox */
+    scrollbar-width: none;
+  }
+  /* For Chrome, Safari, and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

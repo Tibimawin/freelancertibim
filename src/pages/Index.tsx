@@ -152,7 +152,7 @@ const Index = () => {
             {/* Platform Tabs */}
             <Tabs defaultValue="all" className="mb-8">
               {/* Adicionar scroll horizontal para as tabs em mobile */}
-              <TabsList className="flex flex-nowrap w-full gap-1 h-auto bg-muted/50 border border-border rounded-lg p-1 overflow-x-auto whitespace-nowrap">
+              <TabsList className="flex flex-nowrap w-full gap-1 h-auto bg-muted/50 border border-border rounded-lg p-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
                   {t("all")}
                 </TabsTrigger>

@@ -165,7 +165,7 @@ const WalletCard = () => {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-3 max-h-60 overflow-y-auto">
+          <div className="space-y-3 max-h-60 overflow-y-auto scrollbar-hide">
             {transactions.length > 0 ? (
               transactions.slice(0, 5).map((transaction) => (
               <div

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Wallet, User, Bell, Search, LogOut, Settings, BarChart3, Plus, History, CheckCircle, Menu, X } from "lucide-react";
+import { Wallet, User, Bell, Search, LogOut, Settings, BarChart3, Plus, History, CheckCircle, Menu, X, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import AuthModal from "./AuthModal";

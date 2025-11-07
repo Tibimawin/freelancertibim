@@ -54,8 +54,9 @@ export interface UserVerification {
   userName: string;
   userEmail: string;
   documents: {
-    type: 'cpf' | 'rg' | 'passport' | 'selfie' | 'address_proof';
+    type: 'cpf' | 'rg' | 'passport' | 'selfie' | 'address_proof' | 'id_front' | 'id_back'; // Adicionando tipos de documentos
     url: string;
+    publicId: string; // Adicionado para exclusão no Cloudinary
     uploadedAt: Date;
     status: 'pending' | 'approved' | 'rejected';
     rejectionReason?: string;

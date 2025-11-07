@@ -30,6 +30,7 @@ import {
 import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
+import VerificationForm from "@/components/VerificationForm"; // Importando o novo componente
 import { useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
@@ -200,7 +201,7 @@ const Profile = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Informações Pessoais */}
                 <div className="lg:col-span-2">
-                  <Card className="bg-card border-border shadow-md">
+                  <Card className="mb-6 bg-card border-border shadow-md">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <User className="h-5 w-5 text-electric-purple" />
@@ -308,6 +309,9 @@ const Profile = () => {
                       )}
                     </CardContent>
                   </Card>
+                  
+                  {/* Formulário de Verificação de Identidade */}
+                  <VerificationForm />
                 </div>
 
                 {/* Quick Stats */}

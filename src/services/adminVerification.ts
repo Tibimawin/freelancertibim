@@ -16,6 +16,50 @@ import { db } from '@/lib/firebase';
 import { UserVerification } from '@/types/admin';
 
 export class AdminVerificationService {
+  
+  // Novo método para submeter documentos de verificação
+  static async submitVerification(
+    userId: string,
+    userName: string,
+    userEmail: string,
+    documents: { type: string; url: string; publicId: string }[]
+  ): Promise<void> {
+    try {
+      const batch = writeBatch(db);
+      const verificationRef = doc(db, 'userVerifications', userId); // Usamos o userId como ID do documento para garantir unicidade
+      
+      const documentsData = documents.map(doc => ({
+        type: doc.type,
+        url: doc.url,
+        publicId: doc.publicId,
+        uploadedAt: Timestamp.now(),
+        status: 'pending'
+      }));
+
+      // 1. Criar/Atualizar o registro de verificação
+      batch.set(verificationRef, {
+        userId,
+        userName,
+        userEmail,
+        documents: documentsData,
+        overallStatus: 'pending',
+        submittedAt: Timestamp.now(),
+      }, { merge: true }); // Usar merge para não apagar campos existentes se for um reenvio
+
+      // 2. Atualizar o status de verificação do usuário
+      const userRef = doc(db, 'users', userId);
+      batch.update(userRef, {
+        verificationStatus: 'pending',
+        updatedAt: Timestamp.now()
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error('Error submitting verification:', error);
+      throw error;
+    }
+  }
+  
   // Get all pending verifications
   static async getPendingVerifications(limitCount?: number): Promise<UserVerification[]> {
     try {

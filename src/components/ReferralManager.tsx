@@ -77,12 +77,14 @@ const ReferralManager = () => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const referralCode = userData?.referralCode || 'N/A';
+  const referralCode = userData?.referralCode || 'CARREGANDO...';
+  const isCodeReady = referralCode !== 'CARREGANDO...';
+  
   const referralLink = useMemo(() => {
-    if (referralCode === 'N/A') return '';
+    if (!isCodeReady) return '';
     // Usando a URL base da aplicação (simulação)
     return `${window.location.origin}/referral?code=${referralCode}`;
-  }, [referralCode]);
+  }, [referralCode, isCodeReady]);
 
   const totalPending = referrals.filter(r => r.status === 'pending').length;
   const totalCompleted = referrals.filter(r => r.status === 'completed').length;
@@ -91,6 +93,7 @@ const ReferralManager = () => {
     .reduce((sum, r) => sum + r.rewardAmount, 0);
 
   const handleCopy = async (text: string) => {
+    if (!isCodeReady) return;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -152,12 +155,14 @@ const ReferralManager = () => {
                     id="referral-code"
                     value={referralCode}
                     readOnly
-                    className="font-mono text-lg text-center uppercase bg-muted/50 border-primary/30"
+                    className={`font-mono text-lg text-center uppercase bg-muted/50 border-primary/30 ${!isCodeReady ? 'animate-pulse' : ''}`}
+                    disabled={!isCodeReady}
                   />
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleCopy(referralCode)}
+                    disabled={!isCodeReady}
                   >
                     {copied ? <CheckCircle className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                   </Button>
@@ -171,12 +176,14 @@ const ReferralManager = () => {
                     id="referral-link"
                     value={referralLink}
                     readOnly
-                    className="text-sm bg-muted/50 border-border"
+                    className={`text-sm bg-muted/50 border-border ${!isCodeReady ? 'animate-pulse' : ''}`}
+                    disabled={!isCodeReady}
                   />
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleCopy(referralLink)}
+                    disabled={!isCodeReady}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -188,6 +195,7 @@ const ReferralManager = () => {
               variant="default" 
               className="w-full md:w-auto glow-effect"
               onClick={() => {
+                if (!isCodeReady) return;
                 if (navigator.share) {
                   navigator.share({
                     title: t("share_title"),
@@ -198,6 +206,7 @@ const ReferralManager = () => {
                   handleCopy(referralLink);
                 }
               }}
+              disabled={!isCodeReady}
             >
               <Share2 className="h-4 w-4 mr-2" />
               {t("share_now")}
@@ -214,15 +223,21 @@ const ReferralManager = () => {
             </h3>
             <p className="text-sm text-muted-foreground">{t("qr_code_description")}</p>
             <div className="p-4 inline-block bg-white rounded-lg shadow-lg border border-border">
-              <QRCode 
-                value={referralLink} 
-                size={180} 
-                fgColor="#4c1d95" // Electric Purple
-                logoImage={currentUser?.photoURL || undefined}
-                logoWidth={40}
-                logoHeight={40}
-                qrStyle="dots"
-              />
+              {isCodeReady ? (
+                <QRCode 
+                  value={referralLink} 
+                  size={180} 
+                  fgColor="#4c1d95" // Electric Purple
+                  logoImage={currentUser?.photoURL || undefined}
+                  logoWidth={40}
+                  logoHeight={40}
+                  qrStyle="dots"
+                />
+              ) : (
+                <div className="w-[180px] h-[180px] flex items-center justify-center bg-muted animate-pulse rounded-md">
+                  <Loader2 className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

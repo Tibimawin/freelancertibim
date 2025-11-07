@@ -113,9 +113,21 @@ export class AuthService {
 
   static async getUserData(uid: string): Promise<User | null> {
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
+      const userRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userRef);
+      
       if (userDoc.exists()) {
         const raw: any = userDoc.data();
+        
+        // --- Lógica de Fallback para Referral Code ---
+        let referralCode = raw.referralCode;
+        if (!referralCode) {
+          // Se o código estiver faltando, gere um novo e salve no Firestore
+          referralCode = await ReferralService.generateUniqueCode();
+          await updateDoc(userRef, { referralCode });
+        }
+        // ---------------------------------------------
+
         const testerWallet = raw.testerWallet ?? (raw.wallet ? { 
           availableBalance: raw.wallet.balance ?? 0, 
           pendingBalance: 0, 
@@ -144,7 +156,7 @@ export class AuthService {
           location: raw.location,
           skills: raw.skills ?? [],
           settings: raw.settings, // Ensure settings are loaded
-          referralCode: raw.referralCode,
+          referralCode: referralCode, // Usar o código garantido
           referredBy: raw.referredBy,
         } as User;
         

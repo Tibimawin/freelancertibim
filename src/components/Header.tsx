@@ -256,6 +256,7 @@ const Header = () => {
                       <Plus className="h-4 w-4 mr-2" />
                       {t("create_job")}
                     </Link>
+                  </Button>
                 )}
                 
                 {/* Mode Toggle (Desktop Only) */}

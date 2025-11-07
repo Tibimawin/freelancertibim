@@ -43,12 +43,13 @@ export class ReferralService {
 
   static async registerReferral(referrerId: string, referredId: string): Promise<string> {
     try {
-      const rewardAmount = 500; // Exemplo: 500 KZ de recompensa inicial (pode ser ajustado para 0 se a comissão for baseada apenas em tarefas)
+      // A recompensa inicial é 0, pois a comissão será paga por tarefa concluída.
+      const rewardAmount = 0; 
       
       const referralData: Omit<Referral, 'id' | 'createdAt'> = {
         referrerId,
         referredId,
-        status: 'pending',
+        status: 'pending', // Mantemos como pending até a primeira tarefa ser concluída
         rewardAmount,
       };
 

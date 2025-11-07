@@ -123,6 +123,7 @@ export class ApplicationService {
             const currentPending = testerData.testerWallet?.pendingBalance || 0;
             const currentAvailable = testerData.testerWallet?.availableBalance || 0;
             const currentEarnings = testerData.testerWallet?.totalEarnings || 0;
+            const completedTests = testerData.completedTests || 0;
 
             // Atualizar carteira do freelancer
             transaction.update(testerRef, {
@@ -164,12 +165,28 @@ export class ApplicationService {
                 updatedAt: Timestamp.now(),
               });
 
-              // Atualizar status da referência para 'completed' (se for a primeira tarefa)
-              // Nota: A lógica de "primeira tarefa" é complexa de verificar aqui. Vamos assumir que a comissão é paga em todas as tarefas, a menos que a regra seja estritamente a primeira.
-              // Se a regra for "5% por cada trabalho concluído com sucesso", a lógica acima está correta.
+              // 3. Atualizar status da referência se for a primeira tarefa concluída
+              if (completedTests === 0) {
+                const referralQuery = query(
+                  collection(db, 'referrals'),
+                  where('referrerId', '==', referrerId),
+                  where('referredId', '==', appData.testerId),
+                  limit(1)
+                );
+                const referralSnapshot = await transaction.get(referralQuery);
+                
+                if (!referralSnapshot.empty) {
+                  const referralDocRef = referralSnapshot.docs[0].ref;
+                  transaction.update(referralDocRef, {
+                    status: 'completed',
+                    completedAt: Timestamp.now(),
+                    rewardAmount: increment(commissionAmount) // Adiciona a primeira comissão ao campo rewardAmount
+                  });
+                }
+              }
             }
 
-            // 3. Reduzir saldo pendente do contratante
+            // 4. Reduzir saldo pendente do contratante
             const posterRef = doc(db, 'users', job.posterId);
             const posterDoc = await transaction.get(posterRef);
             
@@ -183,7 +200,7 @@ export class ApplicationService {
               });
             }
 
-            // 4. Criar transação de pagamento para o freelancer
+            // 5. Criar transação de pagamento para o freelancer
             const transactionRef = doc(collection(db, 'transactions'));
             transaction.set(transactionRef, {
               userId: appData.testerId,
@@ -199,9 +216,6 @@ export class ApplicationService {
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now(),
             });
-
-            // 5. Atualizar status da aplicação (fora da transação de saldo, mas dentro do batch original)
-            // Como estamos usando uma transação para o saldo, vamos garantir que a atualização da aplicação seja feita no batch principal.
           });
         }
 

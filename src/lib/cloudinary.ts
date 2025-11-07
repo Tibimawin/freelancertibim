@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Credenciais seguras para o frontend (Cloud Name e API Key)
-const CLOUD_NAME = "freelancer"; // Usar minúsculas para garantir consistência no URL
+const CLOUD_NAME = "frelincer"; // Usar minúsculas para garantir consistência no URL
 const UPLOAD_PRESET = "freelancer_unsigned_preset"; // Deve ser um preset unsigned
 
 export interface UploadResult {

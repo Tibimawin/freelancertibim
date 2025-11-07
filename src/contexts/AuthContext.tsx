@@ -7,7 +7,7 @@ interface AuthContextType {
   currentUser: FirebaseUser | null;
   userData: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, referralCode?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -20,6 +20,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    // Adicionando um console.error aqui para debug
+    console.error('useAuth called outside AuthProvider');
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -53,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             approvalRate: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
+            referralCode: '', // Default fallback
           });
         }
       } else {
@@ -65,10 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, referralCode?: string) => {
     setLoading(true);
     try {
-      await AuthService.signUp(email, password, name);
+      await AuthService.signUp(email, password, name, referralCode);
     } catch (error) {
       setLoading(false);
       throw error;
@@ -128,7 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {/* Render children even if loading, but handle loading state inside components */}
+      {children} 
     </AuthContext.Provider>
   );
 };

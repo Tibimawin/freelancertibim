@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Search, Clock, DollarSign, Loader2, CheckCircle } from 'lucide-react';
-import { ReportService } from '@/services/reportService'; // Reutilizando ReportService para estrutura
-import { useAdminReports } from '@/hooks/useAdmin'; // Reutilizando hook para estrutura
 import { useTranslation } from 'react-i18next';
 import { ReferralService } from '@/services/referralService';
 import { Referral } from '@/types/firebase';

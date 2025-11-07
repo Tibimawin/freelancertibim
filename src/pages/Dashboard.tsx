@@ -94,7 +94,7 @@ const Dashboard = () => {
           <Card className="bg-card border-border shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Saldo Disponível
+                {t("available balance")}
               </CardTitle>
               <Wallet className="h-4 w-4 text-electric-purple" />
             </CardHeader>
@@ -104,8 +104,8 @@ const Dashboard = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 {isFreelancer && userData.testerWallet?.pendingBalance && userData.testerWallet.pendingBalance > 0
-                  ? `${userData.testerWallet.pendingBalance.toFixed(2)} KZ pendente`
-                  : "Disponível para uso"
+                  ? `${userData.testerWallet.pendingBalance.toFixed(2)} KZ ${t("pending")}`
+                  : t("available for use")
                 }
               </p>
             </CardContent>
@@ -114,7 +114,7 @@ const Dashboard = () => {
           <Card className="bg-card border-border shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {isFreelancer ? "Tarefas Completadas" : "Tarefas Criadas"}
+                {isFreelancer ? t("completed tasks") : t("created tasks")}
               </CardTitle>
               <CheckCircle className="h-4 w-4 text-cosmic-blue" />
             </CardHeader>
@@ -123,14 +123,14 @@ const Dashboard = () => {
                 {isFreelancer ? freelancerCompletedTests : contractorJobsPosted}
               </div>
               <p className="text-xs text-muted-foreground">
-                {isFreelancer ? "Total de tarefas concluídas" : "Total de tarefas criadas"}
+                {isFreelancer ? t("total completed tasks") : t("total created tasks")}
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Avaliação Média</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("average rating")}</CardTitle>
               <Star className="h-4 w-4 text-star-glow" />
             </CardHeader>
             <CardContent>
@@ -155,7 +155,7 @@ const Dashboard = () => {
           <Card className="bg-card border-border shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {isFreelancer ? "Taxa de Aprovação" : "Taxa de Conclusão"}
+                {isFreelancer ? t("approval rate") : t("completion rate")}
               </CardTitle>
               <Target className="h-4 w-4 text-success" />
             </CardHeader>
@@ -177,21 +177,21 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-foreground">
                     <BarChart2 className="h-5 w-5 text-electric-purple" />
-                    <span>Estatísticas de Performance</span>
+                    <span>{t("performance statistics")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Tarefas Completadas</span>
+                      <span className="text-sm text-muted-foreground">{t("completed tasks")}</span>
                       <span className="font-bold text-primary">{freelancerCompletedTests}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Avaliação Média</span>
+                      <span className="text-sm text-muted-foreground">{t("average rating")}</span>
                       <span className="font-bold text-primary">{freelancerRating.toFixed(1)}/5.0</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Taxa de Aprovação</span>
+                      <span className="text-sm text-muted-foreground">{t("approval rate")}</span>
                       <span className="font-bold text-success">{freelancerApprovalRate}%</span>
                     </div>
                   </div>
@@ -203,22 +203,22 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-foreground">
                     <Activity className="h-5 w-5 text-cosmic-blue" />
-                    <span>Próximos Passos</span>
+                    <span>{t("next steps")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {freelancerCompletedTests === 0 && (
                       <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                        <p className="font-medium text-sm text-foreground">Comece sua primeira tarefa!</p>
-                        <p className="text-xs text-muted-foreground mt-1">Navegue pelas tarefas disponíveis e comece a ganhar dinheiro.</p>
+                        <p className="font-medium text-sm text-foreground">{t("start your first task")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("browse available tasks")}</p>
                       </div>
                     )}
                     
                     {currentBalance >= 2000 && (
                       <div className="p-3 bg-success/5 border border-success/20 rounded-lg">
-                        <p className="font-medium text-sm text-foreground">Saldo disponível para saque</p>
-                        <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} KZ disponível para retirada.</p>
+                        <p className="font-medium text-sm text-foreground">{t("balance available for withdrawal")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("you have balance available for withdrawal", { balance: currentBalance.toFixed(2) })}</p>
                       </div>
                     )}
                     
@@ -227,7 +227,7 @@ const Dashboard = () => {
                       onClick={() => navigate('/')}
                       className="w-full"
                     >
-                      Ver Tarefas Disponíveis
+                      {t("view available tasks")}
                     </Button>
                   </div>
                 </CardContent>
@@ -240,21 +240,21 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-foreground">
                     <Users className="h-5 w-5 text-electric-purple" />
-                    <span>Suas Tarefas</span>
+                    <span>{t("your tasks")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Tarefas Ativas</span>
+                      <span className="text-sm text-muted-foreground">{t("active tasks")}</span>
                       <span className="font-bold text-primary">{contractorActiveTasks}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Aguardando Aprovação</span>
+                      <span className="text-sm text-muted-foreground">{t("awaiting approval")}</span>
                       <span className="font-bold text-warning">{contractorAwaitingApproval}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Concluídas</span>
+                      <span className="text-sm text-muted-foreground">{t("completed tasks count")}</span>
                       <span className="font-bold text-success">{contractorCompletedTasks}</span>
                     </div>
                     
@@ -262,7 +262,7 @@ const Dashboard = () => {
                       onClick={() => navigate('/manage-applications')}
                       className="w-full bg-gradient-primary text-primary-foreground"
                     >
-                      Gerenciar Aplicações
+                      {t("manage applications")}
                     </Button>
                   </div>
                 </CardContent>
@@ -273,20 +273,20 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-foreground">
                     <Briefcase className="h-5 w-5 text-star-glow" />
-                    <span>Criar Nova Tarefa</span>
+                    <span>{t("create new task")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      Crie uma nova tarefa e encontre freelancers qualificados para testar seu aplicativo.
+                      {t("create new task description")}
                     </p>
                     
                     <Button 
                       onClick={() => navigate('/create-job')}
                       className="w-full"
                     >
-                      Criar Nova Tarefa
+                      {t("create new task button")}
                     </Button>
                   </div>
                 </CardContent>
@@ -300,7 +300,7 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-foreground">
               <AlertCircle className="h-5 w-5 text-warning" />
-              <span>Alertas Importantes</span>
+              <span>{t("important alerts")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -311,8 +311,8 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-3 p-3 bg-muted/5 border border-muted/20 rounded-lg">
                       <Activity className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium text-sm text-foreground">Nenhuma tarefa ainda</p>
-                        <p className="text-xs text-muted-foreground mt-1">Comece sua primeira tarefa para começar a ganhar.</p>
+                        <p className="font-medium text-sm text-foreground">{t("no tasks yet")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("start your first task to earn")}</p>
                       </div>
                     </div>
                   )}
@@ -321,8 +321,8 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-3 p-3 bg-success/5 border border-success/20 rounded-lg">
                       <CheckCircle className="h-5 w-5 text-success" />
                       <div>
-                        <p className="font-medium text-sm text-foreground">Saldo disponível para saque</p>
-                        <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} KZ disponível para retirada.</p>
+                        <p className="font-medium text-sm text-foreground">{t("balance available for withdrawal")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("you have balance available for withdrawal", { balance: currentBalance.toFixed(2) })}</p>
                       </div>
                     </div>
                   )}
@@ -333,8 +333,8 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-3 p-3 bg-warning/5 border border-warning/20 rounded-lg">
                       <Clock className="h-5 w-5 text-warning" />
                       <div>
-                        <p className="font-medium text-sm text-foreground">{contractorAwaitingApproval} tarefas aguardando sua aprovação</p>
-                        <p className="text-xs text-muted-foreground mt-1">Freelancers estão aguardando feedback sobre suas submissões</p>
+                        <p className="font-medium text-sm text-foreground">{t("tasks awaiting approval", { count: contractorAwaitingApproval })}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("tasks awaiting approval description")}</p>
                       </div>
                     </div>
                   )}
@@ -343,8 +343,8 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-3 p-3 bg-muted/5 border border-muted/20 rounded-lg">
                       <Briefcase className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium text-sm text-foreground">Nenhuma tarefa criada ainda</p>
-                        <p className="text-xs text-muted-foreground mt-1">Crie sua primeira tarefa para encontrar freelancers.</p>
+                        <p className="font-medium text-sm text-foreground">{t("no tasks created yet")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("create your first task to find freelancers")}</p>
                       </div>
                     </div>
                   )}

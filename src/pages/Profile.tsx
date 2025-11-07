@@ -92,14 +92,14 @@ const Profile = () => {
 
       setIsEditing(false);
       toast({
-        title: t("profile_updated"),
-        description: t("profile_updated_description"),
+        title: t("profile updated"),
+        description: t("profile updated description"),
       });
     } catch (error) {
       console.error("Error saving profile:", error);
       toast({
-        title: t("error_saving"),
-        description: t("error_saving_description"),
+        title: t("error saving"),
+        description: t("error saving description"),
         variant: "destructive",
       });
     } finally {
@@ -132,21 +132,21 @@ const Profile = () => {
         return (
           <Badge className="bg-warning/10 text-warning border-warning/20">
             <Clock className="h-3 w-3 mr-1" />
-            {t("pending_status")}
+            {t("pending status")}
           </Badge>
         );
       case 'rejected':
         return (
           <Badge className="bg-destructive/10 text-destructive border-destructive/20">
             <AlertCircle className="h-3 w-3 mr-1" />
-            {t("rejected_status")}
+            {t("rejected status")}
           </Badge>
         );
       case 'incomplete':
       default:
         return (
           <Badge variant="outline" className="text-muted-foreground">
-            {t("incomplete_status")}
+            {t("incomplete status")}
           </Badge>
         );
     }
@@ -157,7 +157,7 @@ const Profile = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Header />
         <div className="text-center text-foreground p-8 bg-card rounded-lg shadow-lg">
-          <p className="text-muted-foreground">{t("loading_profile")}</p>
+          <p className="text-muted-foreground">{t("loading profile")}</p>
         </div>
       </div>
     );
@@ -205,7 +205,7 @@ const Profile = () => {
                       
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{t("member_since")} {new Date(userData.createdAt).toLocaleDateString('pt-BR')}</span>
+                        <span>{t("member since")} {new Date(userData.createdAt).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>
                     
@@ -221,7 +221,7 @@ const Profile = () => {
                   className="flex items-center space-x-2 mt-4 md:mt-0"
                 >
                   {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                  <span>{isEditing ? t("cancel") : t("edit_profile")}</span>
+                  <span>{isEditing ? t("cancel") : t("edit profile")}</span>
                 </Button>
               </div>
             </CardHeader>
@@ -242,14 +242,14 @@ const Profile = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <User className="h-5 w-5 text-electric-purple" />
-                        <span>{t("personal_information")}</span>
+                        <span>{t("personal information")}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {isEditing ? (
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="name">{t("full_name")}</Label>
+                            <Label htmlFor="name">{t("full name")}</Label>
                             <Input
                               id="name"
                               value={formData.name}
@@ -261,7 +261,7 @@ const Profile = () => {
                             <Label htmlFor="bio">{t("bio")}</Label>
                             <Textarea
                               id="bio"
-                              placeholder={t("tell_about_yourself")}
+                              placeholder={t("tell about yourself")}
                               value={formData.bio}
                               onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                             />
@@ -299,7 +299,7 @@ const Profile = () => {
                           
                           <Button onClick={handleSave} disabled={isLoading} className="w-full glow-effect">
                             <Save className="h-4 w-4 mr-2" />
-                            {isLoading ? t("saving") : t("save_changes")}
+                            {isLoading ? t("saving") : t("save changes")}
                           </Button>
                         </div>
                       ) : (
@@ -357,17 +357,17 @@ const Profile = () => {
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center space-x-2">
                         <BarChart3 className="h-5 w-5 text-cosmic-blue" />
-                        <span>{t("your_stats")}</span>
+                        <span>{t("your stats")}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("completed_tasks")}</span>
+                        <span className="text-sm text-muted-foreground">{t("completed tasks")}</span>
                         <span className="font-semibold text-foreground">{userData.completedTests}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
+                        <span className="text-sm text-muted-foreground">{t("average rating")}</span>
                         <div className="flex items-center space-x-1">
                           <Star className="h-4 w-4 fill-star-glow text-star-glow" />
                           <span className="font-semibold text-foreground">{(userData.rating || 0).toFixed(1)}</span>
@@ -375,12 +375,12 @@ const Profile = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("approval_rate")}</span>
+                        <span className="text-sm text-muted-foreground">{t("approval rate")}</span>
                         <span className="font-semibold text-success">{userData.approvalRate || 0}%</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("current_balance")}</span>
+                        <span className="text-sm text-muted-foreground">{t("current balance")}</span>
                         <span className="font-semibold text-foreground">
                           {(userData.currentMode === 'tester' 
                             ? userData.testerWallet?.availableBalance || 0 
@@ -398,33 +398,33 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_completed_tasks")}</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total completed tasks")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{userData.completedTests}</div>
                     <div className="flex items-center text-xs text-success">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      +12% {t("this_month")}
+                      +12% {t("this month")}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total_earnings")}</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("total earnings")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{(userData.testerWallet?.totalEarnings || 0).toFixed(2)} KZ</div>
                     <div className="flex items-center text-xs text-success">
                       <DollarSign className="h-3 w-3 mr-1" />
-                      +340 KZ {t("this_month")}
+                      +340 KZ {t("this month")}
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("average_rating_label")}</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("average rating label")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{(userData.rating || 0).toFixed(1)}</div>
@@ -437,13 +437,13 @@ const Profile = () => {
 
                 <Card className="bg-card border-border shadow-md interactive-scale">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("approval_rate_label")}</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{t("approval rate label")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{userData.approvalRate}%</div>
                     <div className="flex items-center text-xs text-success">
                       <TrendingUp className="h-3 w-3 mr-1" />
-                      {t("above_average")}
+                      {t("above average")}
                     </div>
                   </CardContent>
                 </Card>
@@ -457,15 +457,15 @@ const Profile = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Settings className="h-5 w-5 text-electric-purple" />
-                      <span>{t("account_settings")}</span>
+                      <span>{t("account settings")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("manage_preferences_basic_settings")}
+                      {t("manage preferences basic settings")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>{t("current_mode_label")}</Label>
+                    <Label>{t("current mode label")}</Label>
                     <Select value={userData.currentMode} disabled>
                       <SelectTrigger>
                         <SelectValue />
@@ -476,20 +476,20 @@ const Profile = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      {t("use_toggle_to_change_mode")}
+                      {t("use toggle to change mode")}
                     </p>
                   </div>
 
                     <div className="space-y-2">
-                      <Label>{t("account_email")}</Label>
+                      <Label>{t("account email")}</Label>
                       <Input value={currentUser.email || ""} disabled />
                       <p className="text-xs text-muted-foreground">
-                        {t("email_cannot_be_changed")}
+                        {t("email cannot be changed")}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>{t("account_status")}</Label>
+                      <Label>{t("account status")}</Label>
                       <div className="flex items-center space-x-2">
                         {getVerificationBadge(userData.verificationStatus)}
                         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
@@ -500,7 +500,7 @@ const Profile = () => {
 
                     <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
                       <Link to="/profile?tab=settings">
-                        {t("change_password")}
+                        {t("change password")}
                       </Link>
                     </Button>
                     
@@ -513,10 +513,10 @@ const Profile = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Globe className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("social_media")}</span>
+                      <span>{t("social media")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("connect_social_media")}
+                      {t("connect social media")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

@@ -48,7 +48,7 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
     if (!currentUser || !userData) {
       toast({
         title: t("error"),
-        description: t("unauthenticated_report"),
+        description: t("unauthenticated report"),
         variant: "destructive",
       });
       return;
@@ -57,7 +57,7 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
     if (!reportedUserId) {
       toast({
         title: t("error"),
-        description: t("reported_user_id_missing"),
+        description: t("reported user id missing"),
         variant: "destructive",
       });
       return;
@@ -78,16 +78,16 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
       });
 
       toast({
-        title: t("report_submitted_success"),
-        description: t("report_submitted_description"),
+        title: t("report submitted success"),
+        description: t("report submitted description"),
       });
       onClose();
       form.reset();
     } catch (error) {
       console.error('Error submitting report:', error);
       toast({
-        title: t("error_submitting_report"),
-        description: t("error_submitting_report_description"),
+        title: t("error submitting report"),
+        description: t("error submitting report description"),
         variant: "destructive",
       });
     }
@@ -99,20 +99,20 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Flag className="h-5 w-5" />
-            {t("report_contractor")}
+            {t("report contractor")}
           </DialogTitle>
           <DialogDescription>
-            {t("report_contractor_description")}
+            {t("report contractor description")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="reportedEmail">{t("reported_email")} *</Label>
+            <Label htmlFor="reportedEmail">{t("reported email")} *</Label>
             <Input
               id="reportedEmail"
               type="email"
-              placeholder={t("reported_email_placeholder")}
+              placeholder={t("reported email placeholder")}
               {...form.register("reportedEmail")}
               disabled={!!reportedUserEmail}
             />
@@ -122,17 +122,17 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
           </div>
 
           <div>
-            <Label htmlFor="reason">{t("reason_for_report")} *</Label>
+            <Label htmlFor="reason">{t("reason for report")} *</Label>
             <Select onValueChange={(value) => form.setValue("reason", value)} value={form.watch("reason")}>
               <SelectTrigger>
-                <SelectValue placeholder={t("select_reason")} />
+                <SelectValue placeholder={t("select reason")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="task_not_approved">{t("task_not_approved")}</SelectItem>
-                <SelectItem value="late_approval">{t("late_approval")}</SelectItem>
-                <SelectItem value="payment_issues">{t("payment_issues")}</SelectItem>
+                <SelectItem value="task not approved">{t("task not approved")}</SelectItem>
+                <SelectItem value="late approval">{t("late approval")}</SelectItem>
+                <SelectItem value="payment issues">{t("payment issues")}</SelectItem>
                 <SelectItem value="harassment">{t("harassment")}</SelectItem>
-                <SelectItem value="other">{t("other_reason")}</SelectItem>
+                <SelectItem value="other">{t("other reason")}</SelectItem>
               </SelectContent>
             </Select>
             {form.formState.errors.reason && (
@@ -141,10 +141,10 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
           </div>
 
           <div>
-            <Label htmlFor="description">{t("detailed_description")} *</Label>
+            <Label htmlFor="description">{t("detailed description")} *</Label>
             <Textarea
               id="description"
-              placeholder={t("detailed_description_placeholder_report")}
+              placeholder={t("detailed description placeholder report")}
               rows={5}
               {...form.register("description")}
             />
@@ -164,7 +164,7 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
                   {t("submitting")}
                 </>
               ) : (
-                t("submit_report")
+                t("submit report")
               )}
             </Button>
           </div>

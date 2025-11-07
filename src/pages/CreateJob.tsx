@@ -133,10 +133,10 @@ const CreateJob = () => {
 
   const getPlaceholderForProofType = (type: 'text' | 'screenshot' | 'file' | 'url') => {
     switch (type) {
-      case 'text': return t('proof_placeholder_text');
-      case 'url': return t('proof_placeholder_url');
-      case 'screenshot': return t('proof_placeholder_screenshot');
-      case 'file': return t('proof_placeholder_file');
+      case 'text': return t('proof placeholder text');
+      case 'url': return t('proof placeholder url');
+      case 'screenshot': return t('proof placeholder screenshot');
+      case 'file': return t('proof placeholder file');
       default: return '';
     }
   };
@@ -157,7 +157,7 @@ const CreateJob = () => {
     if (!currentUser || !userData) {
       toast({
         title: t("error"),
-        description: t("error_login_required"),
+        description: t("error login required"),
         variant: "destructive",
       });
       return;
@@ -167,7 +167,7 @@ const CreateJob = () => {
     if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty) {
       toast({
         title: t("error"),
-        description: t("fill_all_required_fields"), // Assuming this translation exists
+        description: t("fill all required fields"), // Assuming this translation exists
         variant: "destructive",
       });
       return;
@@ -179,8 +179,8 @@ const CreateJob = () => {
     
     if (jobBounty < 5 || jobBounty > 50) {
       toast({
-        title: t("task_value_invalid"),
-        description: t("task_value_range"),
+        title: t("task value invalid"),
+        description: t("task value range"),
         variant: "destructive",
       });
       return;
@@ -192,8 +192,8 @@ const CreateJob = () => {
     
     if (currentBalance < totalCost) {
       toast({
-        title: t("insufficient_balance"), 
-        description: t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) }),
+        title: t("insufficient balance"), 
+        description: t("insufficient balance description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) }),
         variant: "destructive",
       });
       return;
@@ -223,16 +223,16 @@ const CreateJob = () => {
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
       
       toast({
-        title: t("job_created_success"),
-        description: t("job_created_description", { cost: totalCost.toFixed(2) }),
+        title: t("job created success"),
+        description: t("job created description", { cost: totalCost.toFixed(2) }),
       });
       
       navigate("/");
     } catch (error) {
       console.error("Error creating job:", error);
       toast({
-        title: t("error_creating_job"),
-        description: t("error_creating_job_description"),
+        title: t("error creating job"),
+        description: t("error creating job description"),
         variant: "destructive",
       });
     } finally {
@@ -246,7 +246,7 @@ const CreateJob = () => {
         <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
-            <p className="text-muted-foreground">{t("error_login_required")}</p>
+            <p className="text-muted-foreground">{t("error login required")}</p>
           </div>
         </div>
       </div>
@@ -266,8 +266,8 @@ const CreateJob = () => {
               {t("back")}
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{t("create_job")}</h1>
-              <p className="text-muted-foreground">{t("create_job_description")}</p>
+              <h1 className="text-3xl font-bold text-foreground">{t("create job")}</h1>
+              <p className="text-muted-foreground">{t("create job description")}</p>
             </div>
           </div>
 
@@ -280,16 +280,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <FileText className="h-5 w-5 text-electric-purple" />
-                      <span>{t("basic_information")}</span>
+                      <span>{t("basic information")}</span>
                     </CardTitle>
-                    <CardDescription>{t("basic_information_description")}</CardDescription> {/* Assuming this translation exists */}
+                    <CardDescription>{t("basic information description")}</CardDescription> {/* Assuming this translation exists */}
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="title">{t("task_title")} *</Label>
+                      <Label htmlFor="title">{t("task title")} *</Label>
                       <Input
                         id="title"
-                        placeholder={t("task_title_placeholder")}
+                        placeholder={t("task title placeholder")}
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                         required
@@ -297,10 +297,10 @@ const CreateJob = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="description">{t("detailed_description")} *</Label>
+                      <Label htmlFor="description">{t("detailed description")} *</Label>
                       <Textarea
                         id="description"
-                        placeholder={t("detailed_description_placeholder")}
+                        placeholder={t("detailed description placeholder")}
                         rows={5}
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -313,7 +313,7 @@ const CreateJob = () => {
                         <Label htmlFor="platform">{t("platform")} *</Label>
                         <Select value={formData.platform} onValueChange={(value) => setFormData(prev => ({ ...prev, platform: value }))}>
                           <SelectTrigger>
-                            <SelectValue placeholder={t("select_platform")} />
+                            <SelectValue placeholder={t("select platform")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="iOS">
@@ -356,10 +356,10 @@ const CreateJob = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="difficulty">{t("difficulty_level")} *</Label>
+                        <Label htmlFor="difficulty">{t("difficulty level")} *</Label>
                         <Select value={formData.difficulty} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}>
                           <SelectTrigger>
-                            <SelectValue placeholder={t("select_difficulty")} />
+                            <SelectValue placeholder={t("select difficulty")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Fácil">{t("easy")}</SelectItem>
@@ -377,16 +377,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <ListOrdered className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("detailed_instructions")}</span>
+                      <span>{t("detailed instructions")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("detailed_instructions_description")}
+                      {t("detailed instructions description")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
                       <Textarea
-                        placeholder={t("instruction_placeholder")}
+                        placeholder={t("instruction placeholder")}
                         value={currentInstruction}
                         onChange={(e) => setCurrentInstruction(e.target.value)}
                         rows={2}
@@ -427,16 +427,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <ShieldCheck className="h-5 w-5 text-star-glow" />
-                      <span>{t("proof_requirements")}</span>
+                      <span>{t("proof requirements")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("proof_requirements_description")}
+                      {t("proof requirements description")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="proofType">{t("proof_type")}</Label>
+                        <Label htmlFor="proofType">{t("proof type")}</Label>
                         <Select value={currentProofType} onValueChange={(value: 'text' | 'screenshot' | 'file' | 'url') => setCurrentProofType(value)}>
                           <SelectTrigger>
                             <SelectValue />
@@ -445,7 +445,7 @@ const CreateJob = () => {
                             <SelectItem value="text">
                               <div className="flex items-center space-x-2">
                                 <Type className="h-4 w-4 text-electric-purple" />
-                                <span>{t("text_response")}</span>
+                                <span>{t("text response")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="screenshot">
@@ -457,7 +457,7 @@ const CreateJob = () => {
                             <SelectItem value="url">
                               <div className="flex items-center space-x-2">
                                 <Link className="h-4 w-4 text-cosmic-blue" />
-                                <span>{t("link_url")}</span>
+                                <span>{t("link url")}</span>
                               </div>
                             </SelectItem>
                             <SelectItem value="file">
@@ -470,10 +470,10 @@ const CreateJob = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="proofLabel">{t("proof_name")}</Label>
+                        <Label htmlFor="proofLabel">{t("proof name")}</Label>
                         <Input
                           id="proofLabel"
-                          placeholder={t("proof_name_placeholder")}
+                          placeholder={t("proof name placeholder")}
                           value={currentProofLabel}
                           onChange={(e) => setCurrentProofLabel(e.target.value)}
                         />
@@ -481,10 +481,10 @@ const CreateJob = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="proofDescription">{t("proof_description")}</Label>
+                      <Label htmlFor="proofDescription">{t("proof description")}</Label>
                       <Textarea
                         id="proofDescription"
-                        placeholder={t("proof_description_placeholder")}
+                        placeholder={t("proof description placeholder")}
                         value={currentProofDescription}
                         onChange={(e) => setCurrentProofDescription(e.target.value)}
                         rows={2}
@@ -493,7 +493,7 @@ const CreateJob = () => {
                     
                     <Button type="button" onClick={handleAddProofRequirement} className="w-full glow-effect">
                       <Plus className="h-4 w-4 mr-2" />
-                      {t("add_proof")}
+                      {t("add proof")}
                     </Button>
                     
                     {formData.proofRequirements.length > 0 && (
@@ -507,10 +507,10 @@ const CreateJob = () => {
                               <div className="flex items-center space-x-2 mb-1">
                                 <span className="font-medium text-sm">{proof.label}</span>
                                 <Badge variant="secondary" className="text-xs">
-                                  {proof.type === 'text' && t('text_response')}
-                                  {proof.type === 'screenshot' && t('screenshot_short')}
-                                  {proof.type === 'url' && t('link_short')}
-                                  {proof.type === 'file' && t('file_short')}
+                                  {proof.type === 'text' && t('text response')}
+                                  {proof.type === 'screenshot' && t('screenshot short')}
+                                  {proof.type === 'url' && t('link short')}
+                                  {proof.type === 'file' && t('file short')}
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">{proof.description}</p>
@@ -536,16 +536,16 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Info className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("general_requirements")}</span>
+                      <span>{t("general requirements")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("general_requirements_description")}
+                      {t("general requirements description")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-2">
                       <Input
-                        placeholder={t("requirement_placeholder")}
+                        placeholder={t("requirement placeholder")}
                         value={currentRequirement}
                         onChange={(e) => setCurrentRequirement(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddRequirement())}
@@ -579,19 +579,19 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Clock className="h-5 w-5 text-star-glow" />
-                      <span>{t("additional_details")}</span>
+                      <span>{t("additional details")}</span>
                     </CardTitle>
                     <CardDescription>
-                      {t("additional_details_description")} {/* Assuming this translation exists */}
+                      {t("additional details description")} {/* Assuming this translation exists */}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="timeEstimate">{t("time_estimate")}</Label>
+                        <Label htmlFor="timeEstimate">{t("time estimate")}</Label>
                         <Input
                           id="timeEstimate"
-                          placeholder={t("time_estimate_placeholder")}
+                          placeholder={t("time estimate placeholder")}
                           value={formData.timeEstimate}
                           onChange={(e) => setFormData(prev => ({ ...prev, timeEstimate: e.target.value }))}
                         />
@@ -601,7 +601,7 @@ const CreateJob = () => {
                         <Label htmlFor="location">{t("location")}</Label>
                         <Input
                           id="location"
-                          placeholder={t("location_placeholder")}
+                          placeholder={t("location placeholder")}
                           value={formData.location}
                           onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                         />
@@ -610,18 +610,18 @@ const CreateJob = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="maxApplicants">{t("max_applicants")}</Label>
+                        <Label htmlFor="maxApplicants">{t("max applicants")}</Label>
                         <Input
                           id="maxApplicants"
                           type="number"
-                          placeholder={t("max_applicants_placeholder")}
+                          placeholder={t("max applicants placeholder")}
                           value={formData.maxApplicants}
                           onChange={(e) => setFormData(prev => ({ ...prev, maxApplicants: e.target.value }))}
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="dueDate">{t("due_date")}</Label>
+                        <Label htmlFor="dueDate">{t("due date")}</Label>
                         <Input
                           id="dueDate"
                           type="date"
@@ -641,26 +641,26 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <DollarSign className="h-5 w-5 text-electric-purple" />
-                      <span>{t("bounty_value")}</span>
+                      <span>{t("bounty value")}</span>
                     </CardTitle>
-                    <CardDescription>{t("bounty_value_description")}</CardDescription> {/* Assuming this translation exists */}
+                    <CardDescription>{t("bounty value description")}</CardDescription> {/* Assuming this translation exists */}
                   </CardHeader>
                   <CardContent>
                     <div>
-                       <Label htmlFor="bounty">{t("bounty_value_label")} *</Label>
+                       <Label htmlFor="bounty">{t("bounty value label")} *</Label>
                        <Input
                          id="bounty"
                          type="number"
                          step="0.01"
                          min="5"
                          max="50"
-                         placeholder={t("bounty_value_placeholder")}
+                         placeholder={t("bounty value placeholder")}
                          value={formData.bounty}
                          onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))}
                          required
                        />
                        <p className="text-xs text-muted-foreground mt-2">
-                         {t("bounty_value_min_max")}
+                         {t("bounty value min max")}
                        </p>
                     </div>
                   </CardContent>
@@ -671,7 +671,7 @@ const CreateJob = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Users className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("job_summary")}</span>
+                      <span>{t("job summary")}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -690,20 +690,20 @@ const CreateJob = () => {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("detailed_instructions")}:</span>
+                      <span className="text-muted-foreground">{t("detailed instructions")}:</span>
                       <span className="font-medium">{formData.detailedInstructions.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("proof_requirements")}:</span>
+                      <span className="text-muted-foreground">{t("proof requirements")}:</span>
                       <span className="font-medium">{formData.proofRequirements.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("general_requirements")}:</span>
+                      <span className="text-muted-foreground">{t("general requirements")}:</span>
                       <span className="font-medium">{formData.requirements.length}</span>
                     </div>
                     <Separator />
                     <div className="flex items-center justify-between text-sm font-medium">
-                      <span>{t("total_project_cost")}:</span>
+                      <span>{t("total project cost")}:</span>
                       <span className="text-primary">
                         {formData.bounty ? `${(parseFloat(formData.bounty) * (parseInt(formData.maxApplicants) || 1)).toFixed(2)} KZ` : "0,00 KZ"}
                       </span>
@@ -720,7 +720,7 @@ const CreateJob = () => {
                     size="lg"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? t("publishing") : t("publish_job")}
+                    {isLoading ? t("publishing") : t("publish job")}
                   </Button>
                   
                   <Button 

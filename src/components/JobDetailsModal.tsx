@@ -54,7 +54,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
     if (!currentUser || !userData) {
       toast({
         title: t("error"),
-        description: t("unauthenticated_apply"),
+        description: t("unauthenticated apply"),
         variant: "destructive",
       });
       return;
@@ -65,8 +65,8 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
       await JobService.applyToJob(job.id, currentUser.uid, userData.name);
       
       toast({
-        title: t("proofs_submitted_success"),
-        description: t("proofs_submitted_description"),
+        title: t("proofs submitted success"),
+        description: t("proofs submitted description"),
       });
       
       onOpenChange(false);
@@ -74,7 +74,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
       console.error('Error applying to job:', error);
       toast({
         title: t("error"),
-        description: t("error_submitting_proofs"),
+        description: t("error submitting proofs"),
         variant: "destructive",
       });
     } finally {
@@ -104,20 +104,20 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-primary">{job.bounty.toFixed(2)} KZ</p>
-              <p className="text-sm text-muted-foreground">{t("applicants_count", { count: job.applicantCount })}</p>
+              <p className="text-sm text-muted-foreground">{t("applicants count", { count: job.applicantCount })}</p>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <h3 className="font-semibold mb-2">{t("detailed_description")}</h3>
+            <h3 className="font-semibold mb-2">{t("detailed description")}</h3>
             <p className="text-muted-foreground leading-relaxed">{job.description}</p>
           </div>
 
           {/* Detailed Instructions */}
           {job.detailedInstructions && job.detailedInstructions.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-3">{t("detailed_instructions_label")}</h3>
+              <h3 className="font-semibold mb-3">{t("detailed instructions label")}</h3>
               <div className="space-y-3">
                 {job.detailedInstructions.map((instruction, index) => (
                   <div key={instruction.id} className="flex items-start space-x-3 p-3 bg-muted/30 rounded-lg">
@@ -141,7 +141,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
           {/* Proof Requirements */}
           {job.proofRequirements && job.proofRequirements.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-3">{t("proof_requirements")}</h3>
+              <h3 className="font-semibold mb-3">{t("proof requirements")}</h3>
               <div className="space-y-3">
                 {job.proofRequirements.map((proof, index) => (
                   <div key={proof.id} className="flex items-start space-x-3 p-3 border border-border rounded-lg">
@@ -159,9 +159,9 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
                       </div>
                       <p className="text-xs text-muted-foreground">{proof.description}</p>
                       <div className="mt-2 text-xs text-muted-foreground">
-                        {t("type")}: {proof.type === 'text' ? t('text_response') : 
+                        {t("type")}: {proof.type === 'text' ? t('text response') : 
                                proof.type === 'screenshot' ? t('screenshot') :
-                               proof.type === 'file' ? t('file') : t('link_url')}
+                               proof.type === 'file' ? t('file') : t('link url')}
                       </div>
                     </div>
                   </div>
@@ -175,13 +175,13 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("time_estimate")}:</span>
+                <span className="text-muted-foreground">{t("time estimate")}:</span>
                 <span className="font-medium">{job.timeEstimate}</span>
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("posted_by")}:</span>
+                <span className="text-muted-foreground">{t("posted by")}:</span>
                 <span className="font-medium">{job.posterName}</span>
               </div>
 
@@ -206,7 +206,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
               {job.dueDate && (
                 <div className="flex items-center space-x-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("due_date")}:</span>
+                  <span className="text-muted-foreground">{t("due date")}:</span>
                   <span className="font-medium">
                     {new Date(job.dueDate).toLocaleDateString('pt-BR')}
                   </span>
@@ -216,7 +216,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
               {job.maxApplicants && (
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("max_applicants")}:</span>
+                  <span className="text-muted-foreground">{t("max applicants")}:</span>
                   <span className="font-medium">{job.maxApplicants}</span>
                 </div>
               )}
@@ -235,15 +235,15 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
                 disabled={isApplying}
                 className="min-w-[120px]"
               >
-                {isApplying ? t("applying") : t("apply_now")}
+                {isApplying ? t("applying") : t("apply now")}
               </Button>
             ) : (
               <Button disabled variant="outline">
                 {currentUser && job.posterId === currentUser.uid 
-                  ? t("your_own_job_short") 
+                  ? t("your own job short") 
                   : job.status !== 'active' 
-                    ? t("job_inactive_short") 
-                    : t("not_available")
+                    ? t("job inactive short") 
+                    : t("not available")
                 }
               </Button>
             )}

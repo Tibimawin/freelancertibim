@@ -48,8 +48,8 @@ const VerificationForm = () => {
 
     if (filesToUpload.length < 3) {
       toast({
-        title: t("missing_documents"),
-        description: t("missing_documents_description"),
+        title: t("missing documents"),
+        description: t("missing documents description"),
         variant: "destructive",
       });
       return;
@@ -100,16 +100,16 @@ const VerificationForm = () => {
       await updateUserData({ verificationStatus: 'pending' });
 
       toast({
-        title: t("verification_submitted"),
-        description: t("verification_submitted_description"),
+        title: t("verification submitted"),
+        description: t("verification submitted description"),
       });
 
     } catch (error) {
       console.error('Erro durante o processo de verificação:', error);
       uploadError = true;
       toast({
-        title: t("error_uploading_documents"),
-        description: t("error_uploading_documents_description"),
+        title: t("error uploading documents"),
+        description: t("error uploading documents description"),
         variant: "destructive",
       });
     } finally {
@@ -135,9 +135,9 @@ const VerificationForm = () => {
     return (
       <Alert className="bg-warning/10 border-warning/20 text-warning">
         <Clock className="h-4 w-4" />
-        <AlertTitle>{t("verification_pending")}</AlertTitle>
+        <AlertTitle>{t("verification pending")}</AlertTitle>
         <AlertDescription>
-          {t("verification_pending_description")}
+          {t("verification pending description")}
         </AlertDescription>
       </Alert>
     );
@@ -147,9 +147,9 @@ const VerificationForm = () => {
     return (
       <Alert className="bg-success/10 border-success/20 text-success">
         <CheckCircle className="h-4 w-4" />
-        <AlertTitle>{t("verification_approved")}</AlertTitle>
+        <AlertTitle>{t("verification approved")}</AlertTitle>
         <AlertDescription>
-          {t("verification_approved_description")}
+          {t("verification approved description")}
         </AlertDescription>
       </Alert>
     );
@@ -160,17 +160,17 @@ const VerificationForm = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Clock className="h-5 w-5 text-cosmic-blue" />
-          <span>{t("identity_verification")}</span>
+          <span>{t("identity verification")}</span>
         </CardTitle>
         <CardDescription>
-          {t("identity_verification_description")}
+          {t("identity verification description")}
         </CardDescription>
         {verificationStatus === 'rejected' && (
           <Alert className="bg-destructive/10 border-destructive/20 text-destructive mt-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{t("verification_rejected")}</AlertTitle>
+            <AlertTitle>{t("verification rejected")}</AlertTitle>
             <AlertDescription>
-              {t("verification_rejected_description")}
+              {t("verification rejected description")}
             </AlertDescription>
           </Alert>
         )}
@@ -182,7 +182,7 @@ const VerificationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="id_front" className="flex items-center space-x-2">
                 {getDocStatus('id_front')}
-                <span>{t("document_id_front")} *</span>
+                <span>{t("document id front")} *</span>
               </Label>
               <Input
                 id="id_front"
@@ -198,7 +198,7 @@ const VerificationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="id_back" className="flex items-center space-x-2">
                 {getDocStatus('id_back')}
-                <span>{t("document_id_back")} *</span>
+                <span>{t("document id back")} *</span>
               </Label>
               <Input
                 id="id_back"
@@ -214,7 +214,7 @@ const VerificationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="selfie" className="flex items-center space-x-2">
                 {getDocStatus('selfie')}
-                <span>{t("selfie_with_document")} *</span>
+                <span>{t("selfie with document")} *</span>
               </Label>
               <Input
                 id="selfie"
@@ -230,7 +230,7 @@ const VerificationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="address_proof" className="flex items-center space-x-2">
                 {getDocStatus('address_proof')}
-                <span>{t("proof_of_address")} ({t("optional")})</span>
+                <span>{t("proof of address")} ({t("optional")})</span>
               </Label>
               <Input
                 id="address_proof"
@@ -250,12 +250,12 @@ const VerificationForm = () => {
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t("submitting_documents")}
+                {t("submitting documents")}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                {t("submit_for_verification")}
+                {t("submit for verification")}
               </>
             )}
           </Button>

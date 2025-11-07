@@ -47,7 +47,7 @@ const ManageApplications = () => {
       console.error('Error fetching jobs with applications:', error);
       toast({
         title: t("error"),
-        description: t("error_loading_tasks_applications"),
+        description: t("error loading tasks applications"),
         variant: "destructive",
       });
     } finally {
@@ -73,7 +73,7 @@ const ManageApplications = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
-        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">{t("awaiting_review")}</Badge>;
+        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">{t("awaiting review")}</Badge>;
       case 'approved':
         return <Badge variant="outline" className="bg-success/10 text-success border-success/20">{t("approved")}</Badge>;
       case 'rejected':
@@ -94,7 +94,7 @@ const ManageApplications = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="ml-3 text-muted-foreground">{t("loading_your_tasks")}</p>
+            <p className="ml-3 text-muted-foreground">{t("loading your tasks")}</p>
           </div>
         </div>
       </div>
@@ -114,8 +114,8 @@ const ManageApplications = () => {
               {t("back")}
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{t("manage_applications")}</h1>
-              <p className="text-muted-foreground">{t("review_freelancer_proofs")}</p>
+              <h1 className="text-3xl font-bold text-foreground">{t("manage applications")}</h1>
+              <p className="text-muted-foreground">{t("review freelancer proofs")}</p>
             </div>
           </div>
 
@@ -125,12 +125,12 @@ const ManageApplications = () => {
               <Card className="bg-card border-border shadow-md">
                 <CardContent className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{t("no_tasks_found_manage")}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{t("no tasks found manage")}</h3>
                   <p className="text-muted-foreground mb-4">
-                    {t("no_tasks_found_manage_description")}
+                    {t("no tasks found manage description")}
                   </p>
                   <Button onClick={() => navigate('/create-job')} className="glow-effect">
-                    {t("create_new_task")}
+                    {t("create new task")}
                   </Button>
                 </CardContent>
               </Card>
@@ -146,7 +146,7 @@ const ManageApplications = () => {
                       <div className="text-right">
                         <p className="text-2xl font-bold text-primary">{job.bounty.toFixed(2)} KZ</p>
                         <p className="text-sm text-muted-foreground">
-                          {job.applications?.length || 0} {t("applications_received")}
+                          {job.applications?.length || 0} {t("applications received")}
                         </p>
                       </div>
                     </div>
@@ -158,7 +158,7 @@ const ManageApplications = () => {
                         <Separator className="bg-border" />
                         <h4 className="font-semibold flex items-center text-foreground">
                           <Users className="h-4 w-4 mr-2 text-cosmic-blue" />
-                          {t("applications_received")}
+                          {t("applications received")}
                         </h4>
                         
                         <div className="space-y-3">
@@ -170,7 +170,7 @@ const ManageApplications = () => {
                                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                                     <Clock className="h-3 w-3" />
                                     <span>
-                                      {t("applied_on")} {new Date(application.appliedAt).toLocaleDateString('pt-BR')}
+                                      {t("applied on")} {new Date(application.appliedAt).toLocaleDateString('pt-BR')}
                                     </span>
                                   </div>
                                 </div>
@@ -185,19 +185,19 @@ const ManageApplications = () => {
                                     className="glow-effect"
                                   >
                                     <Eye className="h-4 w-4 mr-2" />
-                                    {t("review_proofs")}
+                                    {t("review proofs")}
                                   </Button>
                                 )}
                                 {application.status === 'approved' && (
                                   <div className="flex items-center text-success text-sm">
                                     <CheckCircle className="h-4 w-4 mr-1" />
-                                    {t("approved_short")}
+                                    {t("approved short")}
                                   </div>
                                 )}
                                 {application.status === 'rejected' && (
                                   <div className="flex items-center text-destructive text-sm">
                                     <XCircle className="h-4 w-4 mr-1" />
-                                    {t("rejected_short")}
+                                    {t("rejected short")}
                                   </div>
                                 )}
                               </div>
@@ -208,7 +208,7 @@ const ManageApplications = () => {
                     ) : (
                       <div className="text-center py-6 text-muted-foreground">
                         <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>{t("no_applications_for_task")}</p>
+                        <p>{t("no applications for task")}</p>
                       </div>
                     )}
                   </CardContent>

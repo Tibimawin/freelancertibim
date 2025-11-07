@@ -24,13 +24,13 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
       setCopied(field);
       toast({
         title: t("copied"),
-        description: t("copied_to_clipboard", { field }),
+        description: t("copied to clipboard", { field }),
       });
       setTimeout(() => setCopied(null), 2000);
     } catch (error) {
       toast({
-        title: t("error_copying"),
-        description: t("error_copying_description"),
+        title: t("error copying"),
+        description: t("error copying description"),
         variant: "destructive",
       });
     }
@@ -55,7 +55,7 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {method === 'express' ? t('deposit_modal_title_express') : t('deposit_modal_title_iban')}
+            {method === 'express' ? t('deposit modal title express') : t('deposit modal title iban')}
           </DialogTitle>
         </DialogHeader>
 
@@ -65,12 +65,12 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Phone className="h-5 w-5" />
-                  {t('express_transfer_data')}
+                  {t('express transfer data')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('phone_number')}</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('phone number')}</label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-muted rounded text-center font-mono">
                       {expressData.phone}
@@ -78,9 +78,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(expressData.phone, t('phone_number'))}
+                      onClick={() => copyToClipboard(expressData.phone, t('phone number'))}
                     >
-                      {copied === t('phone_number') ? (
+                      {copied === t('phone number') ? (
                         <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -90,7 +90,7 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('beneficiary_name')}</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('beneficiary name')}</label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-muted rounded text-center">
                       {expressData.name}
@@ -98,9 +98,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(expressData.name, t('beneficiary_name'))}
+                      onClick={() => copyToClipboard(expressData.name, t('beneficiary name'))}
                     >
-                      {copied === t('beneficiary_name') ? (
+                      {copied === t('beneficiary name') ? (
                         <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -135,12 +135,12 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Building className="h-5 w-5" />
-                  {t('iban_transfer_data')}
+                  {t('iban transfer data')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('iban_code')}</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('iban code')}</label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-muted rounded text-center font-mono text-sm">
                       {ibanData.iban}
@@ -148,9 +148,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(ibanData.iban, t('iban_code'))}
+                      onClick={() => copyToClipboard(ibanData.iban, t('iban code'))}
                     >
-                      {copied === t('iban_code') ? (
+                      {copied === t('iban code') ? (
                         <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -167,7 +167,7 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('account_name')}</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('account name')}</label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-muted rounded text-center">
                       {ibanData.accountName}
@@ -175,9 +175,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(ibanData.accountName, t('account_name'))}
+                      onClick={() => copyToClipboard(ibanData.accountName, t('account name'))}
                     >
-                      {copied === t('account_name') ? (
+                      {copied === t('account name') ? (
                         <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -187,7 +187,7 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('swift_code')}</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('swift code')}</label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-muted rounded text-center font-mono">
                       {ibanData.swift}
@@ -195,9 +195,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(ibanData.swift, t('swift_code'))}
+                      onClick={() => copyToClipboard(ibanData.swift, t('swift code'))}
                     >
-                      {copied === t('swift_code') ? (
+                      {copied === t('swift code') ? (
                         <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
                         <Copy className="h-4 w-4" />
@@ -235,17 +235,17 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{t('important')}</Badge>
                   <span className="text-muted-foreground">
-                    {t('use_reference_to_identify_deposit')}
+                    {t('use reference to identify deposit')}
                   </span>
                 </div>
                 <p className="text-muted-foreground">
-                  {t('balance_credited_within_24h')}
+                  {t('balance credited within 24h')}
                 </p>
                 <p className="text-muted-foreground">
-                  {t('keep_proof_of_transfer')}
+                  {t('keep proof of transfer')}
                 </p>
                 <p className="text-muted-foreground">
-                  {t('contact_us_if_problems')}
+                  {t('contact us if problems')}
                 </p>
               </div>
             </CardContent>

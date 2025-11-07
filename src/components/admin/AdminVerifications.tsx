@@ -159,7 +159,7 @@ const AdminVerifications = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por usuário ou ID..."
+                  placeholder={t('search user id')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -169,14 +169,14 @@ const AdminVerifications = () => {
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Filtrar por status" />
+                <SelectValue placeholder={t('filter by status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="pending">Pendentes</SelectItem>
-                <SelectItem value="approved">Aprovados</SelectItem>
-                <SelectItem value="rejected">Rejeitados</SelectItem>
-                <SelectItem value="incomplete">Incompletos</SelectItem>
+                <SelectItem value="all">{t('all statuses')}</SelectItem>
+                <SelectItem value="pending">{t('pending status')}</SelectItem>
+                <SelectItem value="approved">{t('approved status')}</SelectItem>
+                <SelectItem value="rejected">{t('rejected status')}</SelectItem>
+                <SelectItem value="incomplete">{t('incomplete status')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -202,11 +202,11 @@ const AdminVerifications = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <FileCheck className="h-3 w-3" />
-                      {verification.documents.length} documentos
+                      {verification.documents.length} {t('documents count', { count: verification.documents.length })}
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {verification.submittedAt.toLocaleDateString('pt-BR')}
+                      {t('submitted on')}: {verification.submittedAt.toLocaleDateString('pt-BR')}
                     </div>
                   </div>
 
@@ -222,7 +222,7 @@ const AdminVerifications = () => {
                   
                   {verification.adminNotes && (
                     <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                      <strong>Notas do Admin:</strong> {verification.adminNotes}
+                      <strong>{t('admin notes')}:</strong> {verification.adminNotes}
                     </div>
                   )}
                 </div>
@@ -234,7 +234,7 @@ const AdminVerifications = () => {
                     onClick={() => setSelectedVerification(verification)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Analisar
+                    {t('analyze')}
                   </Button>
                   
                   {verification.overallStatus === 'pending' && (
@@ -245,7 +245,7 @@ const AdminVerifications = () => {
                         onClick={() => setActionDialog({ type: 'approve', verification })}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        Aprovar
+                        {t('approve button')}
                       </Button>
                       <Button
                         variant="destructive"
@@ -253,7 +253,7 @@ const AdminVerifications = () => {
                         onClick={() => setActionDialog({ type: 'reject', verification })}
                       >
                         <X className="h-4 w-4 mr-1" />
-                        Rejeitar
+                        {t('reject button')}
                       </Button>
                     </>
                   )}
@@ -271,9 +271,9 @@ const AdminVerifications = () => {
       >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Análise de Verificação</DialogTitle>
+            <DialogTitle>{t('verification analysis')}</DialogTitle>
             <DialogDescription>
-              Revise todos os documentos submetidos pelo usuário
+              {t('review all submitted documents')}
             </DialogDescription>
           </DialogHeader>
 
@@ -282,12 +282,12 @@ const AdminVerifications = () => {
               {/* User Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded">
                 <div>
-                  <Label>Usuário</Label>
+                  <Label>{t('user')}</Label>
                   <p className="font-medium">{selectedVerification.userName}</p>
                   <p className="text-sm text-muted-foreground">{selectedVerification.userEmail}</p>
                 </div>
                 <div>
-                  <Label>Status Geral</Label>
+                  <Label>{t('overall status')}</Label>
                   <div className="pt-1">
                     {getStatusBadge(selectedVerification.overallStatus)}
                   </div>
@@ -296,7 +296,7 @@ const AdminVerifications = () => {
 
               {/* Documents */}
               <div>
-                <Label className="text-base">Documentos Submetidos</Label>
+                <Label className="text-base">{t('submitted documents')}</Label>
                 <div className="grid gap-4 mt-2">
                   {selectedVerification.documents.map((doc, index) => (
                     <Card key={index}>
@@ -305,7 +305,7 @@ const AdminVerifications = () => {
                           <div>
                             <h4 className="font-medium">{getDocumentTypeLabel(doc.type)}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Enviado em {doc.uploadedAt.toLocaleDateString('pt-BR')}
+                              {t('uploaded on')} {doc.uploadedAt.toLocaleDateString('pt-BR')}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ const AdminVerifications = () => {
                               onClick={() => window.open(doc.url, '_blank')}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              Ver
+                              {t('view')}
                             </Button>
                           </div>
                         </div>
@@ -336,7 +336,7 @@ const AdminVerifications = () => {
                             className="hidden items-center justify-center h-32 text-muted-foreground"
                           >
                             <FileCheck className="h-8 w-8 mr-2" />
-                            Documento disponível para visualização
+                            {t('document available for viewing')}
                           </div>
                         </div>
 
@@ -344,7 +344,7 @@ const AdminVerifications = () => {
                           <div className="mt-2 p-2 bg-destructive/10 rounded text-sm">
                             <div className="flex items-center gap-1 text-destructive mb-1">
                               <AlertCircle className="h-3 w-3" />
-                              <span className="font-medium">Rejeitado:</span>
+                              <span className="font-medium">{t('rejected')}:</span>
                             </div>
                             <p>{doc.rejectionReason}</p>
                           </div>
@@ -357,16 +357,16 @@ const AdminVerifications = () => {
 
               {/* Timeline */}
               <div>
-                <Label className="text-base">Histórico</Label>
+                <Label className="text-base">{t('history')}</Label>
                 <div className="mt-2 space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>Submetido em {selectedVerification.submittedAt.toLocaleString('pt-BR')}</span>
+                    <span>{t('submitted at')}: {selectedVerification.submittedAt.toLocaleString('pt-BR')}</span>
                   </div>
                   {selectedVerification.reviewedAt && (
                     <div className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4" />
-                      <span>Revisado em {selectedVerification.reviewedAt.toLocaleString('pt-BR')}</span>
+                      <span>{t('reviewed at')}: {selectedVerification.reviewedAt.toLocaleString('pt-BR')}</span>
                     </div>
                   )}
                 </div>
@@ -374,7 +374,7 @@ const AdminVerifications = () => {
 
               {selectedVerification.adminNotes && (
                 <div>
-                  <Label>Notas Administrativas</Label>
+                  <Label>{t('admin notes label')}</Label>
                   <p className="bg-muted p-3 rounded text-sm mt-1">{selectedVerification.adminNotes}</p>
                 </div>
               )}
@@ -383,7 +383,7 @@ const AdminVerifications = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedVerification(null)}>
-              Fechar
+              {t('close')}
             </Button>
             {selectedVerification?.overallStatus === 'pending' && (
               <>
@@ -391,12 +391,12 @@ const AdminVerifications = () => {
                   onClick={() => setActionDialog({ type: 'reject', verification: selectedVerification })}
                   variant="destructive"
                 >
-                  Rejeitar
+                  {t('reject button')}
                 </Button>
                 <Button
                   onClick={() => setActionDialog({ type: 'approve', verification: selectedVerification })}
                 >
-                  Aprovar
+                  {t('approve button')}
                 </Button>
               </>
             )}
@@ -412,12 +412,12 @@ const AdminVerifications = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {actionDialog.type === 'approve' ? 'Aprovar Verificação' : 'Rejeitar Verificação'}
+              {actionDialog.type === 'approve' ? t('approve verification') : t('reject verification')}
             </DialogTitle>
             <DialogDescription>
               {actionDialog.type === 'approve' 
-                ? 'Confirmar a aprovação da verificação do usuário.'
-                : 'Selecione os documentos que devem ser rejeitados e informe os motivos.'
+                ? t('confirm user verification approval')
+                : t('select documents to reject')
               }
             </DialogDescription>
           </DialogHeader>
@@ -425,7 +425,7 @@ const AdminVerifications = () => {
           <div className="space-y-4">
             {actionDialog.type === 'reject' && actionDialog.verification && (
               <div>
-                <Label>Documentos para Rejeitar</Label>
+                <Label>{t('documents to reject')}</Label>
                 <div className="space-y-2 mt-2">
                   {actionDialog.verification.documents.map((doc, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -436,7 +436,7 @@ const AdminVerifications = () => {
                           if (checked) {
                             setRejectionReasons(prev => ({
                               ...prev,
-                              [doc.type]: 'Documento inválido ou ilegível'
+                              [doc.type]: t('invalid document illegible')
                             }));
                           } else {
                             const { [doc.type]: removed, ...rest } = rejectionReasons;
@@ -449,7 +449,7 @@ const AdminVerifications = () => {
                       </Label>
                       {rejectionReasons[doc.type] && (
                         <Input
-                          placeholder="Motivo da rejeição"
+                          placeholder={t('rejection reason placeholder')}
                           value={rejectionReasons[doc.type]}
                           onChange={(e) => setRejectionReasons(prev => ({
                             ...prev,
@@ -465,7 +465,7 @@ const AdminVerifications = () => {
             )}
 
             <div>
-              <Label htmlFor="notes">Notas Administrativas</Label>
+              <Label htmlFor="notes">{t('admin notes label')}</Label>
               <Textarea
                 id="notes"
                 placeholder="Adicione observações sobre a verificação..."
@@ -480,13 +480,13 @@ const AdminVerifications = () => {
               variant="outline"
               onClick={() => setActionDialog({ type: null, verification: null })}
             >
-              Cancelar
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleVerificationAction}
               disabled={actionDialog.type === 'reject' && Object.keys(rejectionReasons).length === 0}
             >
-              Confirmar
+              {t('confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

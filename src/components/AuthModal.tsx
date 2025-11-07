@@ -42,14 +42,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     try {
       await signIn(signInForm.email, signInForm.password);
       toast({
-        title: t("login_success"),
-        description: t("welcome_back_freelincer"),
+        title: t("login success"),
+        description: t("welcome back freelincer"),
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: t("login_error"),
-        description: error.message || t("login_error_description"),
+        title: t("login error"),
+        description: error.message || t("login error description"),
         variant: "destructive",
       });
     } finally {
@@ -62,8 +62,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     
     if (signUpForm.password !== signUpForm.confirmPassword) {
       toast({
-        title: t("password_error"),
-        description: t("password_mismatch_signup"),
+        title: t("password error"),
+        description: t("password mismatch signup"),
         variant: "destructive",
       });
       return;
@@ -71,8 +71,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
     if (signUpForm.password.length < 6) {
       toast({
-        title: t("weak_password"),
-        description: t("weak_password_description"),
+        title: t("weak password"),
+        description: t("weak password description"),
         variant: "destructive",
       });
       return;
@@ -83,14 +83,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     try {
       await signUp(signUpForm.email, signUpForm.password, signUpForm.name, signUpForm.referralCode.toUpperCase());
       toast({
-        title: t("account_created_success"),
-        description: t("welcome_freelincer_journey"),
+        title: t("account created success"),
+        description: t("welcome freelincer journey"),
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: t("signup_error"),
-        description: error.message || t("signup_error_description"),
+        title: t("signup error"),
+        description: error.message || t("signup error description"),
         variant: "destructive",
       });
     } finally {
@@ -105,14 +105,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     try {
       await resetPassword(resetForm.email);
       toast({
-        title: t("email_sent_reset"),
-        description: t("email_sent_reset_description"),
+        title: t("email sent reset"),
+        description: t("email sent reset description"),
       });
       setActiveTab("signin");
     } catch (error: any) {
       toast({
-        title: t("error_sending_reset_email"),
-        description: error.message || t("error_sending_reset_email"),
+        title: t("error sending reset email"),
+        description: error.message || t("error sending reset email"),
         variant: "destructive",
       });
     } finally {
@@ -141,14 +141,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           </div>
           
           <CardTitle className="text-2xl">
-            {activeTab === "signin" ? t("enter") : activeTab === "signup" ? t("create_account") : t("recover_password")}
+            {activeTab === "signin" ? t("enter") : activeTab === "signup" ? t("create account") : t("recover password")}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {activeTab === "signin" 
-              ? t("enter_your_account") 
+              ? t("enter your account") 
               : activeTab === "signup" 
-              ? t("join_freelancer_community") 
-              : t("enter_email_to_recover_password")
+              ? t("join freelancer community") 
+              : t("enter email to recover password")
             }
           </CardDescription>
         </CardHeader>
@@ -170,7 +170,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder={t("your_email_placeholder")}
+                        placeholder={t("your email placeholder")}
                         className="pl-10 bg-input border-border text-foreground"
                         value={signInForm.email}
                         onChange={(e) => setSignInForm(prev => ({ ...prev, email: e.target.value }))}
@@ -211,7 +211,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     className="w-full text-sm text-primary hover:text-primary-hover"
                     onClick={() => setActiveTab("reset")}
                   >
-                    {t("forgot_password")}
+                    {t("forgot password")}
                   </Button>
                 </form>
               </TabsContent>
@@ -219,12 +219,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <TabsContent value="signup" className="mt-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">{t("full_name")}</Label>
+                    <Label htmlFor="signup-name">{t("full name")}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-name"
-                        placeholder={t("your_name_placeholder")}
+                        placeholder={t("your name placeholder")}
                         className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.name}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, name: e.target.value }))}
@@ -240,7 +240,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder={t("your_email_placeholder")}
+                        placeholder={t("your email placeholder")}
                         className="pl-10 bg-input border-border text-foreground"
                         value={signUpForm.email}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, email: e.target.value }))}
@@ -267,7 +267,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-confirm">{t("confirm_password")}</Label>
+                    <Label htmlFor="signup-confirm">{t("confirm password")}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
@@ -284,12 +284,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   
                   {/* Novo campo de código de referência */}
                   <div className="space-y-2">
-                    <Label htmlFor="signup-referral">{t("referral_code_optional")}</Label>
+                    <Label htmlFor="signup-referral">{t("referral code optional")}</Label>
                     <div className="relative">
                       <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-referral"
-                        placeholder={t("referral_code_placeholder")}
+                        placeholder={t("referral code placeholder")}
                         className="pl-10 bg-input border-border text-foreground uppercase"
                         value={signUpForm.referralCode}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, referralCode: e.target.value }))}
@@ -304,7 +304,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t("create_account")}
+                    {t("create account")}
                   </Button>
                 </form>
               </TabsContent>
@@ -318,7 +318,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   <Input
                     id="reset-email"
                     type="email"
-                    placeholder={t("your_email_placeholder")}
+                    placeholder={t("your email placeholder")}
                     className="pl-10 bg-input border-border text-foreground"
                     value={resetForm.email}
                     onChange={(e) => setResetForm(prev => ({ ...prev, email: e.target.value }))}
@@ -334,7 +334,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 disabled={loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("send_recovery_email")}
+                {t("send recovery email")}
               </Button>
 
               <Button
@@ -343,7 +343,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 className="w-full text-sm text-primary hover:text-primary-hover"
                 onClick={() => setActiveTab("signin")}
               >
-                {t("back_to_login")}
+                {t("back to login")}
               </Button>
             </form>
           )}

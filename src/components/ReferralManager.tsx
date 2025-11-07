@@ -54,7 +54,7 @@ const ReferralItem = ({ referral }: ReferralItemProps) => {
             {loading ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : userName}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t("referred_on")} {referral.createdAt.toLocaleDateString('pt-BR')}
+            {t("referred on")} {referral.createdAt.toLocaleDateString('pt-BR')}
           </p>
         </div>
       </div>
@@ -99,13 +99,13 @@ const ReferralManager = () => {
       setCopied(true);
       toast({
         title: t("copied"),
-        description: t("copied_to_clipboard", { field: t("referral_code") }),
+        description: t("copied to clipboard", { field: t("referral code") }),
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: t("error_copying"),
-        description: t("error_copying_description"),
+        title: t("error copying"),
+        description: t("error copying description"),
         variant: "destructive",
       });
     }
@@ -117,10 +117,10 @@ const ReferralManager = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Users className="h-5 w-5 text-electric-purple" />
-            <span>{t("referral_program")}</span>
+            <span>{t("referral program")}</span>
           </CardTitle>
           <CardDescription>
-            {t("referral_program_description")}
+            {t("referral program description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -129,15 +129,15 @@ const ReferralManager = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
               <p className="text-2xl font-bold text-primary">{totalCompleted}</p>
-              <p className="text-sm text-muted-foreground">{t("successful_referrals")}</p>
+              <p className="text-sm text-muted-foreground">{t("successful referrals")}</p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
               <p className="text-2xl font-bold text-warning">{totalPending}</p>
-              <p className="text-sm text-muted-foreground">{t("pending_rewards")}</p>
+              <p className="text-sm text-muted-foreground">{t("pending rewards")}</p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
               <p className="text-2xl font-bold text-success">{totalEarned.toFixed(2)} KZ</p>
-              <p className="text-sm text-muted-foreground">{t("total_earned_referrals")}</p>
+              <p className="text-sm text-muted-foreground">{t("total earned referrals")}</p>
             </div>
           </div>
 
@@ -145,7 +145,7 @@ const ReferralManager = () => {
 
           {/* Código e Link de Compartilhamento */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">{t("your_referral_code")}</h3>
+            <h3 className="font-semibold text-foreground">{t("your referral code")}</h3>
             
             <div className="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3">
               <div className="flex-1 w-full">
@@ -170,7 +170,7 @@ const ReferralManager = () => {
               </div>
               
               <div className="flex-1 w-full">
-                <Label htmlFor="referral-link" className="text-sm text-muted-foreground">{t("share_link")}</Label>
+                <Label htmlFor="referral-link" className="text-sm text-muted-foreground">{t("share link")}</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="referral-link"
@@ -198,8 +198,8 @@ const ReferralManager = () => {
                 if (!isCodeReady) return;
                 if (navigator.share) {
                   navigator.share({
-                    title: t("share_title"),
-                    text: t("share_text", { code: referralCode, link: referralLink }),
+                    title: t("share title"),
+                    text: t("share text", { code: referralCode, link: referralLink }),
                     url: referralLink,
                   });
                 } else {
@@ -209,7 +209,7 @@ const ReferralManager = () => {
               disabled={!isCodeReady}
             >
               <Share2 className="h-4 w-4 mr-2" />
-              {t("share_now")}
+              {t("share now")}
             </Button>
           </div>
           
@@ -219,9 +219,9 @@ const ReferralManager = () => {
           <div className="text-center space-y-3">
             <h3 className="font-semibold text-foreground flex items-center justify-center space-x-2">
               <QrCode className="h-5 w-5" />
-              <span>{t("qr_code_share")}</span>
+              <span>{t("qr code share")}</span>
             </h3>
-            <p className="text-sm text-muted-foreground">{t("qr_code_description")}</p>
+            <p className="text-sm text-muted-foreground">{t("qr code description")}</p>
             <div className="p-4 inline-block bg-white rounded-lg shadow-lg border border-border">
               {isCodeReady ? (
                 <QRCode 
@@ -248,7 +248,7 @@ const ReferralManager = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Clock className="h-5 w-5 text-cosmic-blue" />
-            <span>{t("referral_history")}</span>
+            <span>{t("referral history")}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -259,8 +259,8 @@ const ReferralManager = () => {
           ) : referrals.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{t("no_referrals_yet")}</p>
-              <p className="text-sm mt-1">{t("start_sharing_to_earn")}</p>
+              <p>{t("no referrals yet")}</p>
+              <p className="text-sm mt-1">{t("start sharing to earn")}</p>
             </div>
           ) : (
             <div className="space-y-3">

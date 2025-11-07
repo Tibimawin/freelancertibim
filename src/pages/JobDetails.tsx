@@ -68,7 +68,7 @@ const JobDetails = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-pulse text-muted-foreground">{t("loading_task")}</div>
+          <div className="animate-pulse text-muted-foreground">{t("loading task")}</div>
         </div>
       </div>
     );
@@ -78,8 +78,8 @@ const JobDetails = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">{t("task_not_found")}</h2>
-          <Button onClick={() => navigate('/')}>{t("back_to_home")}</Button>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t("task not found")}</h2>
+          <Button onClick={() => navigate('/')}>{t("back to home")}</Button>
         </div>
       </div>
     );
@@ -139,7 +139,7 @@ const JobDetails = () => {
     if (!currentUser || !userData || !canApply) {
       toast({
         title: t("error"),
-        description: t("unauthenticated_apply"),
+        description: t("unauthenticated apply"),
         variant: "destructive",
       });
       return;
@@ -153,14 +153,14 @@ const JobDetails = () => {
 
     if (missingProofs.length > 0) {
       toast({
-        title: t("missing_required_proofs"),
-        description: t("missing_required_proofs_description"),
+        title: t("missing required proofs"),
+        description: t("missing required proofs description"),
         variant: "destructive",
       });
       return;
     }
 
-    setIsLoading(true);
+    setIsApplying(true);
     try {
       // Primeiro, criar a aplicação
       const applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
@@ -180,8 +180,8 @@ const JobDetails = () => {
       await ApplicationService.submitProofs(applicationId, proofsToSubmit);
       
       toast({
-        title: t("proofs_submitted_success"),
-        description: t("proofs_submitted_description"),
+        title: t("proofs submitted success"),
+        description: t("proofs submitted description"),
       });
       
       navigate('/task-history');
@@ -189,11 +189,11 @@ const JobDetails = () => {
       console.error('Error submitting application:', error);
       toast({
         title: t("error"),
-        description: t("error_submitting_proofs"),
+        description: t("error submitting proofs"),
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsApplying(false);
     }
   };
 
@@ -234,7 +234,7 @@ const JobDetails = () => {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} KZ</p>
-                <p className="text-sm text-muted-foreground">{t("applicants_count", { count: actualApplicantCount })}</p>
+                <p className="text-sm text-muted-foreground">{t("applicants count", { count: actualApplicantCount })}</p>
               </div>
             </div>
           </CardHeader>
@@ -242,18 +242,18 @@ const JobDetails = () => {
           <CardContent className="space-y-6">
             {/* Description */}
             <div>
-              <h3 className="font-semibold mb-2 text-foreground">{t("detailed_description")}</h3>
+              <h3 className="font-semibold mb-2 text-foreground">{t("detailed description")}</h3>
               <p className="text-muted-foreground leading-relaxed">{job.description}</p>
             </div>
 
             {/* Detailed Instructions */}
             <div>
-              <h3 className="font-semibold mb-4 text-foreground">{t("detailed_instructions_label")}</h3>
+              <h3 className="font-semibold mb-4 text-foreground">{t("detailed instructions label")}</h3>
               {job.detailedInstructions && job.detailedInstructions.length > 0 ? (
                 <div className="space-y-3">
                   {job.detailedInstructions.map((instruction) => (
                     <div key={instruction.id} className="flex items-start space-x-3 p-4 bg-muted/30 rounded-lg border border-border/50">
-                      <div className="bg-electric-purple/10 text-electric-purple rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      <div className="bg-electric-purple/10 text-electric-purple border border-electric-purple/20 rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold flex-shrink-0">
                         {instruction.step}
                       </div>
                       <div className="flex-1">
@@ -270,7 +270,7 @@ const JobDetails = () => {
               ) : (
                 <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                   <p className="text-sm text-muted-foreground italic">
-                    {t("no_detailed_instructions")}
+                    {t("no detailed instructions")}
                   </p>
                 </div>
               )}
@@ -283,13 +283,13 @@ const JobDetails = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-2 text-sm">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("time_estimate")}:</span>
+                  <span className="text-muted-foreground">{t("time estimate")}:</span>
                   <span className="font-medium">{job.timeEstimate}</span>
                 </div>
                 
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("posted_by")}:</span>
+                  <span className="text-muted-foreground">{t("posted by")}:</span>
                   <span className="font-medium">{job.posterName}</span>
                 </div>
 
@@ -311,14 +311,14 @@ const JobDetails = () => {
                       ? (job.createdAt as any).toDate().toLocaleDateString('pt-BR')
                       : job.createdAt 
                         ? new Date(job.createdAt).toLocaleDateString('pt-BR') 
-                        : t('date_not_available')}
+                        : t('date not available')}
                   </span>
                 </div>
 
                 {job.dueDate && (
                   <div className="flex items-center space-x-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{t("due_date")}:</span>
+                    <span className="text-muted-foreground">{t("due date")}:</span>
                     <span className="font-medium">
                       {(job.dueDate as any).toDate 
                         ? (job.dueDate as any).toDate().toLocaleDateString('pt-BR')
@@ -330,7 +330,7 @@ const JobDetails = () => {
                 {job.maxApplicants && (
                   <div className="flex items-center space-x-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{t("max_applicants")}:</span>
+                    <span className="text-muted-foreground">{t("max applicants")}:</span>
                     <span className="font-medium">{job.maxApplicants}</span>
                   </div>
                 )}
@@ -344,7 +344,7 @@ const JobDetails = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="h-5 w-5 text-star-glow" />
-              <span>{t("proof_requirements")}</span>
+              <span>{t("proof requirements")}</span>
             </CardTitle>
           </CardHeader>
           
@@ -354,7 +354,7 @@ const JobDetails = () => {
                 {canApply ? (
                   <>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {t("submit_your_proofs")}
+                      {t("submit your proofs")}
                     </p>
                     {job.proofRequirements.map((proofReq) => (
                       <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
@@ -375,10 +375,10 @@ const JobDetails = () => {
                           {(proofReq.type === 'text' || proofReq.type === 'url') && (
                             <div>
                               <label className="text-sm font-medium text-foreground mb-2 block">
-                                {proofReq.type === 'url' ? t('link_url') : t('text_response')}
+                                {proofReq.type === 'url' ? t('link url') : t('text response')}
                               </label>
                               <Textarea
-                                placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
+                                placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof placeholder url') : t('proof placeholder text'))}
                                 value={proofs[proofReq.id]?.text || ''}
                                 onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
                                 className="min-h-[80px]"
@@ -399,7 +399,7 @@ const JobDetails = () => {
                               />
                               {proofs[proofReq.id]?.file && (
                                 <p className="text-sm text-muted-foreground">
-                                  {t("file_selected")}: {proofs[proofReq.id].file?.name}
+                                  {t("file selected")}: {proofs[proofReq.id].file?.name}
                                 </p>
                               )}
                             </div>
@@ -407,10 +407,10 @@ const JobDetails = () => {
 
                           <div>
                             <label className="text-sm font-medium text-foreground mb-2 block">
-                              {t("optional_comment")}
+                              {t("optional comment")}
                             </label>
                             <Textarea
-                              placeholder={t("optional_comment_placeholder")}
+                              placeholder={t("optional comment placeholder")}
                               value={proofs[proofReq.id]?.comment || ''}
                               onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
                               className="min-h-[60px]"
@@ -422,21 +422,21 @@ const JobDetails = () => {
 
                     <div className="flex justify-end space-x-3 pt-4">
                       <Button variant="outline" onClick={handleCancel}>
-                        {t("cancel_button").toUpperCase()}
+                        {t("cancel button").toUpperCase()}
                       </Button>
                       <Button 
                         onClick={handleSubmitProofs} 
                         disabled={isApplying}
                         className="min-w-[140px] glow-effect"
                       >
-                        {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
+                        {isApplying ? t("submitting").toUpperCase() : t("submit proofs").toUpperCase()}
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground mb-4">
-                      {t("contractor_requested_proofs")}
+                      {t("contractor requested proofs")}
                     </p>
                     {job.proofRequirements.map((proofReq) => (
                       <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
@@ -454,7 +454,7 @@ const JobDetails = () => {
                           {t("type")}: <span className="font-medium">{
                             proofReq.type === 'screenshot' ? t('screenshot') :
                             proofReq.type === 'file' ? t('file') :
-                            proofReq.type === 'url' ? t('link_url') : t('text_response')
+                            proofReq.type === 'url' ? t('link url') : t('text response')
                           }</span>
                         </p>
                       </div>
@@ -465,7 +465,7 @@ const JobDetails = () => {
             ) : (
               <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                 <p className="text-sm text-muted-foreground italic">
-                  {t("no_proof_requirements")}
+                  {t("no proof requirements")}
                 </p>
               </div>
             )}
@@ -478,15 +478,15 @@ const JobDetails = () => {
             <CardContent className="text-center py-8">
               <p className="text-muted-foreground">
                 {currentUser && job.posterId === currentUser.uid 
-                  ? t("your_own_job") 
+                  ? t("your own job") 
                   : job.status !== 'active' 
-                    ? t("task_inactive") 
-                    : t("login_to_apply")
+                    ? t("task inactive") 
+                    : t("login to apply")
                 }
               </p>
               {!currentUser && (
                 <Button className="mt-4 glow-effect" onClick={() => navigate('/')}>
-                  {t("login_button")}
+                  {t("login button")}
                 </Button>
               )}
             </CardContent>

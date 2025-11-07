@@ -23,34 +23,34 @@ const HeroSection = () => {
         <div className="container mx-auto px-4 max-w-5xl text-center text-nebula-fg">
           {/* Badge */}
           <Badge variant="secondary" className="mb-6 bg-electric-purple/20 text-electric-purple border-electric-purple/30 backdrop-blur-sm animate-float-subtle">
-            🚀 {t("platform_1_freelancers")}
+            🚀 {t("platform 1 freelancers")}
           </Badge>
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
-            {t("earn_money")}
+            {t("earn money")}
             <br />
             <span className="bg-gradient-to-r from-electric-purple to-cosmic-blue bg-clip-text text-transparent">
-              {t("with_digital_tasks")}
+              {t("with digital tasks")}
             </span>
           </h1>
 
           {/* Description */}
           <p className="text-lg md:text-xl mb-8 text-nebula-fg/80 animate-slide-up max-w-3xl mx-auto">
-            {t("hero_description")}
+            {t("hero description")}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-scale-in">
             <Button variant="hero" size="lg" className="text-lg px-8 py-4 glow-effect">
-              {t("start_working_now")}
+              {t("start working now")}
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-4 bg-transparent border-electric-purple/50 text-electric-purple hover:bg-electric-purple/10 backdrop-blur-sm"
             >
-              {t("post_task")}
+              {t("post task")}
             </Button>
           </div>
 
@@ -61,7 +61,7 @@ const HeroSection = () => {
                 <Users className="h-6 w-6 mr-2" />
                 <span className="text-2xl font-bold">5,000+</span>
               </div>
-              <p className="text-sm text-nebula-fg/70">{t("active_freelancers")}</p>
+              <p className="text-sm text-nebula-fg/70">{t("active freelancers")}</p>
             </div>
             
             <div className="text-center animate-fade-in delay-200">
@@ -69,7 +69,7 @@ const HeroSection = () => {
                 <DollarSign className="h-6 w-6 mr-2" />
                 <span className="text-2xl font-bold">2M+ KZ</span>
               </div>
-              <p className="text-sm text-nebula-fg/70">{t("paid_to_freelancers")}</p>
+              <p className="text-sm text-nebula-fg/70">{t("paid to freelancers")}</p>
             </div>
             
             <div className="text-center animate-fade-in delay-300">
@@ -77,7 +77,7 @@ const HeroSection = () => {
                 <Star className="h-6 w-6 mr-2" />
                 <span className="text-2xl font-bold">4.9</span>
               </div>
-              <p className="text-sm text-nebula-fg/70">{t("average_rating")}</p>
+              <p className="text-sm text-nebula-fg/70">{t("average rating")}</p>
             </div>
             
             <div className="text-center animate-fade-in delay-400">
@@ -85,7 +85,7 @@ const HeroSection = () => {
                 <Clock className="h-6 w-6 mr-2" />
                 <span className="text-2xl font-bold">24h</span>
               </div>
-              <p className="text-sm text-nebula-fg/70">{t("average_support")}</p>
+              <p className="text-sm text-nebula-fg/70">{t("average support")}</p>
             </div>
           </div>
         </div>

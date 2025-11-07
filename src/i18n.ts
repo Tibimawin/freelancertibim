@@ -20,6 +20,7 @@ i18n
   .use(initReactI18next) // Passa a instância do i18n para react-i18next
   .init({
     resources,
+    lng: 'pt-BR', // Definindo Português como idioma inicial
     fallbackLng: 'pt-BR', // Idioma padrão caso o detectado não esteja disponível
     debug: false, // Mude para true para ver logs de debug no console
     interpolation: {

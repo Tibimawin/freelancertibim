@@ -26,13 +26,13 @@ const LandingContent = () => {
       <section className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4 bg-electric-purple/20 text-electric-purple border-electric-purple/30">
-            {t("how_it_works")}
+            {t("how it works")}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            {t("simple_fast_secure")}
+            {t("simple fast secure")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t("how_it_works_description")}
+            {t("how it works description")}
           </p>
         </div>
 
@@ -46,7 +46,7 @@ const LandingContent = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">
-                {t("register_description")}
+                {t("register description")}
               </CardDescription>
             </CardContent>
           </Card>
@@ -56,11 +56,11 @@ const LandingContent = () => {
               <div className="w-16 h-16 bg-cosmic-blue/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-cosmic-blue/20">
                 <Smartphone className="h-8 w-8 text-cosmic-blue" />
               </div>
-              <CardTitle className="text-xl text-foreground">2. {t("choose_tasks")}</CardTitle>
+              <CardTitle className="text-xl text-foreground">2. {t("choose tasks")}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">
-                {t("choose_tasks_description")}
+                {t("choose tasks description")}
               </CardDescription>
             </CardContent>
           </Card>
@@ -70,11 +70,11 @@ const LandingContent = () => {
               <div className="w-16 h-16 bg-star-glow/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-star-glow/20">
                 <DollarSign className="h-8 w-8 text-star-glow" />
               </div>
-              <CardTitle className="text-xl text-foreground">3. {t("receive_payment")}</CardTitle>
+              <CardTitle className="text-xl text-foreground">3. {t("receive payment")}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">
-                {t("receive_payment_description")}
+                {t("receive payment description")}
               </CardDescription>
             </CardContent>
           </Card>
@@ -87,36 +87,36 @@ const LandingContent = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <Badge variant="secondary" className="mb-4 bg-electric-purple/20 text-electric-purple border-electric-purple/30">
-                {t("for_freelancers")}
+                {t("for freelancers")}
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                {t("earn_money_free_time")}
+                {t("earn money free time")}
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                {t("earn_money_free_time_description")}
+                {t("earn money free time description")}
               </p>
 
               <div className="space-y-4 mb-8">
                 <div className="flex items-center space-x-3 text-foreground">
                   <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>{t("payment_range")}</span>
+                  <span>{t("payment range")}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-foreground">
                   <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>{t("flexible_hours")}</span>
+                  <span>{t("flexible hours")}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-foreground">
                   <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>{t("work_anywhere")}</span>
+                  <span>{t("work anywhere")}</span>
                 </div>
                 <div className="flex items-center space-x-3 text-foreground">
                   <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                  <span>{t("payment_approval_time")}</span>
+                  <span>{t("payment approval time")}</span>
                 </div>
               </div>
 
               <Button size="lg" variant="hero" className="text-lg px-8 glow-effect">
-                {t("start_working_now")}
+                {t("start working now")}
               </Button>
             </div>
 
@@ -128,7 +128,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {t("flexible_description")}
+                    {t("flexible description")}
                   </p>
                 </CardContent>
               </Card>
@@ -140,7 +140,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {t("secure_description")}
+                    {t("secure description")}
                   </p>
                 </CardContent>
               </Card>
@@ -152,7 +152,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {t("fast_description")}
+                    {t("fast description")}
                   </p>
                 </CardContent>
               </Card>
@@ -164,7 +164,7 @@ const LandingContent = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {t("focused_description")}
+                    {t("focused description")}
                   </p>
                 </CardContent>
               </Card>
@@ -178,36 +178,36 @@ const LandingContent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="lg:order-2">
             <Badge variant="secondary" className="mb-4 bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">
-              {t("for_companies")}
+              {t("for companies")}
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-              {t("professional_validation_apps")}
+              {t("professional validation apps")}
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              {t("professional_validation_apps_description")}
+              {t("professional validation apps description")}
             </p>
 
             <div className="space-y-4 mb-8">
               <div className="flex items-center space-x-3 text-foreground">
                 <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                <span>{t("pre_qualified_freelancers")}</span>
+                <span>{t("pre qualified freelancers")}</span>
               </div>
               <div className="flex items-center space-x-3 text-foreground">
                 <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                <span>{t("detailed_bug_reports")}</span>
+                <span>{t("detailed bug reports")}</span>
               </div>
               <div className="flex items-center space-x-3 text-foreground">
                 <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                <span>{t("usability_feedback")}</span>
+                <span>{t("usability feedback")}</span>
               </div>
               <div className="flex items-center space-x-3 text-foreground">
                 <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
-                <span>{t("multi_platform_tasks")}</span>
+                <span>{t("multi platform tasks")}</span>
               </div>
             </div>
 
             <Button variant="outline" size="lg" className="text-lg px-8 bg-transparent border-cosmic-blue/50 text-cosmic-blue hover:bg-cosmic-blue/10">
-              {t("post_task")}
+              {t("post task")}
             </Button>
           </div>
 
@@ -221,11 +221,11 @@ const LandingContent = () => {
                       {t("multiplatform")}
                     </Badge>
                   </div>
-                  <CardTitle className="text-xl text-white">{t("ios_android_web")}</CardTitle>
+                  <CardTitle className="text-xl text-white">{t("ios android web")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-white/90">
-                    {t("multiplatform_description")}
+                    {t("multiplatform description")}
                   </p>
                 </CardContent>
               </Card>
@@ -266,7 +266,7 @@ const LandingContent = () => {
               {t("testimonials")}
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {t("what_our_users_say")}
+              {t("what our users say")}
             </h2>
           </div>
 
@@ -278,8 +278,8 @@ const LandingContent = () => {
                     <span className="font-bold text-electric-purple">MS</span>
                   </div>
                   <div>
-                    <CardTitle className="text-sm text-foreground">{t("maria_silva")}</CardTitle>
-                    <p className="text-xs text-muted-foreground">{t("freelancer_role")}</p>
+                    <CardTitle className="text-sm text-foreground">{t("maria silva")}</CardTitle>
+                    <p className="text-xs text-muted-foreground">{t("freelancer role")}</p>
                   </div>
                 </div>
               </CardHeader>
@@ -290,7 +290,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {t("maria_silva_quote")}
+                  {t("maria silva quote")}
                 </p>
               </CardContent>
             </Card>
@@ -302,8 +302,8 @@ const LandingContent = () => {
                     <span className="font-bold text-cosmic-blue">JO</span>
                   </div>
                   <div>
-                    <CardTitle className="text-sm text-foreground">{t("joao_oliveira")}</CardTitle>
-                    <p className="text-xs text-muted-foreground">{t("ceo_techstart")}</p>
+                    <CardTitle className="text-sm text-foreground">{t("joao oliveira")}</CardTitle>
+                    <p className="text-xs text-muted-foreground">{t("ceo techstart")}</p>
                   </div>
                 </div>
               </CardHeader>
@@ -314,7 +314,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {t("joao_oliveira_quote")}
+                  {t("joao oliveira quote")}
                 </p>
               </CardContent>
             </Card>
@@ -326,8 +326,8 @@ const LandingContent = () => {
                     <span className="font-bold text-electric-purple">AS</span>
                   </div>
                   <div>
-                    <CardTitle className="text-sm text-foreground">{t("ana_santos")}</CardTitle>
-                    <p className="text-xs text-muted-foreground">{t("developer_role")}</p>
+                    <CardTitle className="text-sm text-foreground">{t("ana santos")}</CardTitle>
+                    <p className="text-xs text-muted-foreground">{t("developer role")}</p>
                   </div>
                 </div>
               </CardHeader>
@@ -338,7 +338,7 @@ const LandingContent = () => {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {t("ana_santos_quote")}
+                  {t("ana santos quote")}
                 </p>
               </CardContent>
             </Card>
@@ -350,22 +350,22 @@ const LandingContent = () => {
       <section className="bg-gradient-primary py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            {t("ready_to_start")}
+            {t("ready to start")}
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            {t("ready_to_start_description")}
+            {t("ready to start description")}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="hero" size="lg" className="text-lg px-8 py-4 glow-effect">
-              {t("register_as_freelancer")}
+              {t("register as freelancer")}
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-4 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
             >
-              {t("post_task")}
+              {t("post task")}
             </Button>
           </div>
         </div>

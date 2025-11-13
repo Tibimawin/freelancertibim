@@ -6,13 +6,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
-import { Job } from "@/types/firebase";
+import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Job, Application } from "@/types/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { JobService } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { ApplicationService } from "@/services/applicationService";
 import { useTranslation } from 'react-i18next';
+import JobComments from '@/components/JobComments';
+import { CloudinaryService } from '@/lib/cloudinary';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +26,9 @@ const JobDetails = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [proofs, setProofs] = useState<{ [key: string]: { text: string; file: File | null; comment: string } }>({});
   const [actualApplicantCount, setActualApplicantCount] = useState(0);
+  const [myApplication, setMyApplication] = useState<Application | null>(null);
+  // Mover uploadProgress para o topo para manter ordem consistente dos hooks
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -42,6 +49,11 @@ const JobDetails = () => {
           
           const applications = await ApplicationService.getApplicationsForJob(id);
           setActualApplicantCount(applications.length);
+          // Encontrar aplicação do usuário logado para gerir reenvio de provas
+          if (currentUser) {
+            const mine = applications.find(app => app.testerId === currentUser.uid) || null;
+            setMyApplication(mine);
+          }
 
           // Initialize proofs state based on requirements
           const initialProofs: { [key: string]: { text: string; file: null; comment: string } } = {};
@@ -110,7 +122,20 @@ const JobDetails = () => {
     }
   };
 
-  const canApply = currentUser && job.posterId !== currentUser.uid && job.status === 'active';
+  const canApply = Boolean(
+    currentUser &&
+    job.posterId !== currentUser.uid &&
+    job.status === 'active' &&
+    (!job.maxApplicants || actualApplicantCount < (job.maxApplicants || 0)) &&
+    !myApplication
+  );
+
+  // Usuário pode enviar provas se estiver autenticado, tarefa ativa e já tiver aplicação
+  const canSubmitProofs = Boolean(
+    currentUser &&
+    job.status === 'active' &&
+    (canApply || !!myApplication)
+  );
 
   const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
     setProofs(prev => ({
@@ -135,8 +160,35 @@ const JobDetails = () => {
     }));
   };
 
+  const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg'];
+  // Restringir "Arquivo" a somente imagens (PNG/JPG)
+  const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg'];
+
+  const validateFile = (reqId: string, reqType: string, file: File): boolean => {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: t('error'),
+        description: t('file_too_large') || `Arquivo ultrapassa ${MAX_FILE_SIZE_MB}MB.`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+    const allowed = reqType === 'screenshot' ? ALLOWED_IMAGE_TYPES : ALLOWED_FILE_TYPES;
+    if (!allowed.includes(file.type)) {
+      toast({
+        title: t('invalid_file_type_title') || 'Formato de arquivo inválido',
+        description: t('invalid_file_type_desc') || 'Permitidos: PNG e JPG (imagens).',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmitProofs = async () => {
-    if (!currentUser || !userData || !canApply) {
+    if (!currentUser || !userData) {
       toast({
         title: t("error"),
         description: t("unauthenticated_apply"),
@@ -160,21 +212,61 @@ const JobDetails = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsApplying(true);
     try {
-      // Primeiro, criar a aplicação
-      const applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+      let applicationId: string;
+      // Se já existe uma aplicação do usuário para este job, tratar reenvio
+      if (myApplication) {
+        if (myApplication.status === 'submitted' || myApplication.status === 'approved') {
+          toast({
+            title: t("error"),
+            description: t("cannot_resubmit_yet"),
+            variant: "destructive",
+          });
+          return;
+        }
+        applicationId = myApplication.id;
+      } else {
+        // Primeiro, criar a aplicação
+        applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+      }
       
-      // Preparar provas para envio
-      const proofsToSubmit: any[] = job.proofRequirements?.map((req) => {
+      // Preparar provas para envio com upload ao Cloudinary (screenshots/arquivos)
+      const folder = `proofs/${currentUser.uid}/${job.id}`;
+      const proofsToSubmit: any[] = await Promise.all((job.proofRequirements || []).map(async (req) => {
         const proof = proofs[req.id];
+        if (!proof) {
+          return { requirementId: req.id, type: req.type, content: '', comment: '' };
+        }
+
+        // Se for screenshot/arquivo e há arquivo, faz upload e usa a URL
+        if ((req.type === 'screenshot' || req.type === 'file') && proof.file) {
+          // Validação de tamanho e tipo
+          if (!validateFile(req.id, req.type, proof.file)) {
+            return { requirementId: req.id, type: req.type, content: '', comment: proof.comment || '' };
+          }
+          setUploadProgress(prev => ({ ...prev, [req.id]: 0 }));
+          const result = await CloudinaryService.uploadFile(proof.file, folder, (p) => {
+            setUploadProgress(prev => ({ ...prev, [req.id]: p }));
+          });
+          return {
+            requirementId: req.id,
+            type: req.type,
+            content: result.url, // usar URL como conteúdo principal
+            fileUrl: result.url,
+            filePublicId: result.public_id,
+            comment: proof.comment || ''
+          };
+        }
+
+        // Para texto/URL ou se não houver arquivo, enviar o texto/URL
         return {
           requirementId: req.id,
           type: req.type,
-          content: proof?.text || proof?.file?.name || '', // TODO: Implement file upload to storage
-          comment: proof?.comment || ''
+          content: proof.text || '',
+          comment: proof.comment || ''
         };
-      }) || [];
+      }));
 
       // Enviar provas
       await ApplicationService.submitProofs(applicationId, proofsToSubmit);
@@ -189,11 +281,11 @@ const JobDetails = () => {
       console.error('Error submitting application:', error);
       toast({
         title: t("error"),
-        description: t("error_submitting_proofs"),
+        description: (typeof error === 'object' && (error as any)?.message) ? (error as any).message : t("error_submitting_proofs"),
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsApplying(false);
     }
   };
 
@@ -201,9 +293,23 @@ const JobDetails = () => {
     navigate('/');
   };
 
+  const isContractorMode = userData?.currentMode === 'poster';
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Aviso: modo contratante não permite fazer tarefas */}
+        {isContractorMode && (
+          <div className="mb-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Você está no modo Contratante</AlertTitle>
+              <AlertDescription>
+                Para fazer tarefas e enviar provas, mude para a conta Freelancer.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         {/* Header with back button */}
         <div className="flex items-center mb-6">
           <Button
@@ -228,12 +334,23 @@ const JobDetails = () => {
                   {t(job.difficulty.toLowerCase())}
                 </Badge>
                 <Badge variant="secondary" className="bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">{job.platform}</Badge>
-                <Badge variant={job.status === 'active' ? 'default' : 'secondary'} className={job.status === 'active' ? 'bg-success/10 text-success border-success/20' : 'bg-muted/30 text-muted-foreground border-border'}>
-                  {job.status === 'active' ? t('active') : t('inactive')}
+                <Badge
+                  variant={job.status === 'active' ? 'default' : 'secondary'}
+                  className={
+                    job.status === 'active'
+                      ? 'bg-success/10 text-success border-success/20'
+                      : 'bg-muted/30 text-muted-foreground border-border'
+                  }
+                >
+                  {job.status === 'active' && t('active')}
+                  {job.status === 'completed' && t('completed')}
+                  {job.status === 'paused' && t('paused')}
+                  {job.status === 'cancelled' && t('cancelled')}
+                  {['active','completed','paused','cancelled'].includes(job.status) ? '' : t('inactive')}
                 </Badge>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} KZ</p>
+        <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
                 <p className="text-sm text-muted-foreground">{t("applicants_count", { count: actualApplicantCount })}</p>
               </div>
             </div>
@@ -339,6 +456,9 @@ const JobDetails = () => {
           </CardContent>
         </Card>
 
+        {/* Public Comments Section */}
+        <JobComments jobId={job.id} />
+
         {/* Proof Requirements Section */}
         <Card className="bg-card border-border shadow-md">
           <CardHeader>
@@ -351,7 +471,7 @@ const JobDetails = () => {
           <CardContent className="space-y-6">
             {job.proofRequirements && job.proofRequirements.length > 0 ? (
               <>
-                {canApply ? (
+                {canSubmitProofs ? (
                   <>
                     <p className="text-sm text-muted-foreground mb-4">
                       {t("submit_your_proofs")}
@@ -393,14 +513,29 @@ const JobDetails = () => {
                               </label>
                               <Input
                                 type="file"
-                                accept={proofReq.type === 'screenshot' ? 'image/*' : 'image/*,.pdf,.doc,.docx'}
-                                onChange={(e) => handleFileChange(proofReq.id, e.target.files?.[0] || null)}
+                                accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] || null;
+                                  if (!file) { handleFileChange(proofReq.id, null); return; }
+                                  const ok = validateFile(proofReq.id, proofReq.type, file);
+                                  if (!ok) { return; }
+                                  handleFileChange(proofReq.id, file);
+                                }}
                                 className="cursor-pointer"
                               />
+                              <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
                               {proofs[proofReq.id]?.file && (
                                 <p className="text-sm text-muted-foreground">
                                   {t("file_selected")}: {proofs[proofReq.id].file?.name}
                                 </p>
+                              )}
+                              {uploadProgress[proofReq.id] !== undefined && (
+                                <div className="space-y-2">
+                                  <Progress value={uploadProgress[proofReq.id]} className="w-full" />
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('uploading')} {uploadProgress[proofReq.id]}%
+                                  </p>
+                                </div>
                               )}
                             </div>
                           )}

@@ -21,11 +21,13 @@ const AdminBalances = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const contractors = users.filter(user => 
-    user.currentMode === 'poster' &&
-    (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const contractors = users.filter(user => {
+    const matchesSearch = 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const isContractor = user.currentMode === 'poster' || (user.posterWallet?.balance || 0) > 0;
+    return isContractor && matchesSearch;
+  });
 
   const handleAddBalance = async () => {
     if (!selectedUser || !amount || parseFloat(amount) <= 0) {
@@ -43,7 +45,7 @@ const AdminBalances = () => {
       
       toast({
         title: "Sucesso",
-        description: `Saldo de ${amount} KZ adicionado para ${selectedUser.name}`,
+        description: `Saldo de ${amount} Kz adicionado para ${selectedUser.name}`,
       });
 
       setAddBalanceDialog(false);
@@ -107,7 +109,7 @@ const AdminBalances = () => {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-semibold text-lg">
-                        {(user.posterWallet?.balance || 0).toFixed(2)} KZ
+                        {(user.posterWallet?.balance || 0).toFixed(2)} Kz
                       </p>
                       <p className="text-sm text-muted-foreground">Saldo atual</p>
                     </div>
@@ -133,7 +135,7 @@ const AdminBalances = () => {
                         
                         <div className="space-y-4">
                           <div>
-                            <Label htmlFor="amount">Valor (KZ)</Label>
+                            <Label htmlFor="amount">Valor (Kz)</Label>
                             <Input
                               id="amount"
                               type="number"

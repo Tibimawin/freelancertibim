@@ -15,7 +15,8 @@ import {
   Calendar,
   User,
   Eye,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 import { useAdminReports } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ const AdminReports = () => {
   }>({ type: null, report: null });
   const [adminNotes, setAdminNotes] = useState('');
   const [resolution, setResolution] = useState('');
+  const [processing, setProcessing] = useState(false);
   const { t } = useTranslation();
 
   const filteredReports = reports.filter(report => {
@@ -54,6 +56,7 @@ const AdminReports = () => {
     if (!actionDialog.type || !actionDialog.report || !currentUser || !adminData) return;
 
     try {
+      setProcessing(true);
       await reviewReport(
         actionDialog.report.id, 
         actionDialog.type, 
@@ -70,6 +73,8 @@ const AdminReports = () => {
     } catch (error) {
       toast.error(t('error_processing_report'));
       console.error('Error processing report:', error);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -196,17 +201,27 @@ const AdminReports = () => {
                           variant="default"
                           size="sm"
                           onClick={() => setActionDialog({ type: 'approve', report })}
+                          disabled={processing}
                         >
-                          <Check className="h-4 w-4 mr-1" />
-                          {t('approve_button')}
+                          {processing ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4 mr-1" />
+                          )}
+                          {processing ? t('processing') : t('approve_button')}
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => setActionDialog({ type: 'reject', report })}
+                          disabled={processing}
                         >
-                          <X className="h-4 w-4 mr-1" />
-                          {t('reject_button')}
+                          {processing ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4 mr-1" />
+                          )}
+                          {processing ? t('processing') : t('reject_button')}
                         </Button>
                       </>
                     )}
@@ -320,13 +335,21 @@ const AdminReports = () => {
                 <Button
                   onClick={() => setActionDialog({ type: 'reject', report: selectedReport })}
                   variant="destructive"
+                  disabled={processing}
                 >
-                  {t('reject_button')}
+                  {processing ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : null}
+                  {processing ? t('processing') : t('reject_button')}
                 </Button>
                 <Button
                   onClick={() => setActionDialog({ type: 'approve', report: selectedReport })}
+                  disabled={processing}
                 >
-                  {t('approve_button')}
+                  {processing ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : null}
+                  {processing ? t('processing') : t('approve_button')}
                 </Button>
               </>
             )}
@@ -382,14 +405,18 @@ const AdminReports = () => {
             <Button
               variant="outline"
               onClick={() => setActionDialog({ type: null, report: null })}
+              disabled={processing}
             >
               {t('cancel')}
             </Button>
             <Button
               onClick={handleReportAction}
-              disabled={actionDialog.type === 'approve' && !resolution.trim()}
+              disabled={processing || (actionDialog.type === 'approve' && !resolution.trim())}
             >
-              {t('confirm')}
+              {processing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {processing ? t('processing') : t('confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

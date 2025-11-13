@@ -9,6 +9,8 @@ export interface UploadResult {
   public_id: string;
 }
 
+export type UploadProgressCallback = (percent: number) => void;
+
 export class CloudinaryService {
   private static getUploadUrl(): string {
     return `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
@@ -20,7 +22,7 @@ export class CloudinaryService {
    * @param folder A subpasta dentro do Cloudinary (ex: 'verifications/userId').
    * @returns URL e Public ID do arquivo.
    */
-  static async uploadFile(file: File, folder: string): Promise<UploadResult> {
+  static async uploadFile(file: File, folder: string, onProgress?: UploadProgressCallback): Promise<UploadResult> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
@@ -30,6 +32,14 @@ export class CloudinaryService {
       const response = await axios.post(this.getUploadUrl(), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent: ProgressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            try {
+              onProgress(percent);
+            } catch {}
+          }
         },
       });
 

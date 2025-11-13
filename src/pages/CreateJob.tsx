@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { JobService } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +46,8 @@ const CreateJob = () => {
     bounty: "",
     platform: "",
     difficulty: "",
+    category: "",
+    subcategory: "",
     timeEstimate: "",
     location: "",
     maxApplicants: "",
@@ -189,11 +190,13 @@ const CreateJob = () => {
     // Calcular custo total (valor × máximo de candidatos)
     const totalCost = jobBounty * maxApplicants;
     const currentBalance = userData.posterWallet?.balance || 0;
+    const bonusBalance = userData.posterWallet?.bonusBalance || 0;
+    const combined = currentBalance + bonusBalance;
     
-    if (currentBalance < totalCost) {
+    if (combined < totalCost) {
       toast({
         title: t("insufficient_balance"), 
-        description: t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) }),
+              description: t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: combined.toFixed(2) }),
         variant: "destructive",
       });
       return;
@@ -209,6 +212,8 @@ const CreateJob = () => {
         bounty: parseFloat(formData.bounty),
         platform: formData.platform as 'iOS' | 'Android' | 'Web', // Explicit cast
         difficulty: formData.difficulty as 'Fácil' | 'Médio' | 'Difícil', // Explicit cast
+        category: formData.category ? (formData.category as 'Mobile' | 'Web' | 'Social') : undefined,
+        subcategory: formData.subcategory || undefined,
         requirements: formData.requirements,
         attachments: [],
         status: 'active' as const,
@@ -218,6 +223,9 @@ const CreateJob = () => {
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         detailedInstructions: formData.detailedInstructions,
         proofRequirements: formData.proofRequirements,
+        posterApprovalRate: typeof userData.approvalRate === 'number' ? userData.approvalRate : undefined,
+        posterRating: typeof userData.rating === 'number' ? userData.rating : undefined,
+        posterRatingCount: typeof userData.ratingCount === 'number' ? userData.ratingCount : undefined,
       };
 
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
@@ -243,7 +251,6 @@ const CreateJob = () => {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <p className="text-muted-foreground">{t("error_login_required")}</p>
@@ -255,7 +262,6 @@ const CreateJob = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
@@ -334,23 +340,6 @@ const CreateJob = () => {
                                 <span>Web</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="TikTok">TikTok</SelectItem>
-                            <SelectItem value="Instagram">Instagram</SelectItem>
-                            <SelectItem value="Facebook">Facebook</SelectItem>
-                            <SelectItem value="OnlyFans">OnlyFans</SelectItem>
-                            <SelectItem value="Play Store">Play Store</SelectItem>
-                            <SelectItem value="App Store">App Store</SelectItem>
-                            <SelectItem value="Pornhub">Pornhub</SelectItem>
-                            <SelectItem value="X (Twitter)">X (Twitter)</SelectItem>
-                            <SelectItem value="Telegram">Telegram</SelectItem>
-                            <SelectItem value="YouTube">YouTube</SelectItem>
-                            <SelectItem value="WeChat">WeChat</SelectItem>
-                            <SelectItem value="Snapchat">Snapchat</SelectItem>
-                            <SelectItem value="Pinterest">Pinterest</SelectItem>
-                            <SelectItem value="Threads">Threads</SelectItem>
-                            <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                            <SelectItem value="Discord">Discord</SelectItem>
-                            <SelectItem value="Reddit">Reddit</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -365,6 +354,70 @@ const CreateJob = () => {
                             <SelectItem value="Fácil">{t("easy")}</SelectItem>
                             <SelectItem value="Médio">{t("medium")}</SelectItem>
                             <SelectItem value="Difícil">{t("hard")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Categoria e Subcategoria */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="category">Categoria</Label>
+                        <Select
+                          value={formData.category}
+                          onValueChange={(value) =>
+                            setFormData(prev => ({ ...prev, category: value, subcategory: '' }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Mobile">Mobile</SelectItem>
+                            <SelectItem value="Web">Web</SelectItem>
+                            <SelectItem value="Social">Social</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="subcategory">Subcategoria</Label>
+                        <Select
+                          value={formData.subcategory}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Opções dependentes da categoria */}
+                            {formData.category === 'Mobile' && (
+                              <>
+                                <SelectItem value="App">App</SelectItem>
+                                <SelectItem value="Play Store">Play Store</SelectItem>
+                                <SelectItem value="App Store">App Store</SelectItem>
+                              </>
+                            )}
+                            {formData.category === 'Web' && (
+                              <>
+                                <SelectItem value="Website">Website</SelectItem>
+                                <SelectItem value="Visitar site">Visitar site</SelectItem>
+                                <SelectItem value="Ver video no Youtube">Ver video no Youtube</SelectItem>
+                              </>
+                            )}
+                            {formData.category === 'Social' && (
+                              <>
+                                <SelectItem value="Facebook">Facebook</SelectItem>
+                                <SelectItem value="Instagram">Instagram</SelectItem>
+                                <SelectItem value="Tiktok">Tiktok</SelectItem>
+                                <SelectItem value="Youtube">Youtube</SelectItem>
+                                <SelectItem value="Telegram">Telegram</SelectItem>
+                                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                                <SelectItem value="Pinterest">Pinterest</SelectItem>
+                                <SelectItem value="Threads">Threads</SelectItem>
+                                <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                                <SelectItem value="Outras redes sociais">Outras redes sociais</SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -686,7 +739,7 @@ const CreateJob = () => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{t("value")}:</span>
                       <span className="font-medium">
-                        {formData.bounty ? `${parseFloat(formData.bounty).toFixed(2)} KZ` : "-"}
+            {formData.bounty ? `${parseFloat(formData.bounty).toFixed(2)} Kz` : "-"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -705,7 +758,7 @@ const CreateJob = () => {
                     <div className="flex items-center justify-between text-sm font-medium">
                       <span>{t("total_project_cost")}:</span>
                       <span className="text-primary">
-                        {formData.bounty ? `${(parseFloat(formData.bounty) * (parseInt(formData.maxApplicants) || 1)).toFixed(2)} KZ` : "0,00 KZ"}
+            {formData.bounty ? `${(parseFloat(formData.bounty) * (parseInt(formData.maxApplicants) || 1)).toFixed(2)} Kz` : "0,00 Kz"}
                       </span>
                     </div>
                   </CardContent>

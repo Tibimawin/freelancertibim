@@ -11,7 +11,8 @@ import {
   orderBy,
   limit,
   startAfter,
-  Timestamp
+  Timestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Job, Application, Transaction } from '@/types/firebase';
@@ -22,6 +23,8 @@ export class JobService {
       const docRef = await addDoc(collection(db, 'jobs'), {
         ...jobData,
         applicantCount: 0,
+        rating: 0,
+        ratingCount: 0,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -42,6 +45,8 @@ export class JobService {
       const docRef = await addDoc(collection(db, 'jobs'), {
         ...jobData,
         applicantCount: 0,
+        rating: 0,
+        ratingCount: 0,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -54,25 +59,37 @@ export class JobService {
         const posterData = posterDoc.data();
         const currentBalance = posterData.posterWallet?.balance || 0;
         const currentPending = posterData.posterWallet?.pendingBalance || 0;
+        const currentBonus = posterData.posterWallet?.bonusBalance || 0;
+        const expiresAtRaw = posterData.posterWallet?.bonusExpiresAt;
+        const expiresAtDate = expiresAtRaw?.toDate ? expiresAtRaw.toDate() : (expiresAtRaw ? new Date(expiresAtRaw) : null);
+        const now = new Date();
+        const bonusValid = !expiresAtDate || expiresAtDate > now;
+
+        const useBonus = bonusValid ? Math.min(currentBonus, totalCost) : 0;
+        const remaining = totalCost - useBonus;
+        const newBonus = currentBonus - useBonus;
+        const newBalance = currentBalance - remaining;
 
         await updateDoc(posterRef, {
-          'posterWallet.balance': currentBalance - totalCost,
+          'posterWallet.balance': newBalance,
+          'posterWallet.bonusBalance': newBonus,
           'posterWallet.pendingBalance': currentPending + totalCost,
           updatedAt: Timestamp.now(),
         });
 
-        // Criar transação de reserva
+        // Criar transação de reserva (concluída para fins de histórico; fundos movidos para escrow)
         await TransactionService.createTransaction({
           userId: posterId,
           type: 'escrow',
-          amount: -totalCost,
+          amount: totalCost,
           currency: 'KZ',
-          status: 'pending',
-          description: `Reserva para tarefa: ${jobData.title}`,
+          status: 'completed',
+          description: `Reserva para tarefa: ${jobData.title}${useBonus > 0 ? ` (bônus usado: ${useBonus} Kz)` : ''}`,
           metadata: {
             jobId: docRef.id,
             maxApplicants: jobData.maxApplicants,
             bountyPerTask: jobData.bounty,
+            bonusUsed: useBonus,
           },
         });
       }
@@ -160,6 +177,26 @@ export class JobService {
 
   static async applyToJob(jobId: string, freelancerId: string, freelancerName: string) {
     try {
+      // Verificar status e limite de candidatos antes de criar a aplicação
+      const jobRef = doc(db, 'jobs', jobId);
+      const jobDocInitial = await getDoc(jobRef);
+      if (!jobDocInitial.exists()) {
+        throw new Error('Tarefa não encontrada');
+      }
+      const jobDataInitial = jobDocInitial.data() as Job;
+
+      // Bloquear candidaturas se a tarefa não estiver ativa
+      if (jobDataInitial.status !== 'active') {
+        throw new Error('Esta tarefa não está disponível para candidaturas');
+      }
+
+      // Bloquear candidaturas se limite já atingido
+      const maxApplicants = jobDataInitial.maxApplicants;
+      const currentCountInitial = jobDataInitial.applicantCount || 0;
+      if (typeof maxApplicants === 'number' && currentCountInitial >= maxApplicants) {
+        throw new Error('Limite de candidatos atingido');
+      }
+
       // Verificar se o usuário já aplicou para esta tarefa
       const existingApplicationQuery = query(
         collection(db, 'applications'),
@@ -184,17 +221,34 @@ export class JobService {
 
       const docRef = await addDoc(collection(db, 'applications'), applicationData);
 
-      // Update job applicant count
-      const jobRef = doc(db, 'jobs', jobId);
-      const jobDoc = await getDoc(jobRef);
-      
-      if (jobDoc.exists()) {
-        const currentCount = jobDoc.data().applicantCount || 0;
-        await updateDoc(jobRef, {
-          applicantCount: currentCount + 1,
-          updatedAt: Timestamp.now(),
-        });
-      }
+      // Atualizar contagem de candidatos e, se necessário, marcar como concluído
+      await runTransaction(db, async (transaction) => {
+        const jobDoc = await transaction.get(jobRef);
+        if (!jobDoc.exists()) {
+          throw new Error('Tarefa não encontrada durante transação');
+        }
+        const jobData = jobDoc.data() as Job;
+        const currentCount = jobData.applicantCount || 0;
+        const max = jobData.maxApplicants;
+
+        // Checagem de corrida: se alguém atingiu o limite neste meio tempo, abortar
+        if (typeof max === 'number' && currentCount >= max) {
+          throw new Error('Limite de candidatos atingido');
+        }
+
+        const newCount = currentCount + 1;
+        const updates: Partial<Job> = {
+          applicantCount: newCount,
+          updatedAt: Timestamp.now() as any,
+        };
+
+        // Se novo total atingir ou exceder o limite, marcar como concluído
+        if (typeof max === 'number' && newCount >= max) {
+          updates.status = 'completed';
+        }
+
+        transaction.update(jobRef, updates as any);
+      });
 
       return docRef.id;
     } catch (error) {

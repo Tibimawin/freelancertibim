@@ -3,10 +3,12 @@ import {
   doc,
   addDoc,
   getDocs,
+  getDoc,
   updateDoc,
   query,
   where,
   orderBy,
+  limit,
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
@@ -101,11 +103,11 @@ export class ReportService {
       });
 
       // Fetch report data to notify reporter and reported user
-      const reportDoc = await reportRef.get();
-      if (!reportDoc.exists()) {
+      const reportSnap = await getDoc(reportRef);
+      if (!reportSnap.exists()) {
         throw new Error('Report not found');
       }
-      const reportData = reportDoc.data() as Report;
+      const reportData = reportSnap.data() as Report;
 
       // Notify reporter
       await NotificationService.createNotification({

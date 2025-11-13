@@ -31,6 +31,7 @@ const AdminVerifications = () => {
   const { verifications, loading, fetchVerifications, approveVerification, rejectVerification } = useAdminVerifications();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [identityOnly, setIdentityOnly] = useState(false);
   const [selectedVerification, setSelectedVerification] = useState<UserVerification | null>(null);
   const [actionDialog, setActionDialog] = useState<{
     type: 'approve' | 'reject' | null;
@@ -38,6 +39,7 @@ const AdminVerifications = () => {
   }>({ type: null, verification: null });
   const [actionNotes, setActionNotes] = useState('');
   const [rejectionReasons, setRejectionReasons] = useState<{ [key: string]: string }>({});
+  const [identityRejectionReasons, setIdentityRejectionReasons] = useState<{ [field: string]: string }>({});
 
   const filteredVerifications = verifications.filter(verification => {
     const matchesSearch = verification.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,8 +47,9 @@ const AdminVerifications = () => {
                          verification.id.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || verification.overallStatus === statusFilter;
+    const matchesIdentity = !identityOnly || !!verification.identityInfo;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesIdentity;
   });
 
   const handleVerificationAction = async () => {
@@ -69,7 +72,8 @@ const AdminVerifications = () => {
             currentUser.uid, 
             adminData.name,
             rejectionReasons,
-            actionNotes
+            actionNotes,
+            identityRejectionReasons
           );
           toast.success('Verificação rejeitada com sucesso');
           break;
@@ -78,6 +82,7 @@ const AdminVerifications = () => {
       setActionDialog({ type: null, verification: null });
       setActionNotes('');
       setRejectionReasons({});
+      setIdentityRejectionReasons({});
     } catch (error) {
       toast.error('Erro ao processar verificação');
       console.error('Error processing verification:', error);
@@ -109,10 +114,13 @@ const AdminVerifications = () => {
   const getDocumentTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       cpf: "CPF",
-      rg: "RG",
+      rg: "BI",
+      bi: "BI",
       passport: "Passaporte",
       selfie: "Selfie",
-      address_proof: "Comprovante de Endereço"
+      address_proof: "Comprovante de Endereço",
+      id_front: "Frente do Documento",
+      id_back: "Verso do Documento"
     };
     return labels[type] || type;
   };
@@ -179,6 +187,15 @@ const AdminVerifications = () => {
                 <SelectItem value="incomplete">Incompletos</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="identity-only"
+                checked={identityOnly}
+                onCheckedChange={(checked) => setIdentityOnly(!!checked)}
+              />
+              <Label htmlFor="identity-only" className="whitespace-nowrap">Com dados pessoais</Label>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -219,6 +236,34 @@ const AdminVerifications = () => {
                       </div>
                     ))}
                   </div>
+
+                  {/* Documents Thumbnails */}
+                  {verification.documents.length > 0 && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {verification.documents.map((doc, index) => (
+                        <div key={`thumb-${index}`} className="flex items-center gap-2">
+                          <div className="bg-muted/50 rounded p-1 flex items-center justify-center">
+                            <img
+                              src={doc.url}
+                              alt={`${getDocumentTypeLabel(doc.type)} preview`}
+                              className="h-12 w-auto object-contain rounded"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'flex';
+                              }}
+                            />
+                            <div className="hidden items-center justify-center h-12 px-2 text-muted-foreground text-xs">
+                              <FileCheck className="h-4 w-4 mr-1" />
+                              Documento
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {getDocumentTypeLabel(doc.type)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                   {verification.adminNotes && (
                     <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
@@ -293,6 +338,71 @@ const AdminVerifications = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Identity Info */}
+              {selectedVerification.identityInfo && (
+                <div>
+                  <Label className="text-base">Informações de Identidade</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 bg-muted rounded">
+                    <div>
+                      <Label>Número do BI</Label>
+                      <p className="font-medium">{selectedVerification.identityInfo.governmentIdNumber}</p>
+                    </div>
+                    <div>
+                      <Label>Data de Nascimento</Label>
+                      <p className="font-medium">{selectedVerification.identityInfo.dateOfBirth}</p>
+                    </div>
+                    <div>
+                      <Label>Nome</Label>
+                      <p className="font-medium">{selectedVerification.identityInfo.firstName}</p>
+                    </div>
+                    <div>
+                      <Label>Sobrenome</Label>
+                      <p className="font-medium">{selectedVerification.identityInfo.lastName}</p>
+                    </div>
+                    {selectedVerification.identityInfo.address && (
+                      <div className="md:col-span-2">
+                        <Label>Endereço</Label>
+                        <p className="font-medium">{selectedVerification.identityInfo.address}</p>
+                      </div>
+                    )}
+                    {selectedVerification.identityInfo.city && (
+                      <div>
+                        <Label>Cidade</Label>
+                        <p className="font-medium">{selectedVerification.identityInfo.city}</p>
+                      </div>
+                    )}
+                    {selectedVerification.identityInfo.state && (
+                      <div>
+                        <Label>Estado</Label>
+                        <p className="font-medium">{selectedVerification.identityInfo.state}</p>
+                      </div>
+                    )}
+                    {selectedVerification.identityInfo.country && (
+                      <div>
+                        <Label>País</Label>
+                        <p className="font-medium">{selectedVerification.identityInfo.country}</p>
+                      </div>
+                    )}
+                    {selectedVerification.identityInfo.postalCode && (
+                      <div>
+                        <Label>CEP</Label>
+                        <p className="font-medium">{selectedVerification.identityInfo.postalCode}</p>
+                      </div>
+                    )}
+                    {selectedVerification.identityInfo.submittedAt && (
+                      <div>
+                        <Label>Dados pessoais enviados</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedVerification.identityInfo.submittedAt instanceof Date
+                            ? selectedVerification.identityInfo.submittedAt.toLocaleDateString('pt-BR')
+                            : (selectedVerification.identityInfo.submittedAt as any)?.toDate?.()?.toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Documents */}
               <div>
@@ -464,6 +574,45 @@ const AdminVerifications = () => {
               </div>
             )}
 
+            {actionDialog.type === 'reject' && actionDialog.verification?.identityInfo && (
+              <div className="pt-4 border-t">
+                <Label>Campos de Identidade para Rejeitar</Label>
+                <div className="space-y-2 mt-2">
+                  {Object.entries(actionDialog.verification.identityInfo).filter(([key]) => key !== 'submittedAt').map(([key, value]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`id-${key}`}
+                        checked={!!identityRejectionReasons[key]}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setIdentityRejectionReasons(prev => ({
+                              ...prev,
+                              [key]: `Campo '${key}' inválido ou inconsistente`
+                            }));
+                          } else {
+                            const { [key]: removed, ...rest } = identityRejectionReasons;
+                            setIdentityRejectionReasons(rest);
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`id-${key}`} className="w-40 capitalize">{key}</Label>
+                      <Input
+                        placeholder="Motivo da rejeição"
+                        value={identityRejectionReasons[key] || ''}
+                        onChange={(e) => setIdentityRejectionReasons(prev => ({
+                          ...prev,
+                          [key]: e.target.value
+                        }))}
+                        className="flex-1"
+                        disabled={!identityRejectionReasons[key]}
+                      />
+                      <div className="text-xs text-muted-foreground max-w-[200px] truncate">{String(value)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="notes">Notas Administrativas</Label>
               <Textarea
@@ -484,7 +633,7 @@ const AdminVerifications = () => {
             </Button>
             <Button
               onClick={handleVerificationAction}
-              disabled={actionDialog.type === 'reject' && Object.keys(rejectionReasons).length === 0}
+              disabled={actionDialog.type === 'reject' && Object.keys(rejectionReasons).length === 0 && Object.keys(identityRejectionReasons).length === 0}
             >
               Confirmar
             </Button>

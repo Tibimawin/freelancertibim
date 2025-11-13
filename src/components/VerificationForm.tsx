@@ -66,7 +66,7 @@ const VerificationForm = () => {
         if (doc.file) {
           setDocuments(prev => ({ ...prev, [key]: { ...prev[key], status: 'uploading' } }));
           
-          const docType = key === 'id_front' || key === 'id_back' ? 'rg' : key; // Simplificando para 'rg' ou 'selfie'
+  const docType = key === 'id_front' || key === 'id_back' ? 'bi' : key; // Simplificando para 'bi' ou 'selfie'
           
           const result = await CloudinaryService.uploadFile(doc.file, folder);
           

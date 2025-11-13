@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Removido Tabs: vamos usar navegação lateral com estado interno
 import { 
   Users, 
   CreditCard, 
@@ -14,8 +14,11 @@ import {
   Clock,
   DollarSign,
   Flag,
-  Briefcase // Importado Briefcase
+  Briefcase, // Importado Briefcase
+  MessageSquare,
+  ShoppingBag
 } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; 
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -27,6 +30,11 @@ import AdminBanking from '@/components/admin/AdminBanking';
 import AdminReports from '@/components/admin/AdminReports'; 
 import AdminReferrals from '@/components/admin/AdminReferrals';
 import AdminJobManager from '@/components/admin/AdminJobManager'; // Importado AdminJobManager
+import AdminSupport from '@/components/admin/AdminSupport';
+import AdminMarketManager from '@/components/admin/AdminMarketManager';
+import AdminMarketOrders from '@/components/admin/AdminMarketOrders';
+import AdminDevices from '@/components/admin/AdminDevices';
+import AdminDefaultAvatars from '@/components/admin/AdminDefaultAvatars';
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
@@ -34,6 +42,7 @@ const AdminDashboard = () => {
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
   const { reports, fetchReports } = useAdminReports(); 
   const { t } = useTranslation();
+  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'>('overview');
 
   useEffect(() => {
     // Refresh stats every 30 seconds
@@ -63,6 +72,11 @@ const AdminDashboard = () => {
       <AdminHeader />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/** Estado de navegação lateral */}
+        {/** default: overview */}
+        {/** Seções disponíveis: overview, users, jobs, withdrawals, verifications, balances, banking, reports, support, referrals */}
+        {/** useState movido para o topo do componente para evitar erro de sintaxe */}
+
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -91,12 +105,12 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {statsLoading ? '...' : `R$ ${statistics?.finances.totalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            {statsLoading ? '...' : `Kz ${statistics?.finances.totalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
               </div>
               <p className="text-xs text-muted-foreground">
                 {!statsLoading && statistics && (
                   <>
-                    R$ {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {t("pending_withdrawals")}
+            Kz {statistics.finances.pendingWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} {t("pending_withdrawals")}
                   </>
                 )}
               </p>
@@ -142,32 +156,64 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview">{t("overview_tab")}</TabsTrigger>
-            <TabsTrigger value="users">{t("users_tab")}</TabsTrigger>
-            <TabsTrigger value="jobs">
-              <Briefcase className="h-4 w-4 mr-2" />
-              {t("jobs_tab")}
-            </TabsTrigger>
-            <TabsTrigger value="withdrawals">{t("withdrawals_tab")}</TabsTrigger>
-            <TabsTrigger value="verifications">{t("verifications_tab")}</TabsTrigger>
-            <TabsTrigger value="balances">{t("balances_tab")}</TabsTrigger>
-            <TabsTrigger value="reports">
-              {t("reports_tab")}
-              {pendingReportsCount > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                  {pendingReportsCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="referrals">
-              {t("referral_program")}
-            </TabsTrigger>
-          </TabsList>
+        {/* Layout principal com menu lateral */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <aside className="lg:col-span-3">
+            <div className="border rounded-lg bg-card">
+              <nav className="p-2 space-y-1">
+                <button onClick={() => setActive('overview')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='overview' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <TrendingUp className="h-4 w-4" /> {t("overview_tab")}
+                </button>
+                <button onClick={() => setActive('users')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='users' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Users className="h-4 w-4" /> {t("users_tab")}
+                </button>
+                <button onClick={() => setActive('jobs')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='jobs' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Briefcase className="h-4 w-4" /> {t("jobs_tab")}
+                </button>
+                <button onClick={() => setActive('market')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='market' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <ShoppingBag className="h-4 w-4" /> Mercado
+                </button>
+                <button onClick={() => setActive('withdrawals')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='withdrawals' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <CreditCard className="h-4 w-4" /> {t("withdrawals_tab")}
+                </button>
+                <button onClick={() => setActive('verifications')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='verifications' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <FileCheck className="h-4 w-4" /> {t("verifications_tab")}
+                </button>
+                <button onClick={() => setActive('balances')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='balances' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <DollarSign className="h-4 w-4" /> {t("balances_tab")}
+                </button>
+                <button onClick={() => setActive('banking')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='banking' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <CreditCard className="h-4 w-4" /> {t("banking_data_tab")}
+                </button>
+                <button onClick={() => setActive('reports')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='reports' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Flag className="h-4 w-4" />
+                  <span className="flex-1">{t("reports_tab")}</span>
+                  {pendingReportsCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto h-5 w-5 p-0 flex items-center justify-center text-xs">
+                      {pendingReportsCount}
+                    </Badge>
+                  )}
+                </button>
+                <button onClick={() => setActive('support')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='support' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <MessageSquare className="h-4 w-4" /> Atendimento
+                </button>
+                <button onClick={() => setActive('referrals')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='referrals' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Users className="h-4 w-4" /> {t("referral_program")}
+                </button>
+                <button onClick={() => setActive('devices')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='devices' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Smartphone className="h-4 w-4" /> Dispositivos
+                </button>
+                <button onClick={() => setActive('avatars')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='avatars' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Users className="h-4 w-4" /> Avatares
+                </button>
+              </nav>
+            </div>
+          </aside>
 
-          <TabsContent value="overview" className="space-y-4">
+          {/* Conteúdo */}
+          <section className="lg:col-span-9 space-y-4">
+          {active === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
@@ -233,58 +279,44 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t("total_deposits")}</span>
                     <span className="font-medium">
-                      {statsLoading ? '...' : `R$ ${statistics?.finances.totalDeposits.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            {statsLoading ? '...' : `Kz ${statistics?.finances.totalDeposits.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t("total_withdrawals")}</span>
                     <span className="font-medium">
-                      {statsLoading ? '...' : `R$ ${statistics?.finances.totalWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            {statsLoading ? '...' : `Kz ${statistics?.finances.totalWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">{t("platform_fees")}</span>
                     <span className="font-medium text-green-600">
-                      {statsLoading ? '...' : `R$ ${statistics?.finances.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            {statsLoading ? '...' : `Kz ${statistics?.finances.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     </span>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          <TabsContent value="users">
-            <AdminUsers />
-          </TabsContent>
-          
-          <TabsContent value="jobs">
-            <AdminJobManager />
-          </TabsContent>
-
-          <TabsContent value="withdrawals">
-            <AdminWithdrawals />
-          </TabsContent>
-
-          <TabsContent value="verifications">
-            <AdminVerifications />
-          </TabsContent>
-
-          <TabsContent value="balances">
-            <AdminBalances />
-          </TabsContent>
-          
-          <TabsContent value="banking">
-            <AdminBanking />
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <AdminReports />
-          </TabsContent>
-          
-          <TabsContent value="referrals">
-            <AdminReferrals />
-          </TabsContent>
-        </Tabs>
+          )}
+          {active === 'market' && (
+            <div className="space-y-6">
+              <AdminMarketManager />
+              <AdminMarketOrders />
+            </div>
+          )}
+          {active === 'users' && (<AdminUsers />)}
+          {active === 'jobs' && (<AdminJobManager />)}
+          {active === 'withdrawals' && (<AdminWithdrawals />)}
+          {active === 'verifications' && (<AdminVerifications />)}
+          {active === 'balances' && (<AdminBalances />)}
+          {active === 'banking' && (<AdminBanking />)}
+          {active === 'reports' && (<AdminReports />)}
+          {active === 'support' && (<AdminSupport />)}
+          {active === 'referrals' && (<AdminReferrals />)}
+          {active === 'devices' && (<AdminDevices />)}
+          {active === 'avatars' && (<AdminDefaultAvatars />)}
+          </section>
+        </div>
       </div>
     </div>
   );

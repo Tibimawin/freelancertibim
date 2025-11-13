@@ -124,7 +124,7 @@ const AdminReferrals = () => {
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-success" />
                       <span className="font-semibold text-lg text-success">
-                        {ref.rewardAmount.toFixed(2)} KZ
+                        {ref.rewardAmount.toFixed(2)} Kz
                       </span>
                       {getStatusBadge(ref.status)}
                     </div>

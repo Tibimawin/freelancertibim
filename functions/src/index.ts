@@ -198,3 +198,34 @@ export const handleCryptoWebhook = functions.https.onRequest(async (req, res) =>
     res.status(500).send('Erro interno do servidor');
   }
 });
+
+// Expirar bônus automaticamente após 30 dias
+export const expireBonusBalances = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+  const now = new Date();
+  const usersRef = admin.firestore().collection('users');
+  const snapshot = await usersRef.where('posterWallet.bonusBalance', '>', 0).get();
+  const batch = admin.firestore().batch();
+
+  let expiredCount = 0;
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() as any;
+    const expiresAtRaw = data.posterWallet?.bonusExpiresAt;
+    const expiresAtDate = expiresAtRaw?.toDate ? expiresAtRaw.toDate() : (expiresAtRaw ? new Date(expiresAtRaw) : null);
+    if (expiresAtDate && expiresAtDate <= now) {
+      const ref = usersRef.doc(docSnap.id);
+      batch.update(ref, {
+        'posterWallet.bonusBalance': 0,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      expiredCount += 1;
+    }
+  });
+
+  if (expiredCount > 0) {
+    await batch.commit();
+  }
+
+  console.log(`expireBonusBalances: ${expiredCount} bônus expirados.`);
+  return null;
+});

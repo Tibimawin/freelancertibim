@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Filter, Smartphone, Monitor, Globe, TrendingUp, Loader2, Plus } from "lucide-react";
-import Header from "@/components/Header";
+import { Filter, TrendingUp, Loader2, Plus, RefreshCw, LayoutGrid, List, PanelsTopLeft, AlertCircle } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import LandingContent from "@/components/LandingContent";
 import JobCard from "@/components/JobCard";
@@ -11,26 +10,83 @@ import FilterDialog from "@/components/FilterDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJobs } from "@/hooks/useFirebase";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { LevelService } from "@/services/levelService";
+import { Card, CardContent } from "@/components/ui/card";
+import { useSettings } from "@/hooks/useSettings";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Index = () => {
-  const { userData, currentUser } = useAuth();
+  const { userData, currentUser, switchUserMode } = useAuth();
   const { jobs, loading: jobsLoading } = useJobs({ limitCount: 10 });
   const navigate = useNavigate();
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'micro' | 'surveys'>('micro');
+  const [workLevel, setWorkLevel] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(null);
+  const [subcategory, setSubcategory] = useState<string | null>(null);
+  const [payment, setPayment] = useState<string | null>(null);
+  const [location, setLocation] = useState<string | null>(null);
+  const [stats, setStats] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'panels' | 'list'>('list');
   const { t } = useTranslation(); // Initialize useTranslation
+  const [userLevelIndex, setUserLevelIndex] = useState<0 | 1 | 2>(0);
+  const { settings, updateSettings } = useSettings();
+  const [showTips, setShowTips] = useState<boolean>(false);
 
-  // Filtrar jobs baseado na dificuldade selecionada
-  const filteredJobs = difficultyFilter 
-    ? jobs.filter(job => job.difficulty === difficultyFilter)
-    : jobs;
+  useEffect(() => {
+    setShowTips(settings?.showOnboardingTips !== false);
+  }, [settings?.showOnboardingTips]);
+
+  useEffect(() => {
+    const computeLevel = async () => {
+      if (!currentUser) return;
+      try {
+        const rs = await LevelService.getUserLevel(currentUser.uid);
+        setUserLevelIndex(rs.levelIndex);
+      } catch {
+        setUserLevelIndex(0);
+      }
+    };
+    computeLevel();
+  }, [currentUser]);
+
+  // Filtrar jobs baseado na dificuldade selecionada e gate por nível
+  const maxAllowed = LevelService.maxAllowedBountyKZ(userLevelIndex);
+  const filteredJobs = jobs.filter(job => {
+    const byDifficulty = difficultyFilter ? job.difficulty === difficultyFilter : true;
+    const byWorkLevel = workLevel ? job.difficulty === workLevel : true;
+    const byCategory = category ? job.category === category : true;
+    const bySubcategory = subcategory ? job.subcategory === subcategory : true;
+    const byLocation = location ? (job.location || '').toLowerCase() === location.toLowerCase() : true;
+    let byPayment = true;
+    if (payment) {
+      const bounty = Number(job.bounty || 0);
+  if (payment === 'Até 1.000 Kz') byPayment = bounty <= 1000;
+  else if (payment === '1.000–5.000 Kz') byPayment = bounty > 1000 && bounty <= 5000;
+  else if (payment === '> 5.000 Kz') byPayment = bounty > 5000;
+    }
+    let byStats = true;
+    if (stats === 'Alta aprovação') {
+      const approval = typeof job.posterApprovalRate === 'number' ? job.posterApprovalRate : undefined;
+      const rating = typeof job.posterRating === 'number' ? job.posterRating : (typeof job.rating === 'number' ? job.rating : undefined);
+      byStats = (typeof approval === 'number' && approval >= 80) || (typeof rating === 'number' && rating >= 4.0);
+    } else if (stats === 'Pagador confiável') {
+      const rating = typeof job.posterRating === 'number' ? job.posterRating : (typeof job.rating === 'number' ? job.rating : 0);
+      const count = typeof job.posterRatingCount === 'number' ? job.posterRatingCount : (typeof job.ratingCount === 'number' ? job.ratingCount : 0);
+      byStats = rating >= 4.5 && count >= 10;
+    }
+    const byLevelGate = Number(job.bounty || 0) <= maxAllowed;
+    return byDifficulty && byWorkLevel && byCategory && bySubcategory && byLocation && byPayment && byStats && byLevelGate;
+  });
 
   // Se o usuário não estiver logado, mostra apenas a página de apresentação
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <HeroSection />
         <LandingContent />
       </div>
@@ -40,10 +96,26 @@ const Index = () => {
   // Se o usuário estiver logado, mostra a interface da aplicação
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Aviso: modo contratante não permite fazer tarefas */}
+        {userData?.currentMode === 'poster' && (
+          <div className="mb-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Você está no modo Contratante</AlertTitle>
+              <AlertDescription>
+                Para fazer tarefas criadas pelos contratantes, você precisa estar na conta Freelancer.
+                <div className="mt-3">
+                  <Button size="sm" variant="outline" onClick={() => switchUserMode('tester')}>
+                    Mudar para Freelancer
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         {/* Ajuste do grid: lg:grid-cols-4 para desktop, grid-cols-1 para mobile */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -83,8 +155,8 @@ const Index = () => {
                        </span>
                        <span className="font-semibold text-foreground">
                          {userData.currentMode === 'tester' 
-                           ? `${(userData.testerWallet?.availableBalance || 0).toFixed(2)} KZ`
-                           : `${(userData.posterWallet?.balance || 0).toFixed(2)} KZ`
+            ? `${(userData.testerWallet?.availableBalance || 0).toFixed(2)} Kz`
+            : `${(userData.posterWallet?.balance || 0).toFixed(2)} Kz`
                          }
                        </span>
                      </div>
@@ -93,7 +165,7 @@ const Index = () => {
                        <div className="flex items-center justify-between">
                          <span className="text-sm text-muted-foreground">{t("pending_balance")}</span>
                          <span className="font-medium text-warning">
-                           {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} KZ
+          {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} Kz
                          </span>
                        </div>
                      )}
@@ -131,143 +203,216 @@ const Index = () => {
                 {t("tip_number")}
               </Badge>
             </div>
-          </div>
-          
-          {/* Main Content Area (Mover para baixo em mobile: order-2) */}
+        </div>
+
+        {/* Main Content Area (Mover para baixo em mobile: order-2) */}
           <div className="lg:col-span-3 order-2 lg:order-1">
-            {/* Filter Section */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">{t("available_tasks")}</h2>
-                <p className="text-muted-foreground">{t("find_opportunities")}</p>
+            {/* Barra superior como na imagem */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    className={`px-4 py-2 rounded-md font-medium ${activeSection === 'micro' ? 'bg-warning/20 text-warning border-b-2 border-warning' : 'text-foreground'}`}
+                    onClick={() => setActiveSection('micro')}
+                  >
+                    Micro Empregos
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded-md font-medium ${activeSection === 'surveys' ? 'bg-warning/20 text-warning border-b-2 border-warning' : 'text-foreground'}`}
+                    onClick={() => setActiveSection('surveys')}
+                  >
+                    Pesquisas pagas
+                  </button>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => window.location.reload()}>
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-pressed={viewMode === 'grid'}
+                    onClick={() => setViewMode('grid')}
+                    className={viewMode === 'grid' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-pressed={viewMode === 'panels'}
+                    onClick={() => setViewMode('panels')}
+                    className={viewMode === 'panels' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                  >
+                    <PanelsTopLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-pressed={viewMode === 'list'}
+                    onClick={() => setViewMode('list')}
+                    className={viewMode === 'list' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              
-              {/* Mostrar o botão de filtro em mobile também */}
-              <FilterDialog 
-                onFilterChange={setDifficultyFilter}
-                currentFilter={difficultyFilter}
-              />
             </div>
 
-            {/* Platform Tabs */}
-            <Tabs defaultValue="all" className="mb-8">
-              {/* Adicionar scroll horizontal para as tabs em mobile */}
-              <TabsList className="flex flex-nowrap w-full gap-1 h-auto bg-muted/50 border border-border rounded-lg p-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  {t("all")}
-                </TabsTrigger>
-                <TabsTrigger value="iOS" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  {t("ios")}
-                </TabsTrigger>
-                <TabsTrigger value="Android" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  {t("android")}
-                </TabsTrigger>
-                <TabsTrigger value="Web" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  {t("web")}
-                </TabsTrigger>
-                <TabsTrigger value="TikTok" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  TikTok
-                </TabsTrigger>
-                <TabsTrigger value="Instagram" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Instagram
-                </TabsTrigger>
-                <TabsTrigger value="Facebook" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Facebook
-                </TabsTrigger>
-                <TabsTrigger value="OnlyFans" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  OnlyFans
-                </TabsTrigger>
-                <TabsTrigger value="Play Store" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Play Store
-                </TabsTrigger>
-                <TabsTrigger value="App Store" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  App Store
-                </TabsTrigger>
-                <TabsTrigger value="Pornhub" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Pornhub
-                </TabsTrigger>
-                <TabsTrigger value="X (Twitter)" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  X
-                </TabsTrigger>
-                <TabsTrigger value="Telegram" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Telegram
-                </TabsTrigger>
-                <TabsTrigger value="YouTube" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  YouTube
-                </TabsTrigger>
-                <TabsTrigger value="WeChat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  WeChat
-                </TabsTrigger>
-                <TabsTrigger value="Snapchat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Snapchat
-                </TabsTrigger>
-                <TabsTrigger value="Pinterest" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Pinterest
-                </TabsTrigger>
-                <TabsTrigger value="Threads" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Threads
-                </TabsTrigger>
-                <TabsTrigger value="LinkedIn" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  LinkedIn
-                </TabsTrigger>
-                <TabsTrigger value="Discord" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Discord
-                </TabsTrigger>
-                <TabsTrigger value="Reddit" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-sm transition-all">
-                  Reddit
-                </TabsTrigger>
-              </TabsList>
+            {/* Linha de filtros conforme imagem */}
+            <div className="mb-8 rounded-md bg-muted/30 border border-border p-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Nível de trabalho</Label>
+                  <Select value={workLevel || ''} onValueChange={(v) => setWorkLevel(v === 'all' ? null : v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Fácil">Fácil</SelectItem>
+                      <SelectItem value="Médio">Médio</SelectItem>
+                      <SelectItem value="Difícil">Difícil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Categoria</Label>
+                  <Select
+                    value={category || ''}
+                    onValueChange={(v) => {
+                      const next = v === 'all' ? null : v;
+                      setCategory(next);
+                      // Ao mudar a categoria, limpar subcategoria selecionada
+                      setSubcategory(null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="Mobile">Mobile</SelectItem>
+                      <SelectItem value="Web">Web</SelectItem>
+                      <SelectItem value="Social">Social</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Subcategoria</Label>
+                  <Select value={subcategory || ''} onValueChange={(v) => setSubcategory(v === 'all' ? null : v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {/* Opções dependentes da categoria */}
+                      {category === 'Mobile' && (
+                        <>
+                          <SelectItem value="App">App</SelectItem>
+                          <SelectItem value="Play Store">Play Store</SelectItem>
+                          <SelectItem value="App Store">App Store</SelectItem>
+                        </>
+                      )}
+                      {category === 'Web' && (
+                        <>
+                          <SelectItem value="Website">Website</SelectItem>
+                          <SelectItem value="Visitar site">Visitar site</SelectItem>
+                          <SelectItem value="Ver video no Youtube">Ver video no Youtube</SelectItem>
+                        </>
+                      )}
+                      {category === 'Social' && (
+                        <>
+                          <SelectItem value="Facebook">Facebook</SelectItem>
+                          <SelectItem value="Instagram">Instagram</SelectItem>
+                          <SelectItem value="Tiktok">Tiktok</SelectItem>
+                          <SelectItem value="Youtube">Youtube</SelectItem>
+                          <SelectItem value="Telegram">Telegram</SelectItem>
+                          <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                          <SelectItem value="Pinterest">Pinterest</SelectItem>
+                          <SelectItem value="Threads">Threads</SelectItem>
+                          <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                          <SelectItem value="Outras redes sociais">Outras redes sociais</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Pagamento</Label>
+                  <Select value={payment || ''} onValueChange={(v) => setPayment(v === 'all' ? null : v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+        <SelectItem value="Até 1.000 Kz">Até 1.000 Kz</SelectItem>
+        <SelectItem value="1.000–5.000 Kz">1.000–5.000 Kz</SelectItem>
+        <SelectItem value="> 5.000 Kz">&gt; 5.000 Kz</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Localização</Label>
+                  <Select value={location || ''} onValueChange={(v) => setLocation(v === 'all' ? null : v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="Luanda">Luanda</SelectItem>
+                      <SelectItem value="Online">Online</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Emp. Estatísticas</Label>
+                  <Select value={stats || ''} onValueChange={(v) => setStats(v === 'all' ? null : v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="Alta aprovação">Alta aprovação</SelectItem>
+                      <SelectItem value="Pagador confiável">Pagador confiável</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
 
-              <TabsContent value="all" className="space-y-6">
-                {jobsLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
-                    <JobCard 
-                      key={job.id} 
-                      {...job} 
-                      applicants={job.applicantCount} 
-                      postedBy={job.posterName}
-                      posterId={job.posterId}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">
-                      {difficultyFilter 
-                        ? t("no_tasks_for_difficulty", { difficulty: difficultyFilter })
-                        : t("no_tasks_found")}
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              {["iOS", "Android", "Web", "TikTok", "Instagram", "Facebook", "OnlyFans", "Play Store", "App Store", "Pornhub", "X (Twitter)", "Telegram", "YouTube", "WeChat", "Snapchat", "Pinterest", "Threads", "LinkedIn", "Discord", "Reddit"].map((platform) => (
-                <TabsContent key={platform} value={platform} className="space-y-6">
-                  {filteredJobs.filter(job => job.platform === platform).length > 0 ? (
-                    filteredJobs.filter(job => job.platform === platform).map((job) => (
-                      <JobCard 
-                        key={job.id} 
-                        {...job} 
-                        applicants={job.applicantCount} 
-                        postedBy={job.posterName}
-                        posterId={job.posterId}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">
-                        {difficultyFilter 
-                          ? t("no_tasks_for_platform_difficulty", { platform: platform, difficulty: difficultyFilter })
-                          : t("no_tasks_for_platform", { platform: platform })}
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+            {/* Lista de tarefas */}
+            <div className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                : viewMode === 'panels'
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
+                : 'space-y-6'
+            }>
+              {jobsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredJobs.length > 0 ? (
+                filteredJobs.map((job) => (
+                  <JobCard 
+                    key={job.id}
+                    {...job}
+                    applicants={job.applicantCount}
+                    postedBy={job.posterName}
+                    posterId={job.posterId}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    {difficultyFilter 
+                      ? t("no_tasks_for_difficulty", { difficulty: difficultyFilter })
+                      : t("no_tasks_found")}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Load More */}
             <div className="text-center mt-8">
@@ -277,6 +422,46 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Guia rápido (onboarding) contextual */}
+        {showTips && (
+          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 z-40">
+            <Card className="shadow-lg border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold">Guia rápido</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Dicas para começar: publicar, aplicar, comprar e conversar.</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button size="sm" variant="secondary" onClick={() => navigate('/create-job')}>
+                        Publicar job
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => navigate('/')}>Aplicar</Button>
+                      <Button size="sm" variant="secondary" onClick={() => navigate('/market')}>Comprar</Button>
+                      <Button size="sm" variant="secondary" onClick={() => navigate('/dashboard')}>Conversar</Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowTips(false)}>Fechar</Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await updateSettings({ showOnboardingTips: false });
+                          setShowTips(false);
+                        } catch (e) {
+                          setShowTips(false);
+                        }
+                      }}
+                    >
+                      Não mostrar novamente
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );

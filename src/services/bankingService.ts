@@ -13,17 +13,13 @@ import { db } from '@/lib/firebase';
 export interface BankingInfo {
   id?: string;
   expressTransfer: {
-    bankName: string;
-    accountNumber: string;
-    accountHolder: string;
-    swiftCode?: string;
+    phoneNumber: string;
     additionalInfo?: string;
   };
   ibanTransfer: {
     iban: string;
     bankName: string;
-    bankAddress: string;
-    swiftCode?: string;
+    accountName: string;
     additionalInfo?: string;
   };
   updatedAt: any;

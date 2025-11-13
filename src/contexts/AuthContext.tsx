@@ -13,6 +13,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updateUserData: (data: Partial<User>) => Promise<void>;
   switchUserMode: (newMode: 'tester' | 'poster') => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,6 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AuthService.resetPassword(email);
   };
 
+  const resendVerificationEmail = async () => {
+    await AuthService.resendVerificationEmail();
+  };
+
   const updateUserData = async (data: Partial<User>) => {
     if (!currentUser) throw new Error('No user logged in');
     
@@ -127,6 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
     updateUserData,
     switchUserMode,
+    resendVerificationEmail,
   };
 
   return (

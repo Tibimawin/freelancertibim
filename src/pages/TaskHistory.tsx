@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
@@ -14,14 +15,14 @@ import {
   Globe, 
   DollarSign,
   Calendar,
-  Flag // Adicionado Flag para o ícone de denúncia
+  Flag, // Adicionado Flag para o ícone de denúncia
+  Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApplicationService } from "@/services/applicationService";
 import { JobService } from "@/services/firebase";
 import { Application, Job } from "@/types/firebase";
-import Header from "@/components/Header";
 import ReportModal from "@/components/ReportModal"; // Importar o ReportModal
 import { useTranslation } from 'react-i18next';
 
@@ -33,6 +34,8 @@ const TaskHistory = () => {
   const { t } = useTranslation();
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedApplicationForReport, setSelectedApplicationForReport] = useState<(Application & { job?: Job }) | null>(null);
+  const [ratingState, setRatingState] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [contractorRatingState, setContractorRatingState] = useState<Record<string, { rating: number; comment: string }>>({});
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -127,12 +130,98 @@ const TaskHistory = () => {
     setShowReportModal(true);
   };
 
+  const handleSetRating = (appId: string, value: number) => {
+    setRatingState(prev => ({
+      ...prev,
+      [appId]: { rating: value, comment: prev[appId]?.comment || '' }
+    }));
+  };
+
+  const handleSetComment = (appId: string, text: string) => {
+    setRatingState(prev => ({
+      ...prev,
+      [appId]: { rating: prev[appId]?.rating || 0, comment: text }
+    }));
+  };
+
+  const handleSubmitRating = async (app: Application & { job?: Job }) => {
+    try {
+      const rs = ratingState[app.id];
+      if (!rs || rs.rating <= 0) {
+        return;
+      }
+      await ApplicationService.submitJobFeedback(app.id, rs.rating, rs.comment);
+      // Atualiza estado local para refletir feedback submetido
+      setApplications(prev => prev.map(a => a.id === app.id ? { ...a, feedback: { rating: rs.rating, comment: rs.comment, providedAt: new Date() as any } } : a));
+    } catch (error) {
+      console.error('Erro ao submeter classificação:', error);
+    }
+  };
+
+  // --- Avaliação do contratante ---
+  const handleSetContractorRating = (appId: string, value: number) => {
+    setContractorRatingState(prev => ({
+      ...prev,
+      [appId]: { rating: value, comment: prev[appId]?.comment || '' }
+    }));
+  };
+
+  const handleSetContractorComment = (appId: string, text: string) => {
+    setContractorRatingState(prev => ({
+      ...prev,
+      [appId]: { rating: prev[appId]?.rating || 0, comment: text }
+    }));
+  };
+
+  const handleSubmitContractorRating = async (app: Application & { job?: Job }) => {
+    try {
+      const rs = contractorRatingState[app.id];
+      if (!rs || rs.rating <= 0) {
+        return;
+      }
+      await ApplicationService.submitContractorFeedback(app.id, rs.rating, rs.comment);
+      // Atualiza estado local para refletir feedback do contratante submetido
+      setApplications(prev => prev.map(a => a.id === app.id ? { ...a, contractorFeedback: { rating: rs.rating, comment: rs.comment, providedAt: new Date() as any } } : a));
+    } catch (error) {
+      console.error('Erro ao submeter avaliação do contratante:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="animate-pulse text-muted-foreground">{t("loading_history")}</div>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="flex items-center mb-6">
+            <Skeleton className="h-8 w-24" />
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="bg-card border-border">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <Skeleton className="h-5 w-48" />
+                      <Skeleton className="h-3 w-40 mt-2" />
+                    </div>
+                    <div className="text-right space-y-2">
+                      <Skeleton className="h-6 w-24" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-2/3" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -140,7 +229,6 @@ const TaskHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center mb-6">
@@ -186,7 +274,7 @@ const TaskHistory = () => {
                       </div>
                       <div className="text-right space-y-2">
                         <div className="text-2xl font-bold text-primary">
-                          {app.job?.bounty.toFixed(2) || '0.00'} KZ
+            {app.job?.bounty.toFixed(2) || '0.00'} Kz
                         </div>
                         {getStatusBadge(app.status)}
                       </div>
@@ -272,7 +360,7 @@ const TaskHistory = () => {
                     </div>
                     <div className="text-right space-y-2">
                       <div className="text-2xl font-bold text-success">
-                        +{app.job?.bounty.toFixed(2) || '0.00'} KZ
+          +{app.job?.bounty.toFixed(2) || '0.00'} Kz
                       </div>
                       {getStatusBadge(app.status)}
                     </div>
@@ -283,6 +371,90 @@ const TaskHistory = () => {
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {app.job?.description}
                   </p>
+                  {/* Classificação de MicroJob: exibir se aprovado e ainda não classificado */}
+                  {app.status === 'approved' && !app.feedback?.rating && (
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        {[1,2,3,4,5].map((i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className="p-1"
+                            onClick={(e) => { e.stopPropagation(); handleSetRating(app.id, i); }}
+                          >
+                            <Star className={`h-5 w-5 ${ (ratingState[app.id]?.rating || 0) >= i ? 'fill-star-glow text-star-glow' : 'text-muted-foreground' }`} />
+                          </button>
+                        ))}
+                        <span className="text-sm text-muted-foreground">{t('rate_job')}</span>
+                      </div>
+                      <textarea
+                        className="w-full rounded-md border border-border bg-input p-2 text-sm"
+                        placeholder={t('optional_comment')}
+                        value={ratingState[app.id]?.comment || ''}
+                        onChange={(e) => handleSetComment(app.id, e.target.value)}
+                      />
+                      <Button size="sm" className="glow-effect" onClick={(e) => { e.stopPropagation(); handleSubmitRating(app); }}>
+                        {t('submit_rating')}
+                      </Button>
+                    </div>
+                  )}
+                  {/* Avaliação do Contratante: exibir se aprovado, contratante diferente do usuário e ainda não avaliado */}
+                  {app.status === 'approved' && app.job?.posterId && app.job.posterId !== currentUser?.uid && !app.contractorFeedback?.rating && (
+                    <div className="mt-6 space-y-3">
+                      <div className="flex items-center gap-2">
+                        {[1,2,3,4,5].map((i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className="p-1"
+                            onClick={(e) => { e.stopPropagation(); handleSetContractorRating(app.id, i); }}
+                          >
+                            <Star className={`h-5 w-5 ${ (contractorRatingState[app.id]?.rating || 0) >= i ? 'fill-star-glow text-star-glow' : 'text-muted-foreground' }`} />
+                          </button>
+                        ))}
+                        <span className="text-sm text-muted-foreground">
+                          {t('rate_contractor')}{app.job?.posterName ? `: ${app.job.posterName}` : ''}
+                        </span>
+                      </div>
+                      <textarea
+                        className="w-full rounded-md border border-border bg-input p-2 text-sm"
+                        placeholder={t('optional_comment')}
+                        value={contractorRatingState[app.id]?.comment || ''}
+                        onChange={(e) => handleSetContractorComment(app.id, e.target.value)}
+                      />
+                      <Button size="sm" className="glow-effect" onClick={(e) => { e.stopPropagation(); handleSubmitContractorRating(app); }}>
+                        {t('submit_contractor_rating')}
+                      </Button>
+                    </div>
+                  )}
+                  {app.contractorFeedback?.rating && (
+                    <div className="mt-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, idx) => (
+                          <Star key={idx} className={`h-4 w-4 ${ (app.contractorFeedback!.rating) > idx ? 'fill-star-glow text-star-glow' : 'text-muted-foreground' }`} />
+                        ))}
+                        <span className="ml-2">
+                          {t('your_contractor_rating')} {app.contractorFeedback.rating.toFixed(1)}/5
+                        </span>
+                      </div>
+                      {app.contractorFeedback.comment && (
+                        <p className="mt-1">{app.contractorFeedback.comment}</p>
+                      )}
+                    </div>
+                  )}
+                  {app.feedback?.rating && (
+                    <div className="mt-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, idx) => (
+                          <Star key={idx} className={`h-4 w-4 ${ (app.feedback!.rating) > idx ? 'fill-star-glow text-star-glow' : 'text-muted-foreground' }`} />
+                        ))}
+                        <span className="ml-2">{t('your_rating')} {app.feedback.rating.toFixed(1)}/5</span>
+                      </div>
+                      {app.feedback.comment && (
+                        <p className="mt-1">{app.feedback.comment}</p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -301,7 +473,7 @@ const TaskHistory = () => {
                     </div>
                     <div className="text-right space-y-2">
                       <div className="text-2xl font-bold text-warning">
-                        {app.job?.bounty.toFixed(2) || '0.00'} KZ
+            {app.job?.bounty.toFixed(2) || '0.00'} Kz
                       </div>
                       {getStatusBadge(app.status)}
                     </div>
@@ -354,7 +526,7 @@ const TaskHistory = () => {
                     </div>
                     <div className="text-right space-y-2">
                       <div className="text-2xl font-bold text-muted-foreground">
-                        {app.job?.bounty.toFixed(2) || '0.00'} KZ
+            {app.job?.bounty.toFixed(2) || '0.00'} Kz
                       </div>
                       {getStatusBadge(app.status)}
                     </div>

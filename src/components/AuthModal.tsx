@@ -7,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, ArrowLeft, Users } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, Users, Eye, EyeOff } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { auth } from '@/lib/firebase';
+import { MultiFactorResolver, RecaptchaVerifier, PhoneAuthProvider, PhoneMultiFactorGenerator } from 'firebase/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,7 +20,7 @@ interface AuthModalProps {
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, resendVerificationEmail } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -32,6 +34,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     referralCode: "" // Novo campo
   });
   const [resetForm, setResetForm] = useState({ email: "" });
+  const [unverified, setUnverified] = useState(false);
+
+  // Password visibility states
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirm, setShowSignUpConfirm] = useState(false);
+
+  // MFA states
+  const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
+  const [mfaVerificationId, setMfaVerificationId] = useState<string>("");
+  const [mfaCode, setMfaCode] = useState<string>("");
+  const [mfaSending, setMfaSending] = useState<boolean>(false);
+  const [mfaRecaptcha, setMfaRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
   if (!isOpen) return null;
 
@@ -47,11 +62,72 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       });
       onClose();
     } catch (error: any) {
-      toast({
-        title: t("login_error"),
-        description: error.message || t("login_error_description"),
-        variant: "destructive",
-      });
+      // Handle MFA challenge
+      if (error?.code === 'auth/multi-factor-auth-required' && error?.resolver) {
+        try {
+          const resolver = error.resolver as MultiFactorResolver;
+          setMfaResolver(resolver);
+          setActiveTab('signin'); // Ensure we're on sign-in tab
+          setMfaSending(true);
+          // Prepare invisible reCAPTCHA
+          const recaptcha = new RecaptchaVerifier(auth, 'mfa-recaptcha-container', { size: 'invisible' });
+          setMfaRecaptcha(recaptcha);
+          const provider = new PhoneAuthProvider(auth);
+          const verificationId = await provider.verifyPhoneNumber({ multiFactorHint: resolver.hints[0], session: resolver.session }, recaptcha);
+          setMfaVerificationId(verificationId);
+          toast({ title: t('mfa_code_sent'), description: t('mfa_enter_code_description') });
+        } catch (mfaErr: any) {
+          toast({ title: t('login_error'), description: mfaErr?.message || t('login_error_description'), variant: 'destructive' });
+          // Cleanup if created
+          try { mfaRecaptcha?.clear(); } catch {}
+        } finally {
+          setMfaSending(false);
+          setLoading(false);
+        }
+        return;
+      } else {
+        if (error?.code === 'auth/email-not-verified') {
+          toast({
+            title: t('email_not_verified'),
+            description: t('please_check_email_to_activate'),
+            variant: 'destructive',
+          });
+          setUnverified(true);
+          try {
+            await resendVerificationEmail();
+            toast({ title: t('verification_email_resent'), description: t('please_check_email_to_activate') });
+          } catch {}
+        } else {
+          toast({
+            title: t("login_error"),
+            description: error.message || t("login_error_description"),
+            variant: "destructive",
+          });
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyMfaCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaResolver || !mfaVerificationId) return;
+    setLoading(true);
+    try {
+      const cred = PhoneAuthProvider.credential(mfaVerificationId, mfaCode);
+      const assertion = PhoneMultiFactorGenerator.assertion(cred);
+      await mfaResolver.resolveSignIn(assertion);
+      toast({ title: t('login_success'), description: t('welcome_back_freelincer') });
+      // Clear MFA state
+      try { mfaRecaptcha?.clear(); } catch {}
+      setMfaResolver(null);
+      setMfaVerificationId("");
+      setMfaCode("");
+      setMfaRecaptcha(null);
+      onClose();
+    } catch (err: any) {
+      toast({ title: t('mfa_code_invalid'), description: err?.message || t('login_error_description'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -83,10 +159,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     try {
       await signUp(signUpForm.email, signUpForm.password, signUpForm.name, signUpForm.referralCode.toUpperCase());
       toast({
-        title: t("account_created_success"),
-        description: t("welcome_freelincer_journey"),
+        title: t('verification_email_sent'),
+        description: t('please_check_email_to_activate'),
       });
-      onClose();
+      setActiveTab('signin');
     } catch (error: any) {
       toast({
         title: t("signup_error"),
@@ -135,9 +211,9 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           
           <div className="flex items-center justify-center space-x-2 mb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">F</span>
+              <span className="text-sm font-bold text-primary-foreground">AT</span>
             </div>
-            <span className="text-xl font-bold text-foreground">Freelincer</span>
+            <span className="text-xl font-bold text-foreground">Ango Tarefas</span>
           </div>
           
           <CardTitle className="text-2xl">
@@ -153,7 +229,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="max-h-[80vh] overflow-y-auto">
           {activeTab !== "reset" ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2 bg-muted/50">
@@ -162,7 +238,32 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               </TabsList>
 
               <TabsContent value="signin" className="mt-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
+                {/* MFA reCAPTCHA container */}
+                <div id="mfa-recaptcha-container" />
+                {/* Render MFA code form when resolver is present */}
+                {mfaResolver ? (
+                  <form onSubmit={handleVerifyMfaCode} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="mfa-code">{t('verification_code')}</Label>
+                      <Input
+                        id="mfa-code"
+                        placeholder={t('enter_verification_code')}
+                        className="bg-input border-border text-foreground"
+                        value={mfaCode}
+                        onChange={(e) => setMfaCode(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full glow-effect" variant="hero" disabled={loading || mfaSending}>
+                      {(loading || mfaSending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {t('verify_code')}
+                    </Button>
+                    <Button type="button" variant="link" className="w-full text-sm text-primary" onClick={() => setMfaResolver(null)}>
+                      {t('back_to_login')}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">{t("email")}</Label>
                     <div className="relative">
@@ -185,13 +286,25 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signin-password"
-                        type="password"
+                        type={showSignInPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 bg-input border-border text-foreground"
+                        className="pl-10 pr-10 bg-input border-border text-foreground"
                         value={signInForm.password}
                         onChange={(e) => setSignInForm(prev => ({ ...prev, password: e.target.value }))}
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showSignInPassword ? t("hide_password") : t("show_password")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignInPassword(v => !v)}
+                      >
+                        {showSignInPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -205,6 +318,24 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     {t("enter")}
                   </Button>
 
+                  {unverified && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full text-sm text-primary hover:text-primary-hover"
+                      onClick={async () => {
+                        try {
+                          await resendVerificationEmail();
+                          toast({ title: t('verification_email_resent'), description: t('please_check_email_to_activate') });
+                        } catch (err: any) {
+                          toast({ title: t('login_error'), description: err?.message || t('login_error_description'), variant: 'destructive' });
+                        }
+                      }}
+                    >
+                      {t('resend_verification_email')}
+                    </Button>
+                  )}
+
                   <Button
                     type="button"
                     variant="link"
@@ -213,7 +344,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   >
                     {t("forgot_password")}
                   </Button>
-                </form>
+                  </form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup" className="mt-4">
@@ -256,13 +388,25 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showSignUpPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 bg-input border-border text-foreground"
+                        className="pl-10 pr-10 bg-input border-border text-foreground"
                         value={signUpForm.password}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showSignUpPassword ? t("hide_password") : t("show_password")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignUpPassword(v => !v)}
+                      >
+                        {showSignUpPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -272,13 +416,25 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-confirm"
-                        type="password"
+                        type={showSignUpConfirm ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 bg-input border-border text-foreground"
+                        className="pl-10 pr-10 bg-input border-border text-foreground"
                         value={signUpForm.confirmPassword}
                         onChange={(e) => setSignUpForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                         required
                       />
+                      <button
+                        type="button"
+                        aria-label={showSignUpConfirm ? t("hide_password") : t("show_password")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignUpConfirm(v => !v)}
+                      >
+                        {showSignUpConfirm ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   

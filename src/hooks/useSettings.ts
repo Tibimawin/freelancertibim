@@ -33,6 +33,7 @@ export interface UserSettings {
   twoFactorAuth: boolean;
   loginAlerts: boolean;
   sessionTimeout: string;
+  showOnboardingTips?: boolean;
   
   // Social Media Accounts
   socialAccounts?: {
@@ -41,6 +42,9 @@ export interface UserSettings {
     twitter?: string;
     tiktok?: string;
     linkedin?: string;
+  };
+  messageTemplates?: {
+    directMessageInitial?: string;
   };
 }
 
@@ -62,7 +66,11 @@ export const useSettings = () => {
     twoFactorAuth: false,
     loginAlerts: true,
     sessionTimeout: "30",
+    showOnboardingTips: true,
     socialAccounts: {},
+    messageTemplates: {
+      directMessageInitial: 'tenho interesse nesse produto: {{title}}',
+    },
   });
 
   useEffect(() => {
@@ -120,7 +128,11 @@ export const useSettings = () => {
       twoFactorAuth: false,
       loginAlerts: true,
       sessionTimeout: "30",
+      showOnboardingTips: true,
       socialAccounts: {},
+      messageTemplates: {
+        directMessageInitial: 'tenho interesse nesse produto: {{title}}',
+      },
     };
     
     await updateSettings(defaultSettings);

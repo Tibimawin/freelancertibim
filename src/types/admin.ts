@@ -53,19 +53,51 @@ export interface UserVerification {
   userId: string;
   userName: string;
   userEmail: string;
+  // Informações de identidade submetidas pelo usuário
+  identityInfo?: {
+    governmentIdNumber: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string; // ISO string (YYYY-MM-DD)
+    address?: string;
+    state?: string;
+    city?: string;
+    country?: string;
+    postalCode?: string;
+    submittedAt: Date;
+  };
   documents: {
-    type: 'cpf' | 'rg' | 'passport' | 'selfie' | 'address_proof' | 'id_front' | 'id_back'; // Adicionando tipos de documentos
+  type: 'cpf' | 'bi' | 'rg' | 'passport' | 'selfie' | 'address_proof' | 'id_front' | 'id_back'; // Adicionando tipos de documentos (BI preferido)
     url: string;
     publicId: string; // Adicionado para exclusão no Cloudinary
     uploadedAt: Date;
     status: 'pending' | 'approved' | 'rejected';
     rejectionReason?: string;
   }[];
+  // Motivos de rejeição por campo de identidade (opcional)
+  identityRejectionReasons?: { [field: string]: string };
   overallStatus: 'pending' | 'approved' | 'rejected' | 'incomplete';
   submittedAt: Date;
   reviewedAt?: Date;
   reviewedBy?: string;
   adminNotes?: string;
+}
+
+// Device policy types
+export interface DevicePolicy {
+  enforceLimit: boolean;
+  maxUidsPerDevice: number;
+  monitorOnly?: boolean;
+  alertThreshold?: number;
+  updatedAt?: Date;
+}
+
+export interface DeviceLinkReportItem {
+  deviceId: string;
+  uids: string[];
+  uidsCount: number;
+  createdAt?: Date;
+  lastSeenAt?: Date;
 }
 
 // Admin statistics types

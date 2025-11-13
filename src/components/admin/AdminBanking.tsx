@@ -16,17 +16,13 @@ const AdminBanking = () => {
   const [loading, setLoading] = useState(false);
   const [bankingInfo, setBankingInfo] = useState<BankingInfo>({
     expressTransfer: {
-      bankName: '',
-      accountNumber: '',
-      accountHolder: '',
-      swiftCode: '',
+      phoneNumber: '',
       additionalInfo: '',
     },
     ibanTransfer: {
       iban: '',
       bankName: '',
-      bankAddress: '',
-      swiftCode: '',
+      accountName: '',
       additionalInfo: '',
     },
     updatedAt: new Date(),
@@ -117,43 +113,13 @@ const AdminBanking = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="express-bank-name">Nome do Banco</Label>
+              <div className="md:col-span-2">
+                <Label htmlFor="express-phone">Número de Telefone (Multicaixa Express)</Label>
                 <Input
-                  id="express-bank-name"
-                  placeholder="Ex: BAI, BFA, Millennium"
-                  value={bankingInfo.expressTransfer.bankName}
-                  onChange={(e) => updateExpressField('bankName', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="express-account-number">Número da Conta</Label>
-                <Input
-                  id="express-account-number"
-                  placeholder="Número da conta"
-                  value={bankingInfo.expressTransfer.accountNumber}
-                  onChange={(e) => updateExpressField('accountNumber', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="express-account-holder">Titular da Conta</Label>
-                <Input
-                  id="express-account-holder"
-                  placeholder="Nome completo do titular"
-                  value={bankingInfo.expressTransfer.accountHolder}
-                  onChange={(e) => updateExpressField('accountHolder', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="express-swift">Código SWIFT (Opcional)</Label>
-                <Input
-                  id="express-swift"
-                  placeholder="Código SWIFT"
-                  value={bankingInfo.expressTransfer.swiftCode}
-                  onChange={(e) => updateExpressField('swiftCode', e.target.value)}
+                  id="express-phone"
+                  placeholder="Ex: 926 234 567"
+                  value={bankingInfo.expressTransfer.phoneNumber}
+                  onChange={(e) => updateExpressField('phoneNumber', e.target.value)}
                 />
               </div>
             </div>
@@ -179,11 +145,11 @@ const AdminBanking = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <Label htmlFor="iban-code">Código IBAN</Label>
                 <Input
                   id="iban-code"
-                  placeholder="AO06 0040 0000 0000 0000 0000 0"
+                  placeholder="AO06 0040 0000 4562 3745 1018 5"
                   value={bankingInfo.ibanTransfer.iban}
                   onChange={(e) => updateIbanField('iban', e.target.value)}
                 />
@@ -199,23 +165,13 @@ const AdminBanking = () => {
                 />
               </div>
               
-              <div className="md:col-span-2">
-                <Label htmlFor="iban-bank-address">Endereço do Banco</Label>
-                <Input
-                  id="iban-bank-address"
-                  placeholder="Endereço completo do banco"
-                  value={bankingInfo.ibanTransfer.bankAddress}
-                  onChange={(e) => updateIbanField('bankAddress', e.target.value)}
-                />
-              </div>
-              
               <div>
-                <Label htmlFor="iban-swift">Código SWIFT (Opcional)</Label>
+                <Label htmlFor="iban-account-name">Nome da Conta</Label>
                 <Input
-                  id="iban-swift"
-                  placeholder="Código SWIFT"
-                  value={bankingInfo.ibanTransfer.swiftCode}
-                  onChange={(e) => updateIbanField('swiftCode', e.target.value)}
+                  id="iban-account-name"
+                  placeholder="Titular/Nome da conta"
+                  value={bankingInfo.ibanTransfer.accountName}
+                  onChange={(e) => updateIbanField('accountName', e.target.value)}
                 />
               </div>
             </div>

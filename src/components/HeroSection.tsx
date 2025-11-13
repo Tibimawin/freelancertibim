@@ -14,7 +14,9 @@ const HeroSection = () => {
         <img 
           src={heroImage} 
           alt="Plataforma de testes de aplicativos freelancers"
-          className="h-full w-full object-cover opacity-10" // Reduced opacity for darker theme
+          className="h-full w-full object-cover opacity-10"
+          decoding="async"
+          fetchpriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-nebula-bg/90 via-nebula-bg/70 to-nebula-bg/90" /> {/* Darker, more subtle overlay */}
       </div>
@@ -67,7 +69,7 @@ const HeroSection = () => {
             <div className="text-center animate-fade-in delay-200">
               <div className="flex items-center justify-center mb-2 text-electric-purple">
                 <DollarSign className="h-6 w-6 mr-2" />
-                <span className="text-2xl font-bold">2M+ KZ</span>
+        <span className="text-2xl font-bold">2M+ Kz</span>
               </div>
               <p className="text-sm text-nebula-fg/70">{t("paid_to_freelancers")}</p>
             </div>

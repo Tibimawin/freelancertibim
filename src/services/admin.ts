@@ -26,6 +26,7 @@ import {
   UserAction 
 } from '@/types/admin';
 import { User, Job, Transaction, Report } from '@/types/firebase'; // Import Report
+import { DevicePolicy, DeviceLinkReportItem } from '@/types/admin';
 
 export class AdminService {
   // Admin authentication
@@ -373,6 +374,187 @@ export class AdminService {
       };
     } catch (error) {
       console.error('Error getting statistics:', error);
+      throw error;
+    }
+  }
+
+  // Device policy - preferences to limit/monitor accounts per device
+  static async getDevicePolicy(): Promise<DevicePolicy> {
+    try {
+      const policyRef = doc(db, 'admin_settings', 'devicePolicy');
+      const snap = await getDoc(policyRef);
+      if (!snap.exists()) {
+        return {
+          enforceLimit: false,
+          maxUidsPerDevice: 3,
+          monitorOnly: true,
+          alertThreshold: 5,
+          updatedAt: new Date(),
+        };
+      }
+      const data = snap.data() as any;
+      return {
+        enforceLimit: !!data.enforceLimit,
+        maxUidsPerDevice: typeof data.maxUidsPerDevice === 'number' ? data.maxUidsPerDevice : 3,
+        monitorOnly: !!data.monitorOnly,
+        alertThreshold: typeof data.alertThreshold === 'number' ? data.alertThreshold : 5,
+        updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
+      };
+    } catch (error) {
+      console.error('Error getting device policy:', error);
+      throw error;
+    }
+  }
+
+  static async updateDevicePolicy(policy: Partial<DevicePolicy>): Promise<void> {
+    try {
+      const policyRef = doc(db, 'admin_settings', 'devicePolicy');
+      await setDoc(policyRef, {
+        enforceLimit: !!policy.enforceLimit,
+        maxUidsPerDevice: typeof policy.maxUidsPerDevice === 'number' ? policy.maxUidsPerDevice : 3,
+        monitorOnly: policy.monitorOnly ?? true,
+        alertThreshold: typeof policy.alertThreshold === 'number' ? policy.alertThreshold : 5,
+        updatedAt: Timestamp.now(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error updating device policy:', error);
+      throw error;
+    }
+  }
+
+  // Report device_links: how many uids per device
+  static async getDeviceLinksReport(limitCount?: number): Promise<DeviceLinkReportItem[]> {
+    try {
+      const q = limitCount
+        ? query(collection(db, 'device_links'), limit(limitCount))
+        : query(collection(db, 'device_links'));
+      const snap = await getDocs(q);
+      const items: DeviceLinkReportItem[] = snap.docs.map((d) => {
+        const data = d.data() as any;
+        const uids: string[] = Array.isArray(data.uids) ? data.uids : [];
+        return {
+          deviceId: d.id,
+          uids,
+          uidsCount: uids.length,
+          createdAt: data.createdAt?.toDate?.() || data.createdAt,
+          lastSeenAt: data.lastSeenAt?.toDate?.() || data.lastSeenAt,
+        };
+      });
+      // Sort by uidsCount desc
+      items.sort((a, b) => b.uidsCount - a.uidsCount);
+      return items;
+    } catch (error) {
+      console.error('Error getting device links report:', error);
+      throw error;
+    }
+  }
+
+  // Relatório de uso de bônus por usuário
+  static async getBonusUsageReport(): Promise<Array<{
+    userId: string;
+    name: string;
+    email: string;
+    bonusBalance: number;
+    bonusIssuedAt?: Date | null;
+    bonusExpiresAt?: Date | null;
+    bonusUsedTotal: number;
+    bonusExpired: boolean;
+  }>> {
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const results: Array<{
+        userId: string;
+        name: string;
+        email: string;
+        bonusBalance: number;
+        bonusIssuedAt?: Date | null;
+        bonusExpiresAt?: Date | null;
+        bonusUsedTotal: number;
+        bonusExpired: boolean;
+      }> = [];
+
+      for (const docSnap of usersSnap.docs) {
+        const data: any = docSnap.data();
+        const bonusBalance = data.posterWallet?.bonusBalance || 0;
+        const issuedRaw = data.posterWallet?.bonusIssuedAt;
+        const expiresRaw = data.posterWallet?.bonusExpiresAt;
+        const issuedAt = issuedRaw?.toDate ? issuedRaw.toDate() : (issuedRaw ? new Date(issuedRaw) : null);
+        const expiresAt = expiresRaw?.toDate ? expiresRaw.toDate() : (expiresRaw ? new Date(expiresRaw) : null);
+        const bonusExpired = !!(expiresAt && expiresAt <= new Date());
+
+        // Somar uso de bônus pelas transações com metadata.bonusUsed
+        const txSnap = await getDocs(
+          query(
+            collection(db, 'transactions'),
+            where('userId', '==', docSnap.id),
+            where('metadata.bonusUsed', '>', 0)
+          )
+        );
+        const bonusUsedTotal = txSnap.docs.reduce((sum, d) => {
+          const m = (d.data() as any).metadata || {};
+          const v = typeof m.bonusUsed === 'number' ? m.bonusUsed : 0;
+          return sum + v;
+        }, 0);
+
+        results.push({
+          userId: docSnap.id,
+          name: data.name || 'Usuário',
+          email: data.email || '',
+          bonusBalance,
+          bonusIssuedAt: issuedAt,
+          bonusExpiresAt: expiresAt,
+          bonusUsedTotal,
+          bonusExpired,
+        });
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error generating bonus usage report:', error);
+      throw error;
+    }
+  }
+
+  // Utilitário opcional: conceder bônus para contas existentes que ainda não receberam
+  static async grantWelcomeBonusToExistingUsers(amountKZ = 500): Promise<number> {
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      let granted = 0;
+      const now = new Date();
+      const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      for (const docSnap of usersSnap.docs) {
+        const data: any = docSnap.data();
+        const hasBonusField = data.posterWallet && typeof data.posterWallet.bonusBalance === 'number';
+        if (hasBonusField) continue; // já possui campo inicializado (evita duplicidade)
+
+        const userRef = doc(db, 'users', docSnap.id);
+        await updateDoc(userRef, {
+          'posterWallet.bonusBalance': amountKZ,
+          'posterWallet.bonusIssuedAt': now,
+          'posterWallet.bonusExpiresAt': expires,
+          updatedAt: Timestamp.now(),
+        } as any);
+
+        // Registrar transação de sistema
+        await addDoc(collection(db, 'transactions'), {
+          userId: docSnap.id,
+          type: 'deposit',
+          amount: amountKZ,
+          currency: 'KZ',
+          status: 'completed',
+          description: 'Bônus de boas-vindas (concessão retroativa)',
+          provider: 'system',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        } as any);
+
+        granted += 1;
+      }
+
+      return granted;
+    } catch (error) {
+      console.error('Error granting welcome bonus to existing users:', error);
       throw error;
     }
   }

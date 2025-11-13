@@ -9,6 +9,10 @@ interface User {
   skills?: string[];
   currentMode: 'tester' | 'poster';
   rating: number;
+  ratingCount?: number;
+  blockedUsers?: string[];
+  accountStatus?: 'active' | 'suspended' | 'banned';
+  deviceId?: string;
   testerWallet: {
     availableBalance: number;
     pendingBalance: number;
@@ -18,6 +22,9 @@ interface User {
     balance: number;
     pendingBalance: number;
     totalDeposits: number;
+    bonusBalance?: number;
+    bonusIssuedAt?: Date;
+    bonusExpiresAt?: Date;
   };
   completedTests: number;
   approvalRate: number;
@@ -48,12 +55,17 @@ export interface UserSettings {
   twoFactorAuth: boolean;
   loginAlerts: boolean;
   sessionTimeout: string;
+  // Onboarding flags
+  showOnboardingTips?: boolean;
   socialAccounts?: {
     instagram?: string;
     facebook?: string;
     twitter?: string;
     tiktok?: string;
     linkedin?: string;
+  };
+  messageTemplates?: {
+    directMessageInitial?: string;
   };
 }
 
@@ -67,6 +79,9 @@ export interface Job {
   bounty: number;
   platform: 'iOS' | 'Android' | 'Web';
   difficulty: 'Fácil' | 'Médio' | 'Difícil';
+  // Classificação funcional por domínio
+  category?: 'Mobile' | 'Web' | 'Social';
+  subcategory?: string;
   requirements: string[];
   attachments: string[];
   status: 'active' | 'paused' | 'completed' | 'cancelled';
@@ -80,6 +95,13 @@ export interface Job {
   // Novas propriedades para instruções detalhadas
   detailedInstructions: TaskInstruction[];
   proofRequirements: ProofRequirement[];
+  // Classificação do MicroJob
+  rating?: number;
+  ratingCount?: number;
+  // Estatísticas do empregador no momento da criação
+  posterApprovalRate?: number;
+  posterRating?: number;
+  posterRatingCount?: number;
 }
 
 // Instruções detalhadas da tarefa
@@ -117,6 +139,12 @@ export interface Application {
     comment: string;
     providedAt: Date;
   };
+  // Avaliação feita pelo freelancer ao contratante
+  contractorFeedback?: {
+    rating: number;
+    comment?: string;
+    providedAt: Date;
+  };
   reviewedAt?: Date;
   reviewedBy?: string;
   rejectionReason?: string;
@@ -126,7 +154,9 @@ export interface Application {
 export interface ProofSubmission {
   requirementId: string;
   type: 'text' | 'screenshot' | 'file' | 'url';
-  content: string; // texto, URL ou caminho do arquivo
+  content: string; // texto ou URL
+  fileUrl?: string; // URL do arquivo (Cloudinary)
+  filePublicId?: string; // Public ID do arquivo (Cloudinary)
   comment?: string;
 }
 
@@ -150,6 +180,12 @@ export interface Transaction {
     exchangeRate?: number;
     maxApplicants?: number;
     bountyPerTask?: number;
+    // Mercado: vínculo com pedido/anúncio/vendedor
+    orderId?: string;
+    listingId?: string;
+    sellerId?: string;
+    // Rastreamento de uso de bônus
+    bonusUsed?: number;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -194,10 +230,11 @@ export interface WithdrawalRequest {
   amount: number;
   method: 'express' | 'iban';
   accountInfo: {
-    bankName?: string;
-    accountNumber?: string;
-    accountHolder?: string;
+    // Transferência Express: apenas número de telefone autenticado no Multicaixa Express
+    phoneNumber?: string;
+    // Transferência IBAN
     iban?: string;
+    accountHolder?: string;
   };
   status: 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
   requestedAt: Date;
@@ -211,7 +248,7 @@ export interface WithdrawalRequest {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'task_approved' | 'task_rejected' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed';
+  type: 'task_approved' | 'task_rejected' | 'task_submitted' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed' | 'message_received' | 'comment_submitted' | 'support_message' | 'market_order_delivered';
   title: string;
   message: string;
   read: boolean;
@@ -220,6 +257,11 @@ export interface Notification {
     applicationId?: string;
     withdrawalId?: string;
     reportId?: string;
+    chatUserId?: string;
+    // Mercado
+    orderId?: string;
+    listingId?: string;
+    downloadTokenId?: string;
   };
   createdAt: Date;
 }
@@ -257,3 +299,111 @@ export interface Referral {
 }
 
 export { User };
+
+// Mensagens de aplicação (chat entre contratante e freelancer)
+export interface Message {
+  id: string;
+  applicationId: string;
+  senderId: string;
+  senderName: string;
+  recipientId: string;
+  text: string;
+  attachments?: string[];
+  createdAt: Date;
+}
+
+// Comentários públicos de job (moderados)
+export interface JobComment {
+  id: string;
+  jobId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+}
+
+// Chat direto entre usuários
+export interface DirectThread {
+  id: string;
+  participants: string[]; // [userA, userB]
+  createdAt: Date;
+  lastMessageAt?: Date;
+  // Realtime typing indicators per user
+  typing?: { [userId: string]: boolean };
+}
+
+export interface DirectMessage {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  recipientId: string;
+  text: string;
+  createdAt: Date;
+  // Read receipt timestamp (set by recipient)
+  readAt?: Date;
+}
+
+// Marketplace types
+export interface MarketListing {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  images?: string[]; // up to 5 images for gallery
+  tags: string[]; // e.g., 'Marketing Digital', 'Backlinks'
+  sellerId: string;
+  sellerName: string;
+  price: number;
+  currency: string; // e.g., 'KZ'
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  model?: string;
+  condition?: 'new' | 'used' | 'refurbished';
+  sku?: string;
+  stock?: number;
+  warranty?: string;
+  deliveryInfo?: string;
+  returnPolicy?: string;
+  details?: string; // additional specifications
+  // Digital product support
+  productType?: 'digital' | 'physical' | 'service';
+  digitalCategory?: 'ebook' | 'video_course' | 'app' | 'other';
+  downloadUrl?: string; // protected link to deliver after purchase
+  autoDeliver?: boolean; // if true, allow immediate download after purchase
+  rating?: number;
+  ratingCount?: number;
+  status: 'active' | 'inactive';
+  createdAt: Date;
+}
+
+export interface MarketOrder {
+  id: string;
+  listingId: string;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'delivered' | 'cancelled';
+  createdAt: Date;
+  updatedAt?: Date;
+  // Avaliação pós-compra
+  rating?: number; // 1..5
+  review?: string;
+  ratedAt?: Date;
+}
+
+// Token temporário para download seguro de produtos digitais
+export interface MarketDownloadToken {
+  id: string;
+  listingId: string;
+  buyerId: string;
+  downloadUrl: string;
+  expiresAt: Date; // será persistido como Firestore Timestamp
+  consumed?: boolean; // se já foi usado
+  createdAt: Date;
+}

@@ -35,6 +35,8 @@ import {
   Linkedin
 } from "lucide-react";
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { AuthService } from '@/services/auth';
+import { RecaptchaVerifier } from 'firebase/auth';
 
 const SettingsManager = () => {
   const { userData, currentUser } = useAuth();
@@ -49,6 +51,12 @@ const SettingsManager = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // 2FA/MFA local states
+  const [mfaPhone, setMfaPhone] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaVerificationId, setMfaVerificationId] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaRecaptcha, setMfaRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -308,6 +316,26 @@ const SettingsManager = () => {
               onCheckedChange={(checked) => setLocalSettings({...localSettings, allowDirectMessages: checked})}
             />
           </div>
+
+          {/* Template de mensagem inicial para Mensagens Diretas */}
+          <div className="space-y-2">
+            <Label>Template de mensagem inicial</Label>
+            <p className="text-sm text-muted-foreground">
+              Personalize a mensagem enviada ao iniciar um chat com um vendedor.
+              Suporta placeholders como <code>{"{{title}}"}</code> e <code>{"{{seller}}"}</code>.
+            </p>
+            <Input
+              value={localSettings.messageTemplates?.directMessageInitial ?? ''}
+              onChange={(e) => setLocalSettings({
+                ...localSettings,
+                messageTemplates: {
+                  ...localSettings.messageTemplates,
+                  directMessageInitial: e.target.value,
+                },
+              })}
+              placeholder={"tenho interesse nesse produto: {{title}}"}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -419,6 +447,93 @@ const SettingsManager = () => {
                 onCheckedChange={(checked) => setLocalSettings({...localSettings, twoFactorAuth: checked})}
               />
             </div>
+          </div>
+
+          {/* 2FA Enrollment Section */}
+          <div className="space-y-3">
+            <div id="settings-mfa-recaptcha" />
+            {currentUser?.multiFactor?.enrolledFactors?.length ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>{t('mfa_enabled')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('mfa_enabled_description')}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  disabled={mfaLoading}
+                  onClick={async () => {
+                    try {
+                      setMfaLoading(true);
+                      const first = currentUser!.multiFactor.enrolledFactors[0];
+                      await AuthService.disableMfa(first.uid);
+                      toast({ title: t('mfa_disabled'), description: t('mfa_disabled_description') });
+                    } catch (err: any) {
+                      toast({ title: t('error'), description: err?.message || t('error_saving'), variant: 'destructive' });
+                    } finally {
+                      setMfaLoading(false);
+                    }
+                  }}
+                >
+                  {t('disable_2fa')}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="mfa-phone">{t('phone_number')}</Label>
+                <Input
+                  id="mfa-phone"
+                  placeholder={t('enter_phone_number')}
+                  value={mfaPhone}
+                  onChange={(e) => setMfaPhone(e.target.value)}
+                />
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="secondary"
+                    disabled={mfaLoading || !mfaPhone}
+                    onClick={async () => {
+                      try {
+                        setMfaLoading(true);
+                        const { verificationId, recaptchaVerifier } = await AuthService.startMfaEnrollment(mfaPhone, 'settings-mfa-recaptcha');
+                        setMfaVerificationId(verificationId);
+                        setMfaRecaptcha(recaptchaVerifier);
+                        toast({ title: t('mfa_enrollment_started'), description: t('mfa_code_sent') });
+                      } catch (err: any) {
+                        toast({ title: t('error'), description: err?.message || t('error_saving'), variant: 'destructive' });
+                      } finally {
+                        setMfaLoading(false);
+                      }
+                    }}
+                  >
+                    {t('send_code')}
+                  </Button>
+                  <Input
+                    placeholder={t('verification_code')}
+                    className="max-w-[200px]"
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value)}
+                  />
+                  <Button
+                    disabled={mfaLoading || !mfaVerificationId || !mfaCode}
+                    onClick={async () => {
+                      try {
+                        setMfaLoading(true);
+                        await AuthService.confirmMfaEnrollment(mfaVerificationId, mfaCode);
+                        try { mfaRecaptcha?.clear(); } catch {}
+                        setMfaVerificationId('');
+                        setMfaCode('');
+                        toast({ title: t('mfa_enrollment_completed'), description: t('mfa_enabled') });
+                      } catch (err: any) {
+                        toast({ title: t('error'), description: err?.message || t('mfa_code_invalid'), variant: 'destructive' });
+                      } finally {
+                        setMfaLoading(false);
+                      }
+                    }}
+                  >
+                    {t('enable_2fa')}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between">

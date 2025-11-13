@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,13 +23,18 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTransactions } from '@/hooks/useFirebase';
 import { useUserJobsAndApplications } from '@/hooks/useUserJobsAndApplications';
+import { useToast } from '@/hooks/use-toast';
+import FreelancerLevel from '@/components/FreelancerLevel';
+import { reload } from 'firebase/auth';
 
 const Dashboard = () => {
-  const { userData, currentUser } = useAuth();
+  const { userData, currentUser, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { transactions, loading: transactionsLoading } = useTransactions();
   const { userJobs, loading: userJobsLoading } = useUserJobsAndApplications();
+  const { toast } = useToast();
+  const [refreshingEmailStatus, setRefreshingEmailStatus] = useState(false);
 
   // Debug logs
   console.log('Dashboard - userData:', userData);
@@ -41,7 +45,6 @@ const Dashboard = () => {
   if (!userData || !currentUser) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <p className="text-muted-foreground">Por favor, faça login para acessar o dashboard</p>
@@ -76,9 +79,68 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Nível do Freelancer */}
+        {isFreelancer && (
+          <div className="mb-6">
+            <FreelancerLevel />
+          </div>
+        )}
+        {/* Banner persistente de verificação de e-mail */}
+        {currentUser && !currentUser.emailVerified && (
+          <div className="mb-6 p-4 bg-warning/5 border border-warning/20 rounded-lg">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm text-foreground">
+                    {t('verify_email_banner_title', { defaultValue: 'Verifique seu e-mail para ativar sua conta' })}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('verify_email_banner_desc', { defaultValue: 'Alguns recursos ficam bloqueados até confirmar.' })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await resendVerificationEmail();
+                      toast({ title: t('verification_email_resent', { defaultValue: 'E-mail de verificação reenviado' }), description: t('please_check_email_to_activate', { defaultValue: 'Verifique sua caixa de entrada para ativar sua conta.' }) });
+                    } catch (err: any) {
+                      toast({ title: t('login_error', { defaultValue: 'Erro de Login' }), description: err?.message || t('login_error_description', { defaultValue: 'Credenciais inválidas ou erro de conexão.' }), variant: 'destructive' });
+                    }
+                  }}
+                >
+                  {t('resend_verification_email', { defaultValue: 'Reenviar e-mail' })}
+                </Button>
+                <Button
+                  disabled={refreshingEmailStatus}
+                  onClick={async () => {
+                    if (!currentUser) return;
+                    setRefreshingEmailStatus(true);
+                    try {
+                      await reload(currentUser);
+                      if (currentUser.emailVerified) {
+                        toast({ title: t('email_verified_now', { defaultValue: 'E-mail verificado' }), description: t('welcome_back_freelincer', { defaultValue: 'Bem-vindo de volta à Freelincer.' }) });
+                      } else {
+                        toast({ title: t('email_not_verified', { defaultValue: 'E-mail não verificado' }), description: t('please_check_email_to_activate', { defaultValue: 'Verifique sua caixa de entrada para ativar sua conta.' }) });
+                      }
+                    } catch (err: any) {
+                      toast({ title: t('error', { defaultValue: 'Erro' }), description: err?.message || t('login_error_description', { defaultValue: 'Credenciais inválidas ou erro de conexão.' }), variant: 'destructive' });
+                    } finally {
+                      setRefreshingEmailStatus(false);
+                    }
+                  }}
+                >
+                  {refreshingEmailStatus ? t('loading', { defaultValue: 'Carregando...' }) : t('refresh_verification_status', { defaultValue: 'Atualizar status' })}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
@@ -100,11 +162,11 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {currentBalance.toFixed(2)} KZ
+        {currentBalance.toFixed(2)} Kz
               </div>
               <p className="text-xs text-muted-foreground">
                 {isFreelancer && userData.testerWallet?.pendingBalance && userData.testerWallet.pendingBalance > 0
-                  ? `${userData.testerWallet.pendingBalance.toFixed(2)} KZ pendente`
+        ? `${userData.testerWallet.pendingBalance.toFixed(2)} Kz pendente`
                   : "Disponível para uso"
                 }
               </p>
@@ -218,7 +280,7 @@ const Dashboard = () => {
                     {currentBalance >= 2000 && (
                       <div className="p-3 bg-success/5 border border-success/20 rounded-lg">
                         <p className="font-medium text-sm text-foreground">Saldo disponível para saque</p>
-                        <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} KZ disponível para retirada.</p>
+      <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} Kz disponível para retirada.</p>
                       </div>
                     )}
                     
@@ -322,7 +384,7 @@ const Dashboard = () => {
                       <CheckCircle className="h-5 w-5 text-success" />
                       <div>
                         <p className="font-medium text-sm text-foreground">Saldo disponível para saque</p>
-                        <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} KZ disponível para retirada.</p>
+      <p className="text-xs text-muted-foreground mt-1">Você tem {currentBalance.toFixed(2)} Kz disponível para retirada.</p>
                       </div>
                     </div>
                   )}

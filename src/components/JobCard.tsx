@@ -10,7 +10,7 @@ interface JobCardProps {
   title: string;
   description: string;
   bounty: number;
-  platform: "iOS" | "Android" | "Web" | "TikTok" | "Instagram" | "Facebook" | "OnlyFans" | "Play Store" | "App Store" | "Pornhub" | "X (Twitter)" | "Telegram" | "YouTube" | "WeChat" | "Snapchat" | "Pinterest" | "Threads" | "LinkedIn" | "Discord" | "Reddit";
+  platform: "iOS" | "Android" | "Web" | "TikTok" | "Instagram" | "Facebook" | "Play Store" | "App Store" | "X (Twitter)" | "Telegram" | "YouTube" | "LinkedIn" | "Discord";
   difficulty: "Fácil" | "Médio" | "Difícil";
   timeEstimate: string;
   rating?: number;
@@ -28,7 +28,7 @@ const JobCard = ({
   platform, 
   difficulty, 
   timeEstimate, 
-  rating = 4.5, 
+  rating = 0, 
   location, 
   postedBy,
   applicants,
@@ -82,7 +82,7 @@ const JobCard = ({
           <Badge variant="secondary" className="bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">{platform}</Badge>
         </div>
         <div className="text-right">
-          <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} KZ</p>
+      <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} Kz</p>
           <p className="text-sm text-muted-foreground">{t("applicants_count", { count: applicants })}</p>
         </div>
       </div>
@@ -119,7 +119,17 @@ const JobCard = ({
       <div className="flex items-center justify-between">
         <div className="text-sm">
           <span className="text-muted-foreground">{t("posted_by")} </span>
-          <span className="font-medium text-foreground">{postedBy}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/profile/${posterId}`);
+            }}
+            className="font-medium text-primary hover:underline hover:text-primary-hover"
+            aria-label={t("posted_by") + ": " + postedBy}
+          >
+            {postedBy}
+          </button>
         </div>
         
         <div className="flex items-center gap-2">

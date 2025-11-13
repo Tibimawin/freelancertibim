@@ -21,8 +21,7 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<'express' | 'iban'>('express');
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
   const [iban, setIban] = useState('');
 
@@ -39,7 +38,7 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
     if (withdrawalAmount < minWithdrawal) {
       toast({
         title: "Valor mínimo não atingido",
-        description: `O valor mínimo para saque é ${minWithdrawal} KZ`,
+  description: `O valor mínimo para saque é ${minWithdrawal} Kz`,
         variant: "destructive",
       });
       return;
@@ -58,7 +57,7 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
     
     try {
       const accountInfo = method === 'express' 
-        ? { bankName, accountNumber, accountHolder }
+        ? { phoneNumber }
         : { iban, accountHolder };
 
       await WithdrawalService.createWithdrawalRequest({
@@ -78,8 +77,7 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
       onClose();
       // Reset form
       setAmount('');
-      setBankName('');
-      setAccountNumber('');
+      setPhoneNumber('');
       setAccountHolder('');
       setIban('');
     } catch (error) {
@@ -104,10 +102,10 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
           <div className="bg-muted/30 p-4 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-muted-foreground">Saldo Disponível</span>
-              <span className="font-bold text-lg">{availableBalance.toFixed(2)} KZ</span>
+        <span className="font-bold text-lg">{availableBalance.toFixed(2)} Kz</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              Valor mínimo para saque: {minWithdrawal} KZ
+        Valor mínimo para saque: {minWithdrawal} Kz
             </div>
           </div>
 
@@ -155,34 +153,12 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
             {method === 'express' ? (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="bankName">Nome do Banco</Label>
+                  <Label htmlFor="phoneNumber">Número de Telefone (Multicaixa Express)</Label>
                   <Input
-                    id="bankName"
-                    placeholder="Ex: BAI, BFA, Millennium"
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="accountNumber">Número da Conta</Label>
-                  <Input
-                    id="accountNumber"
-                    placeholder="Número da conta"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="accountHolder">Titular da Conta</Label>
-                  <Input
-                    id="accountHolder"
-                    placeholder="Nome completo do titular"
-                    value={accountHolder}
-                    onChange={(e) => setAccountHolder(e.target.value)}
+                    id="phoneNumber"
+                    placeholder="Ex: 9XXXXXXXX"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
                     required
                   />
                 </div>

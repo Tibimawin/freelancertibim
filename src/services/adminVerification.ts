@@ -18,6 +18,66 @@ import { NotificationService } from './notificationService'; // Importando Notif
 
 export class AdminVerificationService {
   
+  // Submeter informações de identidade (KYC) para análise
+  static async submitIdentityInfo(
+    userId: string,
+    userName: string,
+    userEmail: string,
+    identityInfo: {
+      governmentIdNumber: string;
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string; // YYYY-MM-DD
+      address?: string;
+      state?: string;
+      city?: string;
+      country?: string;
+      postalCode?: string;
+    }
+  ): Promise<void> {
+    try {
+      const batch = writeBatch(db);
+      const verificationRef = doc(db, 'userVerifications', userId);
+
+      // Atualiza/cria o documento de verificação com identityInfo
+      batch.set(verificationRef, {
+        userId,
+        userName,
+        userEmail,
+        identityInfo: {
+          ...identityInfo,
+          submittedAt: Timestamp.now(),
+        },
+        overallStatus: 'pending',
+        submittedAt: Timestamp.now(),
+      }, { merge: true });
+
+      // Atualiza status do usuário para pending
+      const userRef = doc(db, 'users', userId);
+      batch.update(userRef, {
+        verificationStatus: 'pending',
+        updatedAt: Timestamp.now(),
+      });
+
+      // Notificação para admin
+      await NotificationService.createNotification({
+        userId: 'admin',
+        type: 'verification_pending',
+        title: 'Nova Identidade para Verificação',
+        message: `O usuário ${userName} submeteu informações de identidade para verificação.`,
+        read: false,
+        metadata: {
+          verificationId: userId,
+        },
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error('Error submitting identity info:', error);
+      throw error;
+    }
+  }
+
   // Novo método para submeter documentos de verificação
   static async submitVerification(
     userId: string,
@@ -96,6 +156,13 @@ export class AdminVerificationService {
           ...data,
           submittedAt: data.submittedAt?.toDate() || new Date(),
           reviewedAt: data.reviewedAt?.toDate(),
+          identityInfo: data.identityInfo
+            ? {
+                ...data.identityInfo,
+                submittedAt:
+                  data.identityInfo.submittedAt?.toDate?.() || data.identityInfo.submittedAt,
+              }
+            : undefined,
           documents: data.documents?.map((doc: any) => ({
             ...doc,
             uploadedAt: doc.uploadedAt?.toDate() || new Date()
@@ -139,6 +206,13 @@ export class AdminVerificationService {
           ...data,
           submittedAt: data.submittedAt?.toDate() || new Date(),
           reviewedAt: data.reviewedAt?.toDate(),
+          identityInfo: data.identityInfo
+            ? {
+                ...data.identityInfo,
+                submittedAt:
+                  data.identityInfo.submittedAt?.toDate?.() || data.identityInfo.submittedAt,
+              }
+            : undefined,
           documents: data.documents?.map((doc: any) => ({
             ...doc,
             uploadedAt: doc.uploadedAt?.toDate() || new Date()
@@ -227,7 +301,8 @@ export class AdminVerificationService {
     adminId: string,
     adminName: string,
     rejectionReasons: { [documentType: string]: string },
-    adminNotes?: string
+    adminNotes?: string,
+    identityReasons?: { [field: string]: string }
   ): Promise<void> {
     try {
       const batch = writeBatch(db);
@@ -254,7 +329,8 @@ export class AdminVerificationService {
         reviewedAt: Timestamp.now(),
         reviewedBy: adminId,
         adminNotes: adminNotes || 'Rejected by admin',
-        documents: updatedDocuments
+        documents: updatedDocuments,
+        identityRejectionReasons: identityReasons || verificationData.identityRejectionReasons
       });
 
       // Update user record
@@ -265,7 +341,11 @@ export class AdminVerificationService {
       });
 
       // NOTIFICAÇÃO DE REJEIÇÃO
-      const reasonMessage = Object.values(rejectionReasons).join('; ') || 'Motivo não especificado.';
+      const reasonMessageDocs = Object.values(rejectionReasons).join('; ');
+      const reasonMessageIdentity = identityReasons ? Object.values(identityReasons).join('; ') : '';
+      const reasonMessage = (reasonMessageDocs || reasonMessageIdentity)
+        ? [reasonMessageDocs, reasonMessageIdentity].filter(Boolean).join('; ')
+        : 'Motivo não especificado.';
       await NotificationService.createNotification({
         userId: verificationData.userId,
         type: 'verification_rejected',
@@ -296,6 +376,13 @@ export class AdminVerificationService {
           ...data,
           submittedAt: data.submittedAt?.toDate() || new Date(),
           reviewedAt: data.reviewedAt?.toDate(),
+          identityInfo: data.identityInfo
+            ? {
+                ...data.identityInfo,
+                submittedAt:
+                  data.identityInfo.submittedAt?.toDate?.() || data.identityInfo.submittedAt,
+              }
+            : undefined,
           documents: data.documents?.map((doc: any) => ({
             ...doc,
             uploadedAt: doc.uploadedAt?.toDate() || new Date()
@@ -329,6 +416,13 @@ export class AdminVerificationService {
           ...data,
           submittedAt: data.submittedAt?.toDate() || new Date(),
           reviewedAt: data.reviewedAt?.toDate(),
+          identityInfo: data.identityInfo
+            ? {
+                ...data.identityInfo,
+                submittedAt:
+                  data.identityInfo.submittedAt?.toDate?.() || data.identityInfo.submittedAt,
+              }
+            : undefined,
           documents: data.documents?.map((doc: any) => ({
             ...doc,
             uploadedAt: doc.uploadedAt?.toDate() || new Date()

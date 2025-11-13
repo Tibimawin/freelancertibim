@@ -1,10 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* Freelincer Design System - Deep Nebula Theme */
+/* Ango Tarefas Design System - Blue & Gold Theme */
 
 @layer base {
   :root {
@@ -18,10 +18,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Primary - Soft Purple */
-    --primary: 259 83% 57%;
+    /* Primary - Gold */
+    --primary: 42 85% 50%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 259 83% 47%;
+    --primary-hover: 42 85% 43%;
 
     /* Secondary - Light Blue-Gray */
     --secondary: 210 20% 96%;
@@ -48,21 +48,21 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 259 83% 57%;
+    --ring: 42 85% 50%;
 
     --radius: 0.75rem;
 
     /* Custom Gradients - Light Mode */
-    --gradient-primary: linear-gradient(135deg, hsl(259 83% 57%), hsl(217 91% 60%));
+    --gradient-primary: linear-gradient(135deg, hsl(42 85% 50%), hsl(212 65% 20%));
     --gradient-secondary: linear-gradient(135deg, hsl(210 20% 98%), hsl(220 14% 96%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
     
     /* Deep Nebula Specific Colors (Light Mode - subtle versions) */
     --nebula-bg: 220 14% 98%;
     --nebula-fg: 222.2 84% 4.9%;
-    --electric-purple: 259 83% 57%;
-    --cosmic-blue: 217 91% 60%;
-    --star-glow: 40 100% 70%; /* Soft yellow glow */
+    --electric-purple: 42 85% 50%; /* Reutilizado como ouro da marca */
+    --cosmic-blue: 212 65% 20%; /* Azul escuro (navy) da marca */
+    --star-glow: 42 100% 70%; /* Brilho amarelo dourado */
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -95,14 +95,14 @@
     --popover: 220 18% 12%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Electric Purple */
-    --primary: 270 80% 60%; /* More vibrant purple */
+    /* Primary - Gold (Dark) */
+    --primary: 42 85% 55%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 270 80% 50%;
+    --primary-hover: 42 85% 45%;
 
-    /* Secondary - Deep Teal */
-    --secondary: 180 50% 20%;
-    --secondary-foreground: 180 60% 80%;
+    /* Secondary - Navy */
+    --secondary: 212 65% 20%;
+    --secondary-foreground: 212 65% 85%;
 
     /* Success - Glowing Green */
     --success: 140 70% 45%;
@@ -125,19 +125,19 @@
 
     --border: 220 15% 20%; /* Subtle glowing border */
     --input: 220 15% 15%;
-    --ring: 270 80% 60%;
+    --ring: 42 85% 55%;
 
     /* Custom Gradients - Dark Mode */
-    --gradient-primary: linear-gradient(135deg, hsl(270 80% 60%), hsl(200 80% 40%)); /* Purple to Blue */
+    --gradient-primary: linear-gradient(135deg, hsl(42 85% 55%), hsl(212 65% 20%)); /* Gold to Navy */
     --gradient-secondary: linear-gradient(135deg, hsl(220 18% 12%), hsl(220 15% 15%));
     --gradient-success: linear-gradient(135deg, hsl(140 70% 45%), hsl(160 60% 50%));
     
     /* Deep Nebula Specific Colors (Dark Mode) */
     --nebula-bg: 220 20% 8%;
     --nebula-fg: 210 40% 98%;
-    --electric-purple: 270 80% 60%;
-    --cosmic-blue: 200 80% 40%;
-    --star-glow: 40 100% 70%; /* Vibrant yellow glow */
+    --electric-purple: 42 85% 55%; /* Ouro na versão escura */
+    --cosmic-blue: 212 65% 20%; /* Navy constante */
+    --star-glow: 42 100% 70%; /* Brilho dourado */
 
     --sidebar-background: 220 18% 12%;
     --sidebar-foreground: 210 40% 98%;

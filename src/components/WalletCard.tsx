@@ -8,6 +8,7 @@ import { Transaction } from "@/types/firebase";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DepositModal from "./DepositModal";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
 const WalletCard = () => {
@@ -16,6 +17,7 @@ const WalletCard = () => {
   const [depositModal, setDepositModal] = useState<{ open: boolean; method?: 'express' | 'iban' }>({ open: false });
   const { toast } = useToast();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   if (!userData) {
     return (
@@ -33,6 +35,7 @@ const WalletCard = () => {
   const currentBalance = userData.currentMode === 'tester'
     ? (userData.testerWallet?.availableBalance || 0)
     : (userData.posterWallet?.balance || 0);
+  const bonusBalance = userData.posterWallet?.bonusBalance || 0;
     
   const isVerified = userData.verificationStatus === 'approved';
   const minWithdrawal = 2000;
@@ -58,13 +61,19 @@ const WalletCard = () => {
     .filter(t => t.type === 'escrow' && t.status === 'pending')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
+  const isTester = userData.currentMode === 'tester';
+
+  const getTransactionIcon = (t: Transaction) => {
+    switch (t.type) {
       case "deposit":
       case "admin_deposit":
         return <TrendingUp className="h-4 w-4 text-success" />;
       case "payout":
-        return <TrendingDown className="h-4 w-4 text-primary" />;
+        // Saque (payout com withdrawalRequestId) é saída; pagamento de tarefa é entrada
+        if ((t.metadata as any)?.withdrawalRequestId) {
+          return <TrendingDown className="h-4 w-4 text-destructive" />;
+        }
+        return <TrendingUp className="h-4 w-4 text-success" />;
       case "escrow":
         return <ArrowUpRight className="h-4 w-4 text-warning" />;
       case "fee":
@@ -74,16 +83,43 @@ const WalletCard = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
+  // Filtrar transações exibidas conforme o papel atual
+  const displayTransactions = transactions.filter((t) => {
+    if (isTester) {
+      // Freelancer: ganhos e pendências de tarefas, bonificações de indicação e reembolsos
+      return (
+        t.type === 'payout' ||
+        t.type === 'escrow' ||
+        t.type === 'referral_reward' ||
+        t.type === 'refund'
+      );
+    }
+    // Contratante: depósitos, reservas (escrow), taxas e reembolsos
+    return (
+      t.type === 'deposit' ||
+      t.type === 'admin_deposit' ||
+      t.type === 'escrow' ||
+      t.type === 'fee' ||
+      t.type === 'refund'
+    );
+  });
+
+  const getDisplayStatusBadge = (tx: Transaction) => {
+    // Regra: para contratante, transações de escrow do Mercado são consideradas concluídas
+    // mesmo que o pedido do Mercado esteja pendente de entrega.
+    const isPosterEscrow = userData.currentMode === 'poster' && tx.type === 'escrow';
+    const shouldShowCompleted = isPosterEscrow;
+
+    const statusToShow = shouldShowCompleted ? 'completed' : tx.status;
+    switch (statusToShow) {
+      case 'completed':
         return <Badge variant="outline" className="bg-success/10 text-success border-success/20">{t("completed")}</Badge>;
-      case "pending":
+      case 'pending':
         return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">{t("pending")}</Badge>;
-      case "failed":
+      case 'failed':
         return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">{t("failed")}</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">{statusToShow}</Badge>;
     }
   };
 
@@ -121,16 +157,27 @@ const WalletCard = () => {
           </Badge>
         </div>
         <div className="balance-display text-4xl font-bold mb-2">
-          {currentBalance.toFixed(2)} KZ
+        {currentBalance.toFixed(2)} Kz
         </div>
         <p className="text-sm text-muted-foreground">
           {userData.currentMode === 'tester' ? t("available_balance") : t("current_balance")}
         </p>
+
+        {userData.currentMode === 'poster' && bonusBalance > 0 && (
+          <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-sm text-primary font-medium">
+        + {bonusBalance.toFixed(2)} Kz {t("bonus_balance", { defaultValue: "Bônus disponível" })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("bonus_usage_hint", { defaultValue: "Usável para criar anúncios e comprar no Mercado." })}
+            </p>
+          </div>
+        )}
         
         {userData.currentMode === 'tester' && userData.testerWallet?.pendingBalance && userData.testerWallet.pendingBalance > 0 && (
           <div className="mt-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
             <p className="text-sm text-warning">
-              + {userData.testerWallet.pendingBalance.toFixed(2)} KZ {t("pending")}
+        + {userData.testerWallet.pendingBalance.toFixed(2)} Kz {t("pending")}
             </p>
             <p className="text-xs text-muted-foreground">
               {t("awaiting_task_approval")}
@@ -192,14 +239,14 @@ const WalletCard = () => {
           </div>
         ) : (
           <div className="space-y-3 max-h-60 overflow-y-auto scrollbar-hide">
-            {transactions.length > 0 ? (
-              transactions.slice(0, 5).map((transaction) => (
+            {displayTransactions.length > 0 ? (
+              displayTransactions.slice(0, 5).map((transaction) => (
               <div
                 key={transaction.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50"
               >
                 <div className="flex items-center space-x-3">
-                  {getTransactionIcon(transaction.type)}
+                  {getTransactionIcon(transaction)}
                   <div>
                     <p className="text-sm font-medium text-card-foreground">
                       {transaction.description}
@@ -209,15 +256,37 @@ const WalletCard = () => {
                 </div>
                 
                 <div className="text-right space-y-1">
-                  <p className={`text-sm font-semibold ${
-                    transaction.type === "deposit" || transaction.type === "admin_deposit" 
-                      ? "text-success" 
-                      : transaction.type === "payout" ? "text-destructive" : "text-muted-foreground"
-                  }`}>
-                    {transaction.type === "deposit" || transaction.type === "admin_deposit" ? "+" : "-"}
-                    {transaction.amount.toFixed(2)} KZ
-                  </p>
-                  {getStatusBadge(transaction.status)}
+                  {(() => {
+                    let positive = false;
+                    if (isTester) {
+                      // Saque (payout com withdrawalRequestId) é saída; pagamento de tarefa é entrada
+                      if (transaction.type === 'payout') {
+                        positive = !(transaction.metadata as any)?.withdrawalRequestId;
+                      } else if (transaction.type === 'escrow') {
+                        positive = true; // pendente como entrada prevista
+                      } else if (transaction.type === 'referral_reward' || transaction.type === 'refund') {
+                        positive = true;
+                      } else {
+                        positive = false;
+                      }
+                    } else {
+                      // Contratante: depósitos entram; escrow e taxas saem; reembolso entra
+                      if (transaction.type === 'deposit' || transaction.type === 'admin_deposit' || transaction.type === 'refund') {
+                        positive = true;
+                      } else {
+                        positive = false;
+                      }
+                    }
+                    const color = positive ? 'text-success' : (transaction.type === 'fee' ? 'text-muted-foreground' : 'text-destructive');
+                    const sign = positive ? '+' : '-';
+                    return (
+                      <p className={`text-sm font-semibold ${color}`}>
+                        {sign}
+        {transaction.amount.toFixed(2)} Kz
+                      </p>
+                    );
+                  })()}
+                  {getDisplayStatusBadge(transaction)}
                 </div>
               </div>
               )) 
@@ -233,13 +302,11 @@ const WalletCard = () => {
         )}
       </div>
 
-      {transactions.length > 3 && (
-        <div className="mt-4 pt-4 border-t border-border">
-          <Button variant="ghost" className="w-full text-sm text-primary hover:bg-primary/10">
-            {t("view_all_transactions")}
-          </Button>
-        </div>
-      )}
+      <div className="mt-4 pt-4 border-t border-border">
+        <Button variant="ghost" className="w-full text-sm text-primary hover:bg-primary/10" onClick={() => navigate('/transactions')}>
+          {t("view_all_transactions")}
+        </Button>
+      </div>
       
       <DepositModal 
         open={depositModal.open}

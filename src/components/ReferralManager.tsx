@@ -62,7 +62,7 @@ const ReferralItem = ({ referral }: ReferralItemProps) => {
       <div className="text-right space-y-1">
         {getStatusBadge(referral.status)}
         <p className={`text-sm font-semibold ${referral.status === 'completed' ? 'text-success' : 'text-muted-foreground'}`}>
-          {referral.rewardAmount.toFixed(2)} KZ
+        {referral.rewardAmount.toFixed(2)} Kz
         </p>
       </div>
     </div>
@@ -136,7 +136,7 @@ const ReferralManager = () => {
               <p className="text-sm text-muted-foreground">{t("pending_rewards")}</p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
-              <p className="text-2xl font-bold text-success">{totalEarned.toFixed(2)} KZ</p>
+        <p className="text-2xl font-bold text-success">{totalEarned.toFixed(2)} Kz</p>
               <p className="text-sm text-muted-foreground">{t("total_earned_referrals")}</p>
             </div>
           </div>

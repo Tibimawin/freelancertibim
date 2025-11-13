@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Copy, CheckCircle, Phone, MapPin, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { BankingService, BankingInfo } from '@/services/bankingService';
+import SupportChat from '@/components/SupportChat';
 
 interface DepositModalProps {
   open: boolean;
@@ -17,6 +19,9 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
   const [copied, setCopied] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [bankingInfo, setBankingInfo] = useState<BankingInfo | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -36,18 +41,29 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
     }
   };
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const info = await BankingService.getBankingInfo();
+        setBankingInfo(info);
+      } catch (err) {
+        console.error('Error loading banking info', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const expressData = {
-    phone: "926 234 567",
-    name: "TaskBoost Angola",
-    reference: "DEPOSIT-TB-001"
+    phone: bankingInfo?.expressTransfer?.phoneNumber || "926 234 567"
   };
 
   const ibanData = {
-    iban: "AO06 0040 0000 4562 3745 1018 5",
-    bank: "Banco BIC Angola",
-    accountName: "TaskBoost Angola Lda",
-    swift: "BCGAAOAO",
-    reference: "DEPOSIT-TB-002"
+    iban: bankingInfo?.ibanTransfer?.iban || "AO06 0040 0000 4562 3745 1018 5",
+    bank: bankingInfo?.ibanTransfer?.bankName || "Banco BIC Angola",
+    accountName: bankingInfo?.ibanTransfer?.accountName || "TaskBoost Angola Lda"
   };
 
   return (
@@ -89,44 +105,10 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('beneficiary_name')}</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 p-2 bg-muted rounded text-center">
-                      {expressData.name}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(expressData.name, t('beneficiary_name'))}
-                    >
-                      {copied === t('beneficiary_name') ? (
-                        <CheckCircle className="h-4 w-4 text-success" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('reference')}</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 p-2 bg-muted rounded text-center font-mono">
-                      {expressData.reference}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(expressData.reference, t('reference'))}
-                    >
-                      {copied === t('reference') ? (
-                        <CheckCircle className="h-4 w-4 text-success" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
+                <div className="pt-2">
+                  <Button className="w-full" variant="default" onClick={() => setSupportOpen(true)}>
+                    {t('talk_to_us_now')}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -185,46 +167,6 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
                     </Button>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('swift_code')}</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 p-2 bg-muted rounded text-center font-mono">
-                      {ibanData.swift}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(ibanData.swift, t('swift_code'))}
-                    >
-                      {copied === t('swift_code') ? (
-                        <CheckCircle className="h-4 w-4 text-success" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">{t('reference')}</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 p-2 bg-muted rounded text-center font-mono">
-                      {ibanData.reference}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(ibanData.reference, t('reference'))}
-                    >
-                      {copied === t('reference') ? (
-                        <CheckCircle className="h-4 w-4 text-success" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           )}
@@ -232,12 +174,14 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{t('important')}</Badge>
-                  <span className="text-muted-foreground">
-                    {t('use_reference_to_identify_deposit')}
-                  </span>
-                </div>
+                {method !== 'express' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{t('important')}</Badge>
+                    <span className="text-muted-foreground">
+                      {t('use_reference_to_identify_deposit')}
+                    </span>
+                  </div>
+                )}
                 <p className="text-muted-foreground">
                   {t('balance_credited_within_24h')}
                 </p>
@@ -254,6 +198,8 @@ const DepositModal = ({ open, onOpenChange, method }: DepositModalProps) => {
           <Button onClick={() => onOpenChange(false)} className="w-full">
             {t('understood')}
           </Button>
+          {/* Support Chat Modal */}
+          <SupportChat open={supportOpen} onOpenChange={setSupportOpen} />
         </div>
       </DialogContent>
     </Dialog>

@@ -10,10 +10,12 @@ import {
   orderBy,
   Timestamp,
   writeBatch,
-  increment
+  increment,
+  runTransaction,
+  limit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Application, ProofSubmission } from '@/types/firebase';
+import { Application, ProofSubmission, Job } from '@/types/firebase';
 import { NotificationService } from './notificationService';
 import { TransactionService, JobService } from './firebase'; // Import JobService
 
@@ -33,24 +35,154 @@ export class ApplicationService {
       throw error;
     }
   }
+
+  static async submitJobFeedback(
+    applicationId: string,
+    rating: number,
+    comment?: string
+  ) {
+    try {
+      const appRef = doc(db, 'applications', applicationId);
+      const appDoc = await getDoc(appRef);
+      if (!appDoc.exists()) {
+        throw new Error('Application not found');
+      }
+      const appData = appDoc.data() as Application;
+
+      if (appData.status !== 'approved') {
+        throw new Error('Só é possível classificar tarefas aprovadas');
+      }
+
+      // Evitar reclassificação
+      if (appData.feedback?.rating) {
+        throw new Error('Esta aplicação já foi classificada');
+      }
+
+      // Atualizar feedback da aplicação
+      await updateDoc(appRef, {
+        feedback: {
+          rating,
+          comment: comment || '',
+          providedAt: Timestamp.now(),
+        },
+        updatedAt: Timestamp.now(),
+      } as any);
+
+      // Atualizar agregação de rating no Job
+      const jobRef = doc(db, 'jobs', appData.jobId);
+      const jobSnap = await getDoc(jobRef);
+      if (!jobSnap.exists()) {
+        throw new Error('Job não encontrado para agregação de rating');
+      }
+      const jobData = jobSnap.data() as Job;
+      const currentCount = jobData.ratingCount || 0;
+      const currentAvg = jobData.rating || 0;
+      const newCount = currentCount + 1;
+      // Recalcular média sem armazenar soma (média incremental)
+      const newAvg = ((currentAvg * currentCount) + rating) / newCount;
+
+      await updateDoc(jobRef, {
+        ratingCount: newCount,
+        rating: Number(newAvg.toFixed(2)),
+        updatedAt: Timestamp.now(),
+      } as any);
+    } catch (error) {
+      console.error('Error submitting job feedback:', error);
+      throw error;
+    }
+  }
+
+  static async submitContractorFeedback(
+    applicationId: string,
+    rating: number,
+    comment?: string
+  ) {
+    try {
+      if (rating < 1 || rating > 5) {
+        throw new Error('A avaliação deve estar entre 1 e 5');
+      }
+
+      const appRef = doc(db, 'applications', applicationId);
+      const appDoc = await getDoc(appRef);
+      if (!appDoc.exists()) {
+        throw new Error('Application not found');
+      }
+      const appData = appDoc.data() as Application;
+
+      if (appData.status !== 'approved') {
+        throw new Error('Só é possível avaliar contratantes de tarefas aprovadas');
+      }
+
+      // Evitar reavaliação do contratante
+      if (appData.contractorFeedback?.rating) {
+        throw new Error('O contratante já foi avaliado nesta aplicação');
+      }
+
+      // Obter o job para identificar o contratante
+      const job = await JobService.getJobById(appData.jobId);
+      if (!job) {
+        throw new Error('Job não encontrado para avaliar contratante');
+      }
+
+      const posterRef = doc(db, 'users', job.posterId);
+
+      // Usar transação para atualizar média e contagem no usuário
+      await runTransaction(db, async (transaction) => {
+        const posterSnap = await transaction.get(posterRef);
+        if (!posterSnap.exists()) {
+          throw new Error('Usuário contratante não encontrado');
+        }
+        const posterData = posterSnap.data() as any;
+        const currentCount = posterData.ratingCount || 0;
+        const currentAvg = posterData.rating || 0;
+        const newCount = currentCount + 1;
+        const newAvg = ((currentAvg * currentCount) + rating) / newCount;
+
+        transaction.update(posterRef, {
+          ratingCount: newCount,
+          rating: Number(newAvg.toFixed(2)),
+          updatedAt: Timestamp.now(),
+        });
+
+        // Atualizar feedback na aplicação para marcar como concluído
+        transaction.update(appRef, {
+          contractorFeedback: {
+            rating,
+            comment: comment || '',
+            providedAt: Timestamp.now(),
+          },
+          updatedAt: Timestamp.now(),
+        } as any);
+      });
+    } catch (error) {
+      console.error('Error submitting contractor feedback:', error);
+      throw error;
+    }
+  }
   static async submitProofs(
     applicationId: string,
     proofs: ProofSubmission[]
   ) {
     try {
       const appRef = doc(db, 'applications', applicationId);
-      await updateDoc(appRef, {
-        'proofSubmission.proofs': proofs,
-        'proofSubmission.submittedAt': Timestamp.now(),
-        status: 'submitted',
-      });
-
-      // Fetch application data to get jobId and testerId
+      // Buscar aplicação para validar status atual antes de permitir envio
       const appDoc = await getDoc(appRef);
       if (!appDoc.exists()) {
         throw new Error('Application not found after submission');
       }
       const appData = appDoc.data() as Application;
+
+      // Bloquear reenvio se já estiver submetido ou aprovado
+      if (appData.status === 'submitted' || appData.status === 'approved') {
+        throw new Error('Provas já enviadas ou aprovadas; aguarde ou verifique o resultado.');
+      }
+
+      // Permitir envio se status for 'applied', 'accepted' ou 'rejected'
+      await updateDoc(appRef, {
+        'proofSubmission.proofs': proofs,
+        'proofSubmission.submittedAt': Timestamp.now(),
+        status: 'submitted',
+      });
 
       // Fetch job data to get posterId and job title
       const job = await JobService.getJobById(appData.jobId);
@@ -114,16 +246,24 @@ export class ApplicationService {
           const testerRef = doc(db, 'users', appData.testerId);
           
           // Usar transação para garantir atomicidade
-          await db.runTransaction(async (transaction) => {
+          const txResult = await runTransaction(db, async (transaction) => {
             const testerDoc = await transaction.get(testerRef);
             const testerData = testerDoc.data();
             
             if (!testerData) throw new Error('Tester user not found');
 
+            // Ler dados do contratante antes de qualquer escrita
+            const posterRef = doc(db, 'users', job.posterId);
+            const posterDoc = await transaction.get(posterRef);
+            const posterData = posterDoc.exists() ? posterDoc.data() : null;
+
             const currentPending = testerData.testerWallet?.pendingBalance || 0;
             const currentAvailable = testerData.testerWallet?.availableBalance || 0;
             const currentEarnings = testerData.testerWallet?.totalEarnings || 0;
             const completedTests = testerData.completedTests || 0;
+
+            // Calcular se é a primeira tarefa antes de escrever
+            const wasFirstTask = completedTests === 0;
 
             // Atualizar carteira do freelancer
             transaction.update(testerRef, {
@@ -165,35 +305,12 @@ export class ApplicationService {
                 updatedAt: Timestamp.now(),
               });
 
-              // 3. Atualizar status da referência se for a primeira tarefa concluída
-              if (completedTests === 0) {
-                const referralQuery = query(
-                  collection(db, 'referrals'),
-                  where('referrerId', '==', referrerId),
-                  where('referredId', '==', appData.testerId),
-                  limit(1)
-                );
-                const referralSnapshot = await transaction.get(referralQuery);
-                
-                if (!referralSnapshot.empty) {
-                  const referralDocRef = referralSnapshot.docs[0].ref;
-                  transaction.update(referralDocRef, {
-                    status: 'completed',
-                    completedAt: Timestamp.now(),
-                    rewardAmount: increment(commissionAmount) // Adiciona a primeira comissão ao campo rewardAmount
-                  });
-                }
-              }
+              // 3. Atualização de indicação movida para etapa pós-transação
             }
 
             // 4. Reduzir saldo pendente do contratante
-            const posterRef = doc(db, 'users', job.posterId);
-            const posterDoc = await transaction.get(posterRef);
-            
-            if (posterDoc.exists()) {
-              const posterData = posterDoc.data();
+            if (posterData) {
               const currentPosterPending = posterData.posterWallet?.pendingBalance || 0;
-
               transaction.update(posterRef, {
                 'posterWallet.pendingBalance': Math.max(0, currentPosterPending - bounty),
                 updatedAt: Timestamp.now(),
@@ -216,7 +333,30 @@ export class ApplicationService {
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now(),
             });
+
+            // Retornar dados para pós-processamento (indicação)
+            return { wasFirstTask, referrerId };
           });
+
+          // Pós-transação: atualizar status da indicação se for a primeira tarefa concluída
+          if (txResult?.referrerId && txResult.wasFirstTask) {
+            const commissionAmount = bounty * commissionRate;
+            const referralQuery = query(
+              collection(db, 'referrals'),
+              where('referrerId', '==', txResult.referrerId),
+              where('referredId', '==', appData.testerId),
+              limit(1)
+            );
+            const referralSnapshot = await getDocs(referralQuery);
+            if (!referralSnapshot.empty) {
+              const referralDocRef = referralSnapshot.docs[0].ref;
+              await updateDoc(referralDocRef, {
+                status: 'completed',
+                completedAt: Timestamp.now(),
+                rewardAmount: increment(commissionAmount),
+              } as any);
+            }
+          }
         }
 
         // Criar notificação de aprovação para o freelancer

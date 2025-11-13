@@ -160,7 +160,7 @@ const AdminJobManager = () => {
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-3 w-3" />
-                        {job.bounty.toFixed(2)} KZ
+              {job.bounty.toFixed(2)} Kz
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />

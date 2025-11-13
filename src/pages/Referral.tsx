@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import ReferralManager from "@/components/ReferralManager";
 import { useTranslation } from 'react-i18next';
 
@@ -7,7 +6,6 @@ const Referral = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">

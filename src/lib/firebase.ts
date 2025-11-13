@@ -1,8 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
@@ -21,8 +22,20 @@ const analytics = getAnalytics(app);
 
 // Initialize Firebase services
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Firestore com cache persistente (novo API)
+// Usa cache local persistente com gerenciador de aba única para evitar conflitos
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
+});
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
+// Inicialização segura do RTDB: ambiente pode não ter o serviço disponível
+let _rtdb: any = null;
+try {
+  _rtdb = getDatabase(app);
+} catch (e) {
+  console.warn('Realtime Database não disponível neste ambiente:', e);
+}
+export const rtdb = _rtdb;
 
 export default app;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,9 +110,12 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent aria-describedby="proof-review-description" className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Revisar Provas - {application.job?.title}</DialogTitle>
+          <DialogDescription id="proof-review-description">
+            Analise as provas submetidas e aprove ou rejeite a tarefa. Ao aprovar, o pagamento é processado e notificações são enviadas.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -122,7 +125,7 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
             <p className="text-sm text-muted-foreground mb-2">{application.job?.description}</p>
             <div className="flex items-center space-x-4 text-sm">
               <span>Freelancer: <strong>{application.testerName}</strong></span>
-              <span>Valor: <strong>{application.job?.bounty.toFixed(2)} KZ</strong></span>
+        <span>Valor: <strong>{application.job?.bounty.toFixed(2)} Kz</strong></span>
             </div>
           </div>
 
@@ -164,7 +167,14 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
                             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                               <FileText className="h-4 w-4" />
                               <span>Arquivo: {proof.content}</span>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const url = (proof as any).fileUrl || proof.content;
+                                  if (url) window.open(url, '_blank');
+                                }}
+                              >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Visualizar
                               </Button>

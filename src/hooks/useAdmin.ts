@@ -182,7 +182,8 @@ export const useAdminVerifications = () => {
     adminId: string,
     adminName: string,
     rejectionReasons: { [documentType: string]: string },
-    notes?: string
+    notes?: string,
+    identityReasons?: { [field: string]: string }
   ) => {
     try {
       await AdminVerificationService.rejectVerification(
@@ -190,7 +191,8 @@ export const useAdminVerifications = () => {
         adminId, 
         adminName, 
         rejectionReasons, 
-        notes
+        notes,
+        identityReasons
       );
       await fetchVerifications(); // Refresh the list
     } catch (err) {

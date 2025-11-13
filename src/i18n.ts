@@ -22,12 +22,13 @@ i18n
     resources,
     lng: 'pt-BR', // Definindo pt-BR como idioma inicial
     fallbackLng: 'pt-BR', // Idioma padrão caso o detectado não esteja disponível
+    supportedLngs: ['pt-BR', 'en'], // Idiomas suportados
     debug: false, // Mude para true para ver logs de debug no console
     interpolation: {
       escapeValue: false, // Não escapa HTML, já que o React já faz isso
     },
     detection: {
-      order: ['localStorage', 'navigator'], // Ordem de detecção de idioma
+      order: ['localStorage'], // Prioriza preferência do usuário; sem override por navegador
       caches: ['localStorage'], // Armazena o idioma detectado no localStorage
     }
   });

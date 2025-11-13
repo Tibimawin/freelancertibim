@@ -64,18 +64,23 @@ const ReportModal = ({ isOpen, onClose, applicationId, jobId, reportedUserId, re
     }
 
     try {
-      await ReportService.createReport({
+      const payload: Omit<
+        import('@/types/firebase').Report,
+        'id' | 'status' | 'submittedAt' | 'reviewedAt' | 'reviewedBy' | 'adminNotes' | 'resolution'
+      > = {
         reporterId: currentUser.uid,
         reporterName: userData.name,
         reporterEmail: userData.email,
         reportedUserId: reportedUserId,
-        reportedUserName: reportedUserName || values.reportedEmail, // Fallback if name not provided
+        reportedUserName: reportedUserName || values.reportedEmail,
         reportedUserEmail: values.reportedEmail,
-        applicationId: applicationId,
-        jobId: jobId,
         reason: values.reason,
         description: values.description,
-      });
+        ...(applicationId ? { applicationId } : {}),
+        ...(jobId ? { jobId } : {}),
+      };
+
+      await ReportService.createReport(payload);
 
       toast({
         title: t("report_submitted_success"),

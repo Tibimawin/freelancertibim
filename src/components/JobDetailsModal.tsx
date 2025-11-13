@@ -48,7 +48,12 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
     }
   };
 
-  const canApply = currentUser && job.posterId !== currentUser.uid && job.status === 'active';
+  const canApply = Boolean(
+    currentUser &&
+    job.posterId !== currentUser.uid &&
+    job.status === 'active' &&
+    (!job.maxApplicants || (job.applicantCount || 0) < (job.maxApplicants || 0))
+  );
 
   const handleApply = async () => {
     if (!currentUser || !userData) {
@@ -99,11 +104,15 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
               </Badge>
               <Badge variant="secondary">{job.platform}</Badge>
               <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
-                {job.status === 'active' ? t('active') : t('inactive')}
+                {job.status === 'active' && t('active')}
+                {job.status === 'completed' && t('completed')}
+                {job.status === 'paused' && t('paused')}
+                {job.status === 'cancelled' && t('cancelled')}
+                {['active','completed','paused','cancelled'].includes(job.status) ? '' : t('inactive')}
               </Badge>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-primary">{job.bounty.toFixed(2)} KZ</p>
+          <p className="text-2xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
               <p className="text-sm text-muted-foreground">{t("applicants_count", { count: job.applicantCount })}</p>
             </div>
           </div>
@@ -243,7 +252,9 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
                   ? t("your_own_job_short") 
                   : job.status !== 'active' 
                     ? t("job_inactive_short") 
-                    : t("not_available")
+                    : (job.maxApplicants && (job.applicantCount || 0) >= (job.maxApplicants || 0))
+                      ? t("applications_full")
+                      : t("not_available")
                 }
               </Button>
             )}

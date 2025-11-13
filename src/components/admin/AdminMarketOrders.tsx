@@ -62,7 +62,7 @@ const AdminMarketOrders: React.FC = () => {
     return orders.filter((o) => {
       const l = listingMap[o.listingId];
       const matchesStatus = statusFilter === 'all' ? true : o.status === statusFilter;
-      const text = [o.buyerName, o.sellerName, l?.title, o.listingId, o.id].filter(Boolean).join(' ').toLowerCase();
+      const text = [o.buyerName, o.sellerName, l?.title, o.listingId, o.id, (o as any).affiliateId].filter(Boolean).join(' ').toLowerCase();
       const matchesText = !s || text.includes(s);
       return matchesStatus && matchesText;
     });
@@ -178,6 +178,24 @@ const AdminMarketOrders: React.FC = () => {
                         <div className="font-medium text-sm">{l?.title || 'Produto'} <span className="text-muted-foreground">• {o.listingId}</span></div>
                         <div className="text-xs text-muted-foreground">Cliente: {o.buyerName} • #{o.id}</div>
                         <div className="text-xs text-muted-foreground">Criado: {new Date(o.createdAt).toLocaleString('pt-BR')}</div>
+                        {/* Afiliados: informações resumidas */}
+                        {((o as any).affiliateId) && (
+                          <div className="text-xs">
+                            <span className="inline-flex items-center rounded bg-muted px-2 py-0.5">
+                              Afiliado: {(o as any).affiliateId}
+                            </span>
+                            <span className="ml-2 inline-flex items-center rounded bg-muted px-2 py-0.5">
+                              Comissão: {(() => {
+                                const rate = typeof (o as any).affiliateCommissionRate === 'number' ? (o as any).affiliateCommissionRate : 0.05;
+                                const amount = typeof (o as any).affiliateCommissionAmount === 'number' ? (o as any).affiliateCommissionAmount : (o.amount * rate);
+                                return `${amount.toLocaleString('pt-BR')} ${o.currency}`;
+                              })()}
+                            </span>
+                            <span className="ml-2 inline-flex items-center rounded bg-muted px-2 py-0.5">
+                              Status: {((o as any).affiliateCommissionStatus || 'pending')}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-semibold">{o.amount?.toLocaleString('pt-BR')} {o.currency}</div>

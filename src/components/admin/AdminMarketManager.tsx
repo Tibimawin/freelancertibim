@@ -42,6 +42,8 @@ const AdminMarketManager: React.FC = () => {
   const [deliveryInfo, setDeliveryInfo] = useState<string>('');
   const [returnPolicy, setReturnPolicy] = useState<string>('');
   const [details, setDetails] = useState<string>('');
+  // Afiliados: taxa de comissão (0.0 a 1.0)
+  const [affiliateRate, setAffiliateRate] = useState<number>(0.05);
   // Campos digitais
   const [productType, setProductType] = useState<'digital' | 'physical' | 'service' | ''>('');
   const [digitalCategory, setDigitalCategory] = useState<'ebook' | 'video_course' | 'app' | 'other' | ''>('');
@@ -108,6 +110,7 @@ const AdminMarketManager: React.FC = () => {
           digitalCategory: productType === 'digital' ? (digitalCategory || 'ebook') : undefined,
           downloadUrl: productType === 'digital' ? (downloadUrl || '') : undefined,
           autoDeliver: productType === 'digital' ? !!autoDeliver : undefined,
+          affiliateCommissionRate: typeof affiliateRate === 'number' ? affiliateRate : 0.05,
         });
         toast({ title: 'Produto atualizado', description: 'As alterações foram salvas com sucesso.' });
       } else {
@@ -136,6 +139,7 @@ const AdminMarketManager: React.FC = () => {
           digitalCategory: productType === 'digital' ? (digitalCategory || 'ebook') : undefined,
           downloadUrl: productType === 'digital' ? (downloadUrl || '') : undefined,
           autoDeliver: productType === 'digital' ? !!autoDeliver : undefined,
+          affiliateCommissionRate: typeof affiliateRate === 'number' ? affiliateRate : 0.05,
         });
         toast({ title: 'Produto criado', description: 'O produto do Mercado foi adicionado com sucesso.' });
       }
@@ -162,6 +166,7 @@ const AdminMarketManager: React.FC = () => {
       setDigitalCategory('');
       setDownloadUrl('');
       setAutoDeliver(true);
+      setAffiliateRate(0.05);
       setEditingId(null);
       await fetchListings();
     } catch (err: any) {
@@ -197,6 +202,7 @@ const AdminMarketManager: React.FC = () => {
     setDigitalCategory((l.digitalCategory as any) || '');
     setDownloadUrl(l.downloadUrl || '');
     setAutoDeliver(l.autoDeliver ?? true);
+    setAffiliateRate(typeof (l as any).affiliateCommissionRate === 'number' ? (l as any).affiliateCommissionRate : 0.05);
   };
 
   const cancelEdit = () => {
@@ -219,6 +225,7 @@ const AdminMarketManager: React.FC = () => {
     setDeliveryInfo('');
     setReturnPolicy('');
     setDetails('');
+    setAffiliateRate(0.05);
   };
 
   const filteredListings = useMemo(() => {
@@ -442,6 +449,23 @@ const AdminMarketManager: React.FC = () => {
               </div>
             </div>
 
+            {/* Afiliados: taxa de comissão */}
+            <Separator className="my-2" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Taxa de comissão de afiliado</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={affiliateRate}
+                  onChange={(e) => setAffiliateRate(Math.max(0, Math.min(1, Number(e.target.value))))}
+                />
+                <p className="text-xs text-muted-foreground">Ex.: 0.05 = 5%. Ganho por venda: {(price * (affiliateRate || 0)).toLocaleString('pt-BR')} {currency}</p>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2">
               {editingId && (
                 <Button type="button" variant="secondary" onClick={cancelEdit} disabled={submitting}>
@@ -480,6 +504,9 @@ const AdminMarketManager: React.FC = () => {
                 <div key={l.id} className="border rounded-lg p-3">
                   <div className="font-medium">{l.title}</div>
                   <div className="text-xs text-muted-foreground mb-1">{l.sellerName} • {l.price} {l.currency}</div>
+                  {typeof (l as any).affiliateCommissionRate === 'number' && (
+                    <div className="text-xs text-muted-foreground">Comissão afiliado: {Math.round(((l as any).affiliateCommissionRate || 0) * 100)}%</div>
+                  )}
                   {(l.productType || l.digitalCategory) && (
                     <div className="text-xs mb-1">
                       <span className="inline-flex items-center rounded bg-muted px-2 py-0.5">

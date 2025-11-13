@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, Timestamp, updateDoc, where, deleteDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, Timestamp, updateDoc, where, deleteDoc, runTransaction, increment } from 'firebase/firestore';
 import { MarketListing, MarketOrder } from '@/types/firebase';
 
 export class MarketService {
@@ -125,18 +125,87 @@ export class MarketService {
   }
 
   static async placeOrder(order: Omit<MarketOrder, 'id' | 'createdAt' | 'updatedAt' | 'status'>) : Promise<string> {
+    const hasAffiliate = (order as any).affiliateId ? true : false;
+    const defaultRate = hasAffiliate ? 0.05 : undefined;
     const docRef = await addDoc(this.ordersCollection(), {
       ...order,
       status: 'pending',
       createdAt: Timestamp.now(),
+      ...(hasAffiliate ? { affiliateCommissionStatus: 'pending' } : {}),
+      ...(hasAffiliate ? { affiliateCommissionRate: (order as any).affiliateCommissionRate ?? defaultRate } : {}),
     });
     return docRef.id;
   }
 
   static async updateOrderStatus(orderId: string, status: MarketOrder['status']) {
-    await updateDoc(doc(db, 'market_orders', orderId), {
-      status,
-      updatedAt: Timestamp.now(),
+    const orderRef = doc(db, 'market_orders', orderId);
+    if (status !== 'delivered') {
+      await updateDoc(orderRef, {
+        status,
+        updatedAt: Timestamp.now(),
+      });
+      return;
+    }
+
+    // Ao marcar como entregue, pagar comissão de afiliado se houver
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(orderRef);
+      if (!snap.exists()) {
+        return;
+      }
+      const data = snap.data() as any;
+      const affiliateId: string | undefined = data.affiliateId;
+      const affiliateCommissionStatus: string | undefined = data.affiliateCommissionStatus;
+      const buyerId: string = data.buyerId;
+      const sellerId: string = data.sellerId;
+      const amount: number = Number(data.amount || 0);
+      const rate: number = typeof data.affiliateCommissionRate === 'number' ? data.affiliateCommissionRate : 0.05; // padrão 5%
+
+      // Atualizar status para entregue
+      tx.update(orderRef, { status: 'delivered', updatedAt: Timestamp.now() });
+
+      // Validar e pagar comissão se aplicável
+      if (!affiliateId) return;
+      if (affiliateCommissionStatus === 'paid') return; // já pago
+      if (affiliateId === buyerId || affiliateId === sellerId) return; // evitar auto-comissão
+      const commissionAmount = Number((amount * rate).toFixed(2));
+
+      const affiliateRef = doc(db, 'users', affiliateId);
+      const affiliateSnap = await tx.get(affiliateRef);
+      if (!affiliateSnap.exists()) return;
+
+      // Creditar na carteira do afiliado (testerWallet.availableBalance)
+      tx.update(affiliateRef, {
+        'testerWallet.availableBalance': increment(commissionAmount),
+        updatedAt: Timestamp.now(),
+      });
+
+      // Registrar transação de recompensa de afiliado
+      const trxRef = doc(collection(db, 'transactions'));
+      tx.set(trxRef, {
+        userId: affiliateId,
+        type: 'referral_reward',
+        amount: commissionAmount,
+        currency: data.currency || 'KZ',
+        status: 'completed',
+        description: `Comissão de ${Math.round(rate * 100)}% pela compra no Mercado`,
+        provider: 'system',
+        metadata: {
+          orderId: orderId,
+          listingId: data.listingId,
+          sellerId: sellerId,
+        },
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+
+      // Marcar comissão no pedido
+      tx.update(orderRef, {
+        affiliateCommissionAmount: commissionAmount,
+        affiliateCommissionRate: rate,
+        affiliateCommissionStatus: 'paid',
+        affiliatePaidAt: Timestamp.now(),
+      } as any);
     });
   }
 

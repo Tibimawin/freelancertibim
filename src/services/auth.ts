@@ -56,7 +56,8 @@ export class AuthService {
         rating: 0,
         ratingCount: 0,
         testerWallet: { availableBalance: 0, pendingBalance: 0, totalEarnings: 0 },
-        posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0, bonusBalance: 500, bonusIssuedAt: issuedAt, bonusExpiresAt: expiresAt },
+        // Bônus só será liberado após KYC aprovado
+        posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0, bonusBalance: 0 },
         completedTests: 0,
         approvalRate: 0,
         createdAt: new Date(),
@@ -69,24 +70,6 @@ export class AuthService {
       };
 
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-
-      // Registrar transação de bônus de boas-vindas
-      try {
-        const txRef = doc(collection(db, 'transactions'));
-        await setDoc(txRef, {
-          userId: firebaseUser.uid,
-          type: 'deposit',
-          amount: 500,
-          currency: 'KZ',
-          status: 'completed',
-          description: 'Bônus de boas-vindas para novos usuários',
-          provider: 'system',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      } catch (e) {
-        console.warn('Falha ao registrar transação de bônus:', e);
-      }
 
       // Enviar e-mail de verificação para ativar a conta
       try {

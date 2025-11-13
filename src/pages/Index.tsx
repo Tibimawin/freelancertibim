@@ -423,22 +423,21 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Guia rápido (onboarding) contextual */}
+        {/* Mensagem de bônus e verificação de conta */}
         {showTips && (
           <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 z-40">
             <Card className="shadow-lg border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-sm font-semibold">Guia rápido</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Dicas para começar: publicar, aplicar, comprar e conversar.</p>
+                    <h4 className="text-sm font-semibold">Bônus de 500 KZ</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Verifique sua conta para ganhar 500 KZ de bônus.
+                    </p>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <Button size="sm" variant="secondary" onClick={() => navigate('/create-job')}>
-                        Publicar job
+                      <Button size="sm" className="glow-effect" onClick={() => navigate('/kyc')}>
+                        Verificar conta agora
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={() => navigate('/')}>Aplicar</Button>
-                      <Button size="sm" variant="secondary" onClick={() => navigate('/market')}>Comprar</Button>
-                      <Button size="sm" variant="secondary" onClick={() => navigate('/dashboard')}>Conversar</Button>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">

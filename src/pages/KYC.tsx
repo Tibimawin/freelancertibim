@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { AdminVerificationService } from '@/services/adminVerification';
 import VerificationForm from '@/components/VerificationForm';
+import { CloudinaryService } from '@/lib/cloudinary';
 import { Loader2, UserCheck, AlertCircle, CheckCircle, IdCard, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +30,15 @@ const KYCPage = () => {
     postalCode: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  // Estado dos documentos para envio unificado
+  interface DocumentFile { file: File | null; status: 'idle' | 'uploading' | 'uploaded' | 'error'; url?: string; publicId?: string; }
+  const initialDocs: { id_front: DocumentFile; id_back: DocumentFile; selfie: DocumentFile; address_proof: DocumentFile } = {
+    id_front: { file: null, status: 'idle' },
+    id_back: { file: null, status: 'idle' },
+    selfie: { file: null, status: 'idle' },
+    address_proof: { file: null, status: 'idle' },
+  };
+  const [documents, setDocuments] = useState(initialDocs);
 
   const verificationStatus = userData?.verificationStatus || 'incomplete';
   const isLocked = verificationStatus === 'pending' || verificationStatus === 'approved';
@@ -38,8 +48,7 @@ const KYCPage = () => {
     setForm(prev => ({ ...prev, [id]: value }));
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUnifiedSubmit = async () => {
     if (!currentUser || !userData) return;
 
     // Campos obrigatórios
@@ -52,8 +61,33 @@ const KYCPage = () => {
       return;
     }
 
+    // Validar documentos selecionados (mínimo frente, verso e selfie)
+    const filesToUpload = Object.entries(documents).filter(([, doc]) => (doc as DocumentFile).file) as [keyof typeof initialDocs, DocumentFile][];
+    if (filesToUpload.length < 3) {
+      toast({
+        title: 'Documentos faltando',
+        description: 'Anexe BI (frente e verso) e selfie com documento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
+      // 1) Upload dos documentos ao Cloudinary
+      const uploadedDocs: { type: string; url: string; publicId: string }[] = [];
+      const folder = `verifications/${currentUser.uid}`;
+      for (const [key, doc] of filesToUpload) {
+        if (doc.file) {
+          setDocuments(prev => ({ ...prev, [key]: { ...prev[key], status: 'uploading' } }));
+          const docType = key === 'id_front' || key === 'id_back' ? 'bi' : (key as string);
+          const result = await CloudinaryService.uploadFile(doc.file, folder);
+          uploadedDocs.push({ type: docType, url: result.url, publicId: result.public_id });
+          setDocuments(prev => ({ ...prev, [key]: { ...prev[key], status: 'uploaded', url: result.url, publicId: result.public_id } }));
+        }
+      }
+
+      // 2) Submeter dados pessoais
       await AdminVerificationService.submitIdentityInfo(
         currentUser.uid,
         userData.name,
@@ -71,17 +105,26 @@ const KYCPage = () => {
         }
       );
 
+      // 3) Submeter documentos
+      await AdminVerificationService.submitVerification(
+        currentUser.uid,
+        userData.name,
+        userData.email,
+        uploadedDocs
+      );
+
+      // 4) Atualizar status
       await updateUserData({ verificationStatus: 'pending' });
 
       toast({
-        title: 'KYC enviado para análise',
-        description: 'Suas informações de identidade foram enviadas. Agora anexe os documentos ao lado.',
+        title: 'KYC enviado para verificação',
+        description: 'Seus dados e documentos foram enviados para análise.',
       });
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Erro ao enviar KYC',
-        description: 'Tente novamente mais tarde ou verifique os campos.',
+        title: 'Erro ao enviar verificação',
+        description: 'Tente novamente mais tarde ou verifique os campos e documentos.',
         variant: 'destructive',
       });
     } finally {
@@ -166,7 +209,7 @@ const KYCPage = () => {
               )}
             </CardHeader>
             <CardContent>
-              <form onSubmit={onSubmit} className="space-y-4">
+              <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="governmentIdNumber" className="flex items-center space-x-2">
@@ -217,22 +260,19 @@ const KYCPage = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full glow-effect" disabled={isLocked || submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enviando KYC
-                    </>
-                  ) : (
-                    'Enviar para análise'
-                  )}
-                </Button>
+                {/* Botão removido do Passo 1: envio ficará no Passo 2 */}
               </form>
             </CardContent>
           </Card>
 
-          {/* Upload de Documentos (já existente) */}
-          <VerificationForm />
+          {/* Upload de Documentos (controlado, sem botão próprio) */}
+          <VerificationForm
+            documents={documents}
+            onChangeDocument={(key, file) => setDocuments(prev => ({ ...prev, [key]: { file, status: 'idle' } }))}
+            isSubmitting={submitting}
+            verificationStatus={verificationStatus}
+            onSubmit={handleUnifiedSubmit}
+          />
         </div>
       </div>
     </div>

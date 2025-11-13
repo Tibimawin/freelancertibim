@@ -265,6 +265,39 @@ export class AdminVerificationService {
         updatedAt: Timestamp.now()
       });
 
+      // Grant welcome bonus upon KYC approval (if not already granted)
+      try {
+        const userDoc = await getDoc(userRef);
+        const userData = userDoc.exists() ? (userDoc.data() as any) : null;
+        const existingBonus = userData?.posterWallet?.bonusBalance ?? 0;
+        if (!existingBonus || existingBonus <= 0) {
+          const nowTs = Timestamp.now();
+          const expiresDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const expiresTs = Timestamp.fromDate(expiresDate);
+          batch.update(userRef, {
+            'posterWallet.bonusBalance': 500,
+            'posterWallet.bonusIssuedAt': nowTs,
+            'posterWallet.bonusExpiresAt': expiresTs,
+            updatedAt: nowTs,
+          } as any);
+
+          const txRef = doc(collection(db, 'transactions'));
+          batch.set(txRef, {
+            userId: verificationData.userId,
+            type: 'deposit',
+            amount: 500,
+            currency: 'KZ',
+            status: 'completed',
+            description: 'Bônus de boas-vindas (após KYC aprovado)',
+            provider: 'system',
+            createdAt: nowTs,
+            updatedAt: nowTs,
+          } as any);
+        }
+      } catch (e) {
+        console.warn('Falha ao conceder bônus após KYC aprovado:', e);
+      }
+
       // Log the action
       const actionRef = doc(collection(db, 'userActions'));
       batch.set(actionRef, {

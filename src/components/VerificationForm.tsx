@@ -1,14 +1,10 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Clock, Upload, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { CloudinaryService } from '@/lib/cloudinary';
-import { AdminVerificationService } from '@/services/adminVerification';
 import { useTranslation } from 'react-i18next';
 
 interface DocumentFile {
@@ -25,100 +21,23 @@ const initialDocs = {
   address_proof: { file: null, status: 'idle' } as DocumentFile,
 };
 
-const VerificationForm = () => {
-  const { currentUser, userData, updateUserData } = useAuth();
-  const { toast } = useToast();
+type DocsState = typeof initialDocs;
+interface VerificationFormProps {
+  documents: DocsState;
+  onChangeDocument: (key: keyof DocsState, file: File | null) => void;
+  isSubmitting: boolean;
+  verificationStatus: string;
+  onSubmit: () => void;
+}
+
+const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificationStatus, onSubmit }: VerificationFormProps) => {
   const { t } = useTranslation();
-  const [documents, setDocuments] = useState(initialDocs);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (key: keyof typeof initialDocs, file: File | null) => {
-    setDocuments(prev => ({
-      ...prev,
-      [key]: { file, status: 'idle' },
-    }));
+    onChangeDocument(key, file);
   };
 
-  const handleUploadAndSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser || !userData) return;
-
-    const filesToUpload = Object.entries(documents)
-      .filter(([, doc]) => doc.file) as [keyof typeof initialDocs, DocumentFile][];
-
-    if (filesToUpload.length < 3) {
-      toast({
-        title: t("missing_documents"),
-        description: t("missing_documents_description"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    const uploadedDocs: { type: string; url: string; publicId: string }[] = [];
-    let uploadError = false;
-
-    try {
-      const folder = `verifications/${currentUser.uid}`;
-
-      for (const [key, doc] of filesToUpload) {
-        if (doc.file) {
-          setDocuments(prev => ({ ...prev, [key]: { ...prev[key], status: 'uploading' } }));
-          
-  const docType = key === 'id_front' || key === 'id_back' ? 'bi' : key; // Simplificando para 'bi' ou 'selfie'
-          
-          const result = await CloudinaryService.uploadFile(doc.file, folder);
-          
-          uploadedDocs.push({
-            type: docType,
-            url: result.url,
-            publicId: result.public_id,
-          });
-
-          setDocuments(prev => ({ 
-            ...prev, 
-            [key]: { 
-              ...prev[key], 
-              status: 'uploaded', 
-              url: result.url, 
-              publicId: result.public_id 
-            } 
-          }));
-        }
-      }
-
-      // 2. Enviar dados para o backend (Firestore)
-      await AdminVerificationService.submitVerification(
-        currentUser.uid,
-        userData.name,
-        userData.email,
-        uploadedDocs
-      );
-      
-      // 3. Atualizar status do usuário no AuthContext
-      await updateUserData({ verificationStatus: 'pending' });
-
-      toast({
-        title: t("verification_submitted"),
-        description: t("verification_submitted_description"),
-      });
-
-    } catch (error) {
-      console.error('Erro durante o processo de verificação:', error);
-      uploadError = true;
-      toast({
-        title: t("error_uploading_documents"),
-        description: t("error_uploading_documents_description"),
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-      if (!uploadError) {
-        // Redirecionar ou fechar o formulário após sucesso
-      }
-    }
-  };
+  // Removido upload e envio; o envio será feito no KYCPage com um único botão
 
   const getDocStatus = (key: keyof typeof initialDocs) => {
     const doc = documents[key];
@@ -128,7 +47,6 @@ const VerificationForm = () => {
     return <FileText className="h-4 w-4 text-muted-foreground" />;
   };
 
-  const verificationStatus = userData?.verificationStatus || 'incomplete';
   const isVerificationLocked = verificationStatus === 'pending' || verificationStatus === 'approved';
 
   if (verificationStatus === 'pending') {
@@ -176,7 +94,7 @@ const VerificationForm = () => {
         )}
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleUploadAndSubmit} className="space-y-6">
+        <form className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Documento de Identidade - Frente */}
             <div className="space-y-2">
@@ -241,22 +159,19 @@ const VerificationForm = () => {
               />
             </div>
           </div>
-
-          <Button 
-            type="submit" 
-            className="w-full glow-effect" 
+          <Button
+            type="button"
+            className="w-full glow-effect"
             disabled={isSubmitting || isVerificationLocked}
+            onClick={onSubmit}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t("submitting_documents")}
+                {t('submitting_documents') || 'Enviando verificação'}
               </>
             ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                {t("submit_for_verification")}
-              </>
+              t('submit_for_verification') || 'Enviar para Verificação'
             )}
           </Button>
         </form>

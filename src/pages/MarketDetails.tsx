@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,7 @@ const formatPrice = (value: number, currency: string) => {
 export default function MarketDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { currentUser, userData, switchUserMode, updateUserData } = useAuth();
   const [listing, setListing] = useState<MarketListing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,13 @@ export default function MarketDetailsPage() {
     return `${value.toFixed(2)} Kz`;
     }
   };
+
+  // Link de afiliado para o usuário atual
+  const affiliateLink = useMemo(() => {
+    if (!id || !currentUser?.uid) return '';
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/market/${id}?aff=${currentUser.uid}`;
+  }, [id, currentUser?.uid]);
 
   // Resolve template substituindo placeholders simples
   const resolveTemplate = (tpl: string, item?: MarketListing | null) => {
@@ -222,6 +230,9 @@ export default function MarketDetailsPage() {
 
     setSubmitting(true);
     try {
+      // Capturar afiliado da URL (se válido)
+      const affParam = searchParams.get('aff') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('aff') : null);
+      const affiliateId = affParam && affParam !== currentUser.uid && affParam !== listing.sellerId ? affParam : undefined;
       // Criar pedido do Mercado (pending)
       const orderId = await MarketService.placeOrder({
         listingId: listing.id,
@@ -231,6 +242,7 @@ export default function MarketDetailsPage() {
         sellerName: listing.sellerName,
         amount: listing.price,
         currency: listing.currency,
+        ...(affiliateId ? { affiliateId } : {}),
       });
 
       // Determinar uso de bônus (respeitando expiração)
@@ -628,6 +640,80 @@ export default function MarketDetailsPage() {
                 <p className="mt-1 text-xs text-muted-foreground">Saldo insuficiente para esta compra.</p>
               )}
             </div>
+
+            {/* Afiliados: compartilhar link para ganhar comissão */}
+            {currentUser && (
+              <div className="mt-4 p-3 rounded-md bg-muted/30 border border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium">Ganhe dinheiro compartilhando</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">Compartilhe seu link de afiliado deste produto. Se alguém comprar por ele, você recebe comissão.</p>
+                <div className="flex gap-2 mb-2">
+                  <Input value={affiliateLink} readOnly className="text-xs" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        if (!affiliateLink) return;
+                        await navigator.clipboard.writeText(affiliateLink);
+                        toast({ title: 'Link copiado', description: 'Seu link de afiliado foi copiado.' });
+                      } catch {
+                        toast({ title: 'Falha ao copiar', description: 'Copie manualmente o link acima.', variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    Copiar
+                  </Button>
+                </div>
+                {/* Botões de compartilhamento rápidos */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      if (!affiliateLink) return;
+                      const text = `Confira este produto: ${listing.title} — ${affiliateLink}`;
+                      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                      window.open(url, '_blank');
+                    }}
+                  >
+                    WhatsApp
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      if (!affiliateLink) return;
+                      const text = `Confira este produto: ${listing.title}`;
+                      const url = `https://t.me/share/url?url=${encodeURIComponent(affiliateLink)}&text=${encodeURIComponent(text)}`;
+                      window.open(url, '_blank');
+                    }}
+                  >
+                    Telegram
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      if (!affiliateLink) return;
+                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(affiliateLink)}`;
+                      window.open(url, '_blank');
+                    }}
+                  >
+                    Facebook
+                  </Button>
+                </div>
+                {/* Indicador de ganho esperado por venda */}
+                <div className="text-xs text-muted-foreground">
+                  {(() => {
+                    const rate = typeof listing.affiliateCommissionRate === 'number' ? listing.affiliateCommissionRate : 0.05;
+                    const expected = (listing.price || 0) * rate;
+                    return `Ganho estimado por venda: ${expected.toLocaleString('pt-BR')} ${listing.currency} (${Math.round(rate * 100)}%)`;
+                  })()}
+                </div>
+              </div>
+            )}
 
             {/* Avaliação pós-compra */}
             {buyerOrderId && (

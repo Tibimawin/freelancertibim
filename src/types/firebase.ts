@@ -395,6 +395,12 @@ export interface MarketOrder {
   rating?: number; // 1..5
   review?: string;
   ratedAt?: Date;
+  // Afiliados
+  affiliateId?: string; // usuário que indicou/compartilhou o link
+  affiliateCommissionRate?: number; // ex.: 0.05 para 5%
+  affiliateCommissionAmount?: number; // valor pago ao afiliado
+  affiliateCommissionStatus?: 'pending' | 'paid';
+  affiliatePaidAt?: Date;
 }
 
 // Token temporário para download seguro de produtos digitais

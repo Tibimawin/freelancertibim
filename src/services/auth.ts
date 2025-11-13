@@ -95,10 +95,8 @@ export class AuthService {
         console.warn('Falha ao enviar e-mail de verificação:', e);
       }
 
-      // Opcional: sair após cadastro para exigir verificação antes de uso
-      try {
-        await firebaseSignOut(auth);
-      } catch {}
+      // Não sair automaticamente após cadastro: manter sessão para reconhecer o usuário imediatamente
+      // A UI pode restringir funcionalidades até a verificação de e-mail
 
       // Vincular dispositivo ao usuário
       try {
@@ -170,17 +168,15 @@ export class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
-      // Bloquear acesso se e-mail não verificado: reenviar e sair
+      // Se e-mail não verificado: reenviar, mas NÃO sair nem bloquear sessão
+      // A UI deve limitar ações críticas até a verificação
       if (!firebaseUser.emailVerified) {
         try {
           await sendEmailVerification(firebaseUser);
         } catch (e) {
           console.warn('Falha ao reenviar e-mail de verificação:', e);
         }
-        await firebaseSignOut(auth);
-        const err: any = new Error('E-mail não verificado. Verifique sua caixa de entrada para ativar.');
-        err.code = 'auth/email-not-verified';
-        throw err;
+        // Prosseguir com sessão limitada; não lançar erro
       }
 
       // Fetch user data to check settings

@@ -179,8 +179,34 @@ export class AuthService {
         // Prosseguir com sessão limitada; não lançar erro
       }
 
-      // Fetch user data to check settings
-      const userData = await this.getUserData(firebaseUser.uid);
+      // Fetch user data to check settings (and ensure document exists)
+      let userData = await this.getUserData(firebaseUser.uid);
+      if (!userData) {
+        // Criar documento mínimo do usuário se não existir (caso mobile tenha falhado no cadastro)
+        const issuedAt = new Date();
+        const fallbackData: Omit<User, 'id'> = {
+          name: firebaseUser.displayName || 'Usuário',
+          email: firebaseUser.email || '',
+          currentMode: 'tester',
+          rating: 0,
+          ratingCount: 0,
+          testerWallet: { availableBalance: 0, pendingBalance: 0, totalEarnings: 0 },
+          posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0 },
+          completedTests: 0,
+          approvalRate: 0,
+          createdAt: issuedAt,
+          updatedAt: issuedAt,
+          referralCode: '',
+          verificationStatus: 'incomplete',
+          accountStatus: 'active'
+        };
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), fallbackData, { merge: true });
+          userData = await this.getUserData(firebaseUser.uid);
+        } catch (e) {
+          console.warn('Falha ao criar documento mínimo do usuário durante login:', e);
+        }
+      }
 
       // Atualizar vínculo de dispositivo (use setDoc with merge to avoid missing doc errors)
       try {
@@ -263,12 +289,13 @@ export class AuthService {
           deviceId,
           timestamp: Timestamp.now(),
         });
-        // Persist last login IP on user document for admin display
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
+        // Persistir último IP de login no documento do usuário para exibição no admin
+        // Usar setDoc com merge para evitar erro quando o documento ainda não existir
+        await setDoc(doc(db, 'users', firebaseUser.uid), {
           lastLoginIp: ip,
           lastLoginAt: Timestamp.now(),
           updatedAt: new Date(),
-        });
+        }, { merge: true });
       } catch (e) {
         console.warn('Falha ao registrar atividade/IP de login:', e);
       }

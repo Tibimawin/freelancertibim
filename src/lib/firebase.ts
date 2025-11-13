@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
@@ -18,15 +18,35 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize Analytics safely (some mobile browsers/WebViews block gtag/cookies)
+let analytics: any = null;
+try {
+  // Only attempt in browser contexts
+  if (typeof window !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
+} catch (e) {
+  console.warn('Analytics não disponível neste ambiente:', e);
+}
 
 // Initialize Firebase services
 export const auth = getAuth(app);
-// Firestore com cache persistente (novo API)
-// Usa cache local persistente com gerenciador de aba única para evitar conflitos
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
-});
+// Firestore com cache persistente (novo API) — com fallback quando IndexedDB/local persistence não está disponível
+let _db: any = null;
+try {
+  _db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
+  });
+} catch (e) {
+  console.warn('Falha ao inicializar Firestore com cache persistente, usando fallback:', e);
+  try {
+    _db = getFirestore(app);
+  } catch (e2) {
+    console.error('Falha ao inicializar Firestore:', e2);
+  }
+}
+export const db = _db;
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 // Inicialização segura do RTDB: ambiente pode não ter o serviço disponível

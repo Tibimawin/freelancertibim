@@ -33,8 +33,10 @@ import AdminJobManager from '@/components/admin/AdminJobManager'; // Importado A
 import AdminSupport from '@/components/admin/AdminSupport';
 import AdminMarketManager from '@/components/admin/AdminMarketManager';
 import AdminMarketOrders from '@/components/admin/AdminMarketOrders';
+import AdminAffiliateAnalytics from '@/components/admin/AdminAffiliateAnalytics';
 import AdminDevices from '@/components/admin/AdminDevices';
 import AdminDefaultAvatars from '@/components/admin/AdminDefaultAvatars';
+import AdminTaxonomyManager from '@/components/admin/AdminTaxonomyManager';
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
@@ -42,7 +44,7 @@ const AdminDashboard = () => {
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
   const { reports, fetchReports } = useAdminReports(); 
   const { t } = useTranslation();
-  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'>('overview');
+  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'|'taxonomies'>('overview');
 
   useEffect(() => {
     // Refresh stats every 30 seconds
@@ -174,6 +176,9 @@ const AdminDashboard = () => {
                 <button onClick={() => setActive('market')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='market' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <ShoppingBag className="h-4 w-4" /> Mercado
                 </button>
+                <button onClick={() => setActive('taxonomies')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='taxonomies' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Briefcase className="h-4 w-4" /> Listas (Taxonomias)
+                </button>
                 <button onClick={() => setActive('withdrawals')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='withdrawals' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <CreditCard className="h-4 w-4" /> {t("withdrawals_tab")}
                 </button>
@@ -302,8 +307,10 @@ const AdminDashboard = () => {
             <div className="space-y-6">
               <AdminMarketManager />
               <AdminMarketOrders />
+              <AdminAffiliateAnalytics />
             </div>
           )}
+          {active === 'taxonomies' && (<AdminTaxonomyManager />)}
           {active === 'users' && (<AdminUsers />)}
           {active === 'jobs' && (<AdminJobManager />)}
           {active === 'withdrawals' && (<AdminWithdrawals />)}

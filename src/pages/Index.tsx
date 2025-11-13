@@ -18,6 +18,7 @@ import { LevelService } from "@/services/levelService";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSettings } from "@/hooks/useSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { TaxonomyService, NamedItem, SubcategoryItem, PaymentRangeItem } from "@/services/taxonomyService";
 
 const Index = () => {
   const { userData, currentUser, switchUserMode } = useAuth();
@@ -31,6 +32,13 @@ const Index = () => {
   const [payment, setPayment] = useState<string | null>(null);
   const [location, setLocation] = useState<string | null>(null);
   const [stats, setStats] = useState<string | null>(null);
+  // Listas dinâmicas do admin
+  const [jobLevelOptions, setJobLevelOptions] = useState<NamedItem[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<NamedItem[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryItem[]>([]);
+  const [paymentRangeOptions, setPaymentRangeOptions] = useState<PaymentRangeItem[]>([]);
+  const [locationOptions, setLocationOptions] = useState<NamedItem[]>([]);
+  const [statsLabelOptions, setStatsLabelOptions] = useState<NamedItem[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'panels' | 'list'>('list');
   const { t } = useTranslation(); // Initialize useTranslation
   const [userLevelIndex, setUserLevelIndex] = useState<0 | 1 | 2>(0);
@@ -54,6 +62,31 @@ const Index = () => {
     computeLevel();
   }, [currentUser]);
 
+  // Carregar listas dinâmicas
+  useEffect(() => {
+    const loadTaxonomies = async () => {
+      try {
+        const [levels, cats, subs, pays, locs, stats] = await Promise.all([
+          TaxonomyService.getJobLevels(),
+          TaxonomyService.getCategories(),
+          TaxonomyService.getSubcategories(),
+          TaxonomyService.getPaymentRanges(),
+          TaxonomyService.getLocations(),
+          TaxonomyService.getStatsLabels(),
+        ]);
+        setJobLevelOptions(levels);
+        setCategoryOptions(cats);
+        setSubcategoryOptions(subs);
+        setPaymentRangeOptions(pays);
+        setLocationOptions(locs);
+        setStatsLabelOptions(stats);
+      } catch (e) {
+        // silencioso: se falhar, mantém listas padrão estáticas
+      }
+    };
+    loadTaxonomies();
+  }, []);
+
   // Filtrar jobs baseado na dificuldade selecionada e gate por nível
   const maxAllowed = LevelService.maxAllowedBountyKZ(userLevelIndex);
   const filteredJobs = jobs.filter(job => {
@@ -65,9 +98,17 @@ const Index = () => {
     let byPayment = true;
     if (payment) {
       const bounty = Number(job.bounty || 0);
-  if (payment === 'Até 1.000 Kz') byPayment = bounty <= 1000;
-  else if (payment === '1.000–5.000 Kz') byPayment = bounty > 1000 && bounty <= 5000;
-  else if (payment === '> 5.000 Kz') byPayment = bounty > 5000;
+      const range = paymentRangeOptions.find((r) => r.id === payment);
+      if (range) {
+        const minOk = typeof range.min === 'number' ? bounty >= (range.min as number) : true;
+        const maxOk = typeof range.max === 'number' ? bounty <= (range.max as number) : true;
+        byPayment = minOk && maxOk;
+      } else {
+        // fallback para etiquetas antigas
+        if (payment === 'Até 1.000 Kz') byPayment = bounty <= 1000;
+        else if (payment === '1.000–5.000 Kz') byPayment = bounty > 1000 && bounty <= 5000;
+        else if (payment === '> 5.000 Kz') byPayment = bounty > 5000;
+      }
     }
     let byStats = true;
     if (stats === 'Alta aprovação') {
@@ -270,9 +311,13 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="Fácil">Fácil</SelectItem>
-                      <SelectItem value="Médio">Médio</SelectItem>
-                      <SelectItem value="Difícil">Difícil</SelectItem>
+                      {(jobLevelOptions.length ? jobLevelOptions : [
+                        { id: 'Fácil', name: 'Fácil' },
+                        { id: 'Médio', name: 'Médio' },
+                        { id: 'Difícil', name: 'Difícil' },
+                      ]).map((lvl) => (
+                        <SelectItem key={lvl.id} value={lvl.name}>{lvl.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -292,9 +337,13 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="Mobile">Mobile</SelectItem>
-                      <SelectItem value="Web">Web</SelectItem>
-                      <SelectItem value="Social">Social</SelectItem>
+                      {(categoryOptions.length ? categoryOptions : [
+                        { id: 'Mobile', name: 'Mobile' },
+                        { id: 'Web', name: 'Web' },
+                        { id: 'Social', name: 'Social' },
+                      ]).map((c) => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -306,35 +355,9 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
-                      {/* Opções dependentes da categoria */}
-                      {category === 'Mobile' && (
-                        <>
-                          <SelectItem value="App">App</SelectItem>
-                          <SelectItem value="Play Store">Play Store</SelectItem>
-                          <SelectItem value="App Store">App Store</SelectItem>
-                        </>
-                      )}
-                      {category === 'Web' && (
-                        <>
-                          <SelectItem value="Website">Website</SelectItem>
-                          <SelectItem value="Visitar site">Visitar site</SelectItem>
-                          <SelectItem value="Ver video no Youtube">Ver video no Youtube</SelectItem>
-                        </>
-                      )}
-                      {category === 'Social' && (
-                        <>
-                          <SelectItem value="Facebook">Facebook</SelectItem>
-                          <SelectItem value="Instagram">Instagram</SelectItem>
-                          <SelectItem value="Tiktok">Tiktok</SelectItem>
-                          <SelectItem value="Youtube">Youtube</SelectItem>
-                          <SelectItem value="Telegram">Telegram</SelectItem>
-                          <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                          <SelectItem value="Pinterest">Pinterest</SelectItem>
-                          <SelectItem value="Threads">Threads</SelectItem>
-                          <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                          <SelectItem value="Outras redes sociais">Outras redes sociais</SelectItem>
-                        </>
-                      )}
+                      {(subcategoryOptions.length ? subcategoryOptions.filter((s) => !category || s.category === category) : []).map((s) => (
+                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -346,9 +369,13 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-        <SelectItem value="Até 1.000 Kz">Até 1.000 Kz</SelectItem>
-        <SelectItem value="1.000–5.000 Kz">1.000–5.000 Kz</SelectItem>
-        <SelectItem value="> 5.000 Kz">&gt; 5.000 Kz</SelectItem>
+                      {(paymentRangeOptions.length ? paymentRangeOptions : [
+                        { id: 'r1', label: 'Até 1.000 Kz', min: 0, max: 1000 },
+                        { id: 'r2', label: '1.000–5.000 Kz', min: 1000, max: 5000 },
+                        { id: 'r3', label: '> 5.000 Kz', min: 5000 },
+                      ]).map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -360,8 +387,12 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="Luanda">Luanda</SelectItem>
-                      <SelectItem value="Online">Online</SelectItem>
+                      {(locationOptions.length ? locationOptions : [
+                        { id: 'Luanda', name: 'Luanda' },
+                        { id: 'Online', name: 'Online' },
+                      ]).map((l) => (
+                        <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -373,8 +404,12 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="Alta aprovação">Alta aprovação</SelectItem>
-                      <SelectItem value="Pagador confiável">Pagador confiável</SelectItem>
+                      {(statsLabelOptions.length ? statsLabelOptions : [
+                        { id: 'Alta aprovação', name: 'Alta aprovação' },
+                        { id: 'Pagador confiável', name: 'Pagador confiável' },
+                      ]).map((s) => (
+                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

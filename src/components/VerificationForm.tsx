@@ -23,33 +23,41 @@ const initialDocs = {
 
 type DocsState = typeof initialDocs;
 interface VerificationFormProps {
-  documents: DocsState;
-  onChangeDocument: (key: keyof DocsState, file: File | null) => void;
-  isSubmitting: boolean;
-  verificationStatus: string;
-  onSubmit: () => void;
+  documents?: DocsState;
+  onChangeDocument?: (key: keyof DocsState, file: File | null) => void;
+  isSubmitting?: boolean;
+  verificationStatus?: string;
+  onSubmit?: () => void;
 }
 
 const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificationStatus, onSubmit }: VerificationFormProps) => {
   const { t } = useTranslation();
 
+  // Fallbacks seguros quando usado sem props (ex.: Profile)
+  const docs: DocsState = documents || initialDocs;
+  const safeOnChangeDocument = onChangeDocument || (() => {});
+  const safeOnSubmit = onSubmit || (() => {});
+  const safeIsSubmitting = !!isSubmitting;
+  const safeVerificationStatus = verificationStatus || 'idle';
+
   const handleFileChange = (key: keyof typeof initialDocs, file: File | null) => {
-    onChangeDocument(key, file);
+    safeOnChangeDocument(key, file);
   };
 
   // Removido upload e envio; o envio será feito no KYCPage com um único botão
 
   const getDocStatus = (key: keyof typeof initialDocs) => {
-    const doc = documents[key];
+    const doc = docs[key];
+    if (!doc) return <FileText className="h-4 w-4 text-muted-foreground" />;
     if (doc.status === 'uploaded') return <CheckCircle className="h-4 w-4 text-success" />;
     if (doc.status === 'uploading') return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
     if (doc.status === 'error') return <AlertCircle className="h-4 w-4 text-destructive" />;
     return <FileText className="h-4 w-4 text-muted-foreground" />;
   };
 
-  const isVerificationLocked = verificationStatus === 'pending' || verificationStatus === 'approved';
+  const isVerificationLocked = safeVerificationStatus === 'pending' || safeVerificationStatus === 'approved';
 
-  if (verificationStatus === 'pending') {
+  if (safeVerificationStatus === 'pending') {
     return (
       <Alert className="bg-warning/10 border-warning/20 text-warning">
         <Clock className="h-4 w-4" />
@@ -61,7 +69,7 @@ const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificat
     );
   }
   
-  if (verificationStatus === 'approved') {
+  if (safeVerificationStatus === 'approved') {
     return (
       <Alert className="bg-success/10 border-success/20 text-success">
         <CheckCircle className="h-4 w-4" />
@@ -83,7 +91,7 @@ const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificat
         <CardDescription>
           {t("identity_verification_description")}
         </CardDescription>
-        {verificationStatus === 'rejected' && (
+        {safeVerificationStatus === 'rejected' && (
           <Alert className="bg-destructive/10 border-destructive/20 text-destructive mt-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>{t("verification_rejected")}</AlertTitle>
@@ -162,10 +170,10 @@ const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificat
           <Button
             type="button"
             className="w-full glow-effect"
-            disabled={isSubmitting || isVerificationLocked}
-            onClick={onSubmit}
+            disabled={safeIsSubmitting || isVerificationLocked}
+            onClick={safeOnSubmit}
           >
-            {isSubmitting ? (
+            {safeIsSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 {t('submitting_documents') || 'Enviando verificação'}

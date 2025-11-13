@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useDirectChat } from '@/hooks/useDirectChat';
 import { Check, CheckCheck } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthService } from '@/services/auth';
 
 interface DirectChatThreadProps {
   recipientUserId: string;
@@ -15,10 +18,28 @@ const DirectChatThread = ({ recipientUserId, disabled }: DirectChatThreadProps) 
   const { t } = useTranslation();
   const { messages, loading, sendMessage, currentUserId, otherTyping, setTyping } = useDirectChat(recipientUserId);
   const [text, setText] = useState('');
+  const { userData } = useAuth();
+  const [recipientAvatarUrl, setRecipientAvatarUrl] = useState<string | null>(null);
   useEffect(() => {
     // set typing based on input presence
     setTyping(!!text.trim());
   }, [text]);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        if (recipientUserId) {
+          const u = await AuthService.getUserData(recipientUserId);
+          if (mounted) setRecipientAvatarUrl(u?.avatarUrl || null);
+        }
+      } catch (e) {
+        if (mounted) setRecipientAvatarUrl(null);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [recipientUserId]);
 
   const handleSend = async () => {
     const trimmed = text.trim();
@@ -38,7 +59,13 @@ const DirectChatThread = ({ recipientUserId, disabled }: DirectChatThreadProps) 
           {messages.map((msg) => {
             const mine = msg.senderId === currentUserId;
             return (
-              <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
+                {!mine && (
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={recipientAvatarUrl || undefined} />
+                    <AvatarFallback>{(msg.senderName || '?').charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                )}
                 <div className={`px-3 py-2 rounded-lg text-sm max-w-[75%] ${mine ? 'bg-primary/20 text-foreground' : 'bg-background border border-border text-foreground'}`}>
                   {!mine && <div className="font-semibold text-xs mb-1">{msg.senderName}</div>}
                   <div>{msg.text}</div>
@@ -49,6 +76,12 @@ const DirectChatThread = ({ recipientUserId, disabled }: DirectChatThreadProps) 
                     )}
                   </div>
                 </div>
+                {mine && (
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={(userData?.avatarUrl) || undefined} />
+                    <AvatarFallback>{(userData?.name || 'Você').charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             );
           })}

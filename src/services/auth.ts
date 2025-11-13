@@ -49,7 +49,7 @@ export class AuthService {
       const issuedAt = new Date();
       const expiresAt = new Date(issuedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-      const userData: Omit<User, 'id'> = {
+      const userDataBase: Omit<User, 'id'> = {
         name,
         email,
         currentMode: 'tester',
@@ -63,11 +63,15 @@ export class AuthService {
         createdAt: new Date(),
         updatedAt: new Date(),
         referralCode: newReferralCode, // Salvar o código gerado
-        referredBy: referredBy, // Salvar quem indicou, se houver
         verificationStatus: 'incomplete', // Adicionando status inicial
         accountStatus: 'active',
         deviceId
       };
+
+      // Evitar enviar undefined para Firestore
+      const userData: Omit<User, 'id'> = referredBy
+        ? { ...userDataBase, referredBy }
+        : userDataBase;
 
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
@@ -80,6 +84,19 @@ export class AuthService {
 
       // Não sair automaticamente após cadastro: manter sessão para reconhecer o usuário imediatamente
       // A UI pode restringir funcionalidades até a verificação de e-mail
+
+      // Notificação de bônus pendente (apenas informativa; crédito será liberado após KYC)
+      try {
+        await NotificationService.createNotification({
+          userId: firebaseUser.uid,
+          type: 'welcome_bonus_pending',
+          title: 'Bônus de boas-vindas',
+          message: 'Você ganhou 500 Kz de bônus na conta de contratante. Para usar na criação de empregos ou comprar no Mercado, finalize a verificação de identidade (KYC). Este bônus não é sacável na conta freelancer.',
+          read: false,
+        });
+      } catch (e) {
+        console.warn('Falha ao criar notificação de bônus pendente no cadastro:', e);
+      }
 
       // Vincular dispositivo ao usuário
       try {
@@ -279,6 +296,26 @@ export class AuthService {
           lastLoginAt: Timestamp.now(),
           updatedAt: new Date(),
         }, { merge: true });
+        // Detectar primeiro login e orientar sobre KYC/bônus
+        try {
+          const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userData = userSnap.exists() ? (userSnap.data() as any) : null;
+          const firstLogin = !userData?.firstLoginAt;
+          if (firstLogin) {
+            await setDoc(doc(db, 'users', firebaseUser.uid), {
+              firstLoginAt: Timestamp.now(),
+            }, { merge: true });
+            await NotificationService.createNotification({
+              userId: firebaseUser.uid,
+              type: 'first_login_bonus_info',
+              title: 'Bem-vindo! Bônus de 500 Kz',
+              message: 'Você tem um bônus de 500 Kz reservado na sua conta de contratante. Para poder usar na criação de empregos ou compras no Mercado, conclua a verificação de identidade (KYC). Este bônus não é sacável na conta freelancer.',
+              read: false,
+            });
+          }
+        } catch (e) {
+          console.warn('Falha ao registrar primeiro login/emitir notificação de bônus:', e);
+        }
       } catch (e) {
         console.warn('Falha ao registrar atividade/IP de login:', e);
       }

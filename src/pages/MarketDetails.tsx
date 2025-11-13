@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Star, MessageSquare, ArrowLeft, Shield, Wallet } from 'lucide-react';
 import { MarketListing } from '@/types/firebase';
 import { MarketService } from '@/services/marketService';
+import { AuthService } from '@/services/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import DirectMessagesModal from '@/components/DirectMessagesModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -22,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { DownloadService } from '@/services/downloadService';
+import { AffiliateService } from '@/services/affiliateService';
 
 const formatPrice = (value: number, currency: string) => {
   const iso = currency === 'KZ' ? 'AOA' : currency;
@@ -50,6 +52,7 @@ export default function MarketDetailsPage() {
   const [initialMessage, setInitialMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [sellerAvatarUrl, setSellerAvatarUrl] = useState<string | null>(null);
   // Avaliação pós-compra
   const [buyerOrderId, setBuyerOrderId] = useState<string | null>(null);
   const [buyerOrderStatus, setBuyerOrderStatus] = useState<('pending' | 'paid' | 'delivered' | 'cancelled') | null>(null);
@@ -90,6 +93,18 @@ export default function MarketDetailsPage() {
       try {
         const item = await MarketService.getListing(id);
         setListing(item);
+        // Buscar avatar do vendedor
+        try {
+          if (item?.sellerId) {
+            const seller = await AuthService.getUserData(item.sellerId);
+            setSellerAvatarUrl(seller?.avatarUrl || null);
+          } else {
+            setSellerAvatarUrl(null);
+          }
+        } catch (e) {
+          console.warn('Falha ao buscar avatar do vendedor:', e);
+          setSellerAvatarUrl(null);
+        }
         const tpl = userData?.settings?.messageTemplates?.directMessageInitial;
         const fallback = item ? `tenho interesse nesse produto${item.title ? `: ${item.title}` : ''}` : 'tenho interesse nesse produto';
         setInitialMessage(tpl ? resolveTemplate(tpl, item) : fallback);
@@ -101,6 +116,20 @@ export default function MarketDetailsPage() {
     };
     load();
   }, [id, userData]);
+
+  // Registrar clique em link de afiliado (quando acessado com ?aff=)
+  useEffect(() => {
+    try {
+      const affParam = searchParams.get('aff') || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('aff') : null);
+      if (!id || !affParam) return;
+      // Evita logar clique do próprio afiliado
+      if (currentUser?.uid && currentUser.uid === affParam) return;
+      AffiliateService.logClick({ affiliateId: affParam, listingId: id!, visitorId: currentUser?.uid || null }).catch(() => {});
+    } catch {
+      // silencioso
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, currentUser?.uid]);
 
   // Imagens: derivar galeria de imagens de listing
   const images: string[] = useMemo(() => {
@@ -245,12 +274,13 @@ export default function MarketDetailsPage() {
         ...(affiliateId ? { affiliateId } : {}),
       });
 
-      // Determinar uso de bônus (respeitando expiração)
+      // Determinar uso de bônus (respeitando expiração e KYC)
+      const isVerified = userData.verificationStatus === 'approved';
       const bonusExpiresRaw = userData.posterWallet?.bonusExpiresAt as any;
       const bonusExpiresDate = bonusExpiresRaw?.toDate ? bonusExpiresRaw.toDate() : (bonusExpiresRaw ? new Date(bonusExpiresRaw) : null);
       const bonusValid = !bonusExpiresDate || bonusExpiresDate > new Date();
       const currentBonus = userData.posterWallet?.bonusBalance ?? 0;
-      const useBonusPre = bonusValid ? Math.min(currentBonus, listing.price) : 0;
+      const useBonusPre = bonusValid && isVerified ? Math.min(currentBonus, listing.price) : 0;
 
       // Registrar transação de escrow vinculada ao pedido/anúncio
       await TransactionService.createTransaction({
@@ -269,8 +299,20 @@ export default function MarketDetailsPage() {
       const totalDeposits = userData.posterWallet?.totalDeposits ?? 0;
       const currentBalance = userData.posterWallet?.balance ?? 0;
       const currentBonus2 = userData.posterWallet?.bonusBalance ?? 0;
-      const useBonus = bonusValid ? Math.min(currentBonus2, listing.price) : 0;
+      const useBonus = bonusValid && isVerified ? Math.min(currentBonus2, listing.price) : 0;
       const useCash = listing.price - useBonus;
+
+      // Bloquear se não verificado e saldo em dinheiro insuficiente (sem bônus)
+      if (!isVerified && currentBalance < listing.price) {
+        toast({
+          title: 'Verificação necessária',
+          description: 'Para usar seu bônus de 500 Kz na compra, verifique sua identidade em Identidade/KYC.',
+          variant: 'destructive'
+        });
+        setSubmitting(false);
+        return;
+      }
+
       await switchUserMode('poster');
       await updateUserData({
         posterWallet: {
@@ -502,7 +544,7 @@ export default function MarketDetailsPage() {
               <div className="flex items-center justify-between pt-4">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={undefined} />
+                    <AvatarImage src={sellerAvatarUrl || undefined} />
                     <AvatarFallback>{(listing.sellerName || '?').charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -657,6 +699,10 @@ export default function MarketDetailsPage() {
                       try {
                         if (!affiliateLink) return;
                         await navigator.clipboard.writeText(affiliateLink);
+                        // Logar evento de compartilhamento (copiar)
+                        if (currentUser?.uid && listing?.id) {
+                          AffiliateService.logShare({ affiliateId: currentUser.uid, listingId: listing.id, platform: 'copy' }).catch(() => {});
+                        }
                         toast({ title: 'Link copiado', description: 'Seu link de afiliado foi copiado.' });
                       } catch {
                         toast({ title: 'Falha ao copiar', description: 'Copie manualmente o link acima.', variant: 'destructive' });
@@ -675,6 +721,10 @@ export default function MarketDetailsPage() {
                       if (!affiliateLink) return;
                       const text = `Confira este produto: ${listing.title} — ${affiliateLink}`;
                       const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                      // Logar evento de compartilhamento (WhatsApp)
+                      if (currentUser?.uid && listing?.id) {
+                        AffiliateService.logShare({ affiliateId: currentUser.uid, listingId: listing.id, platform: 'WhatsApp' }).catch(() => {});
+                      }
                       window.open(url, '_blank');
                     }}
                   >
@@ -687,6 +737,10 @@ export default function MarketDetailsPage() {
                       if (!affiliateLink) return;
                       const text = `Confira este produto: ${listing.title}`;
                       const url = `https://t.me/share/url?url=${encodeURIComponent(affiliateLink)}&text=${encodeURIComponent(text)}`;
+                      // Logar evento de compartilhamento (Telegram)
+                      if (currentUser?.uid && listing?.id) {
+                        AffiliateService.logShare({ affiliateId: currentUser.uid, listingId: listing.id, platform: 'Telegram' }).catch(() => {});
+                      }
                       window.open(url, '_blank');
                     }}
                   >
@@ -698,6 +752,10 @@ export default function MarketDetailsPage() {
                     onClick={() => {
                       if (!affiliateLink) return;
                       const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(affiliateLink)}`;
+                      // Logar evento de compartilhamento (Facebook)
+                      if (currentUser?.uid && listing?.id) {
+                        AffiliateService.logShare({ affiliateId: currentUser.uid, listingId: listing.id, platform: 'Facebook' }).catch(() => {});
+                      }
                       window.open(url, '_blank');
                     }}
                   >

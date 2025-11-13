@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MarketListing } from '@/types/firebase';
 import { Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { AuthService } from '@/services/auth';
 
 type Props = {
   listing: MarketListing;
@@ -21,6 +23,26 @@ const formatPrice = (value: number, currency: string) => {
 
 export const MarketCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
   const imageSrc = (listing.images && listing.images.length > 0 ? listing.images[0] : undefined) || listing.imageUrl;
+  const [sellerAvatarUrl, setSellerAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        if (listing.sellerId) {
+          const seller = await AuthService.getUserData(listing.sellerId);
+          if (mounted) setSellerAvatarUrl(seller?.avatarUrl || null);
+        } else {
+          if (mounted) setSellerAvatarUrl(null);
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar avatar do vendedor (card):', e);
+        if (mounted) setSellerAvatarUrl(null);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [listing.sellerId]);
   if (variant === 'list') {
     return (
       <Card className="overflow-hidden">
@@ -46,7 +68,13 @@ export const MarketCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
                   <span>({listing.ratingCount ?? 0})</span>
                 </div>
                 <span className="hidden sm:inline">•</span>
-                <div className="truncate">{listing.sellerName}</div>
+                <div className="flex items-center gap-2 truncate">
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage src={sellerAvatarUrl || undefined} />
+                    <AvatarFallback>{(listing.sellerName || '?').charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate">{listing.sellerName}</span>
+                </div>
               </div>
               <div className="mt-2 flex gap-2 flex-wrap">
                 {listing.tags?.slice(0, 3).map((t) => (
@@ -94,7 +122,13 @@ export const MarketCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
             <div className="font-semibold text-foreground">{formatPrice(listing.price, listing.currency)}</div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <div className="text-xs text-muted-foreground">{listing.sellerName}</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={sellerAvatarUrl || undefined} />
+                <AvatarFallback>{(listing.sellerName || '?').charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="truncate">{listing.sellerName}</span>
+            </div>
             <Link to={`/market/${listing.id}`} className="text-sm font-medium hover:underline">Ver detalhes</Link>
           </div>
         </div>

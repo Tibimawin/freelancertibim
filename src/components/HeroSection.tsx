@@ -28,6 +28,14 @@ const HeroSection = () => {
             🚀 {t("platform_1_freelancers")}
           </Badge>
 
+          {/* Promo Banner */}
+          <div className="mb-6 flex justify-center">
+            <div className="inline-flex items-center rounded-full px-4 py-2 border border-green-400/30 bg-green-500/10 text-green-300 backdrop-blur-sm shadow-sm">
+              <span className="mr-2">🎁</span>
+              <span>ganhe 500kz de bonus a se registrar pela primeira vez</span>
+            </div>
+          </div>
+
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
             {t("earn_money")}

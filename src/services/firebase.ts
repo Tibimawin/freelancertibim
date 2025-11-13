@@ -57,6 +57,7 @@ export class JobService {
       
       if (posterDoc.exists()) {
         const posterData = posterDoc.data();
+        const isVerified = posterData.verificationStatus === 'approved';
         const currentBalance = posterData.posterWallet?.balance || 0;
         const currentPending = posterData.posterWallet?.pendingBalance || 0;
         const currentBonus = posterData.posterWallet?.bonusBalance || 0;
@@ -64,11 +65,15 @@ export class JobService {
         const expiresAtDate = expiresAtRaw?.toDate ? expiresAtRaw.toDate() : (expiresAtRaw ? new Date(expiresAtRaw) : null);
         const now = new Date();
         const bonusValid = !expiresAtDate || expiresAtDate > now;
-
-        const useBonus = bonusValid ? Math.min(currentBonus, totalCost) : 0;
+        // Bônus só pode ser usado se KYC aprovado
+        const useBonus = bonusValid && isVerified ? Math.min(currentBonus, totalCost) : 0;
         const remaining = totalCost - useBonus;
         const newBonus = currentBonus - useBonus;
         const newBalance = currentBalance - remaining;
+
+        if (newBalance < 0) {
+          throw new Error('Saldo insuficiente. Verifique sua identidade (KYC) para poder usar o bônus.');
+        }
 
         await updateDoc(posterRef, {
           'posterWallet.balance': newBalance,

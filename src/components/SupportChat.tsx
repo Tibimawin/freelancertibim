@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SupportChatProps {
   open: boolean;
@@ -20,6 +21,7 @@ const SupportChat = ({ open, onOpenChange }: SupportChatProps) => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<any>(null);
   const [typingLocal, setTypingLocal] = useState(false);
+  const { userData } = useAuth();
 
   const formatRelative = useMemo(() => {
     const rtf = typeof Intl !== 'undefined' && (Intl as any).RelativeTimeFormat ? new (Intl as any).RelativeTimeFormat('pt-BR', { numeric: 'auto' }) : null;
@@ -99,12 +101,18 @@ const SupportChat = ({ open, onOpenChange }: SupportChatProps) => {
               {messages.map((msg) => {
                 const mine = msg.senderId === currentUserId;
                 return (
-                  <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'} mb-2`}>
+                  <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'} mb-2 items-end gap-2`}>
                     {mine ? (
-                      <div className="px-3 py-2 rounded-lg text-sm max-w-[80%] bg-primary text-primary-foreground rounded-br-sm">
-                        <div>{msg.text}</div>
-                        <div className="text-xs mt-1 text-primary-foreground/70">{formatRelative(new Date(msg.createdAt))}</div>
-                      </div>
+                      <>
+                        <div className="px-3 py-2 rounded-lg text-sm max-w-[80%] bg-primary text-primary-foreground rounded-br-sm">
+                          <div>{msg.text}</div>
+                          <div className="text-xs mt-1 text-primary-foreground/70">{formatRelative(new Date(msg.createdAt))}</div>
+                        </div>
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={(userData?.avatarUrl) || undefined} alt={userData?.name || 'Você'} />
+                          <AvatarFallback>{(userData?.name || 'Você').charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      </>
                     ) : (
                       <div className="flex items-end gap-2">
                         <Avatar className="h-6 w-6">

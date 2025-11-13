@@ -86,7 +86,18 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         }
         return;
       } else {
-        if (error?.code === 'auth/email-not-verified') {
+        // Mensagem em português para credenciais inválidas
+        if (
+          error?.code === 'auth/invalid-credential' ||
+          error?.code === 'auth/wrong-password' ||
+          error?.code === 'auth/user-not-found'
+        ) {
+          toast({
+            title: t('login_error'),
+            description: 'Email ou senha errado',
+            variant: 'destructive',
+          });
+        } else if (error?.code === 'auth/email-not-verified') {
           toast({
             title: t('email_not_verified'),
             description: t('please_check_email_to_activate'),
@@ -164,11 +175,27 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       });
       setActiveTab('signin');
     } catch (error: any) {
-      toast({
-        title: t("signup_error"),
-        description: error.message || t("signup_error_description"),
-        variant: "destructive",
-      });
+      if (error?.code === 'auth/email-already-in-use') {
+        toast({
+          title: t('signup_error'),
+          description: 'Esse email já tem uma conta cadastrada no sistema.',
+          variant: 'destructive',
+        });
+        // Sugerir login: mudar para aba de login
+        setActiveTab('signin');
+      } else if (error?.code === 'device_limit_exceeded') {
+        toast({
+          title: t('signup_error'),
+          description: error.message || t('device_limit_exceeded_description'),
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t("signup_error"),
+          description: error.message || t("signup_error_description"),
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

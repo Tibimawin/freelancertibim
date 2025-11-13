@@ -228,7 +228,7 @@ const ReferralManager = () => {
                   value={referralLink} 
                   size={180} 
                   fgColor="#4c1d95" // Electric Purple
-                  logoImage={currentUser?.photoURL || undefined}
+                  logoImage={userData?.avatarUrl || undefined}
                   logoWidth={40}
                   logoHeight={40}
                   qrStyle="dots"

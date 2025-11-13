@@ -65,6 +65,7 @@ const WithdrawalModal = ({ isOpen, onClose }: WithdrawalModalProps) => {
         userName: userData.name,
         userEmail: userData.email,
         amount: withdrawalAmount,
+        currency: 'KZ',
         method,
         accountInfo,
       });

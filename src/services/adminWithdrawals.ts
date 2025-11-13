@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { WithdrawalRequest } from '@/types/admin';
+import { NotificationService } from '@/services/notificationService';
 
 export class AdminWithdrawalService {
   // Get all withdrawal requests
@@ -82,14 +83,14 @@ export class AdminWithdrawalService {
         adminNotes: adminNotes || 'Approved by admin'
       });
 
-      // Create transaction record
+      // Create transaction record (mantém como 'pending' para refletir processamento)
       const transactionRef = doc(collection(db, 'transactions'));
       batch.set(transactionRef, {
         userId: requestData.userId,
         type: 'payout',
         amount: requestData.amount,
-        currency: requestData.currency,
-        status: 'completed',
+        currency: requestData.currency || 'KZ',
+        status: 'pending',
         description: `Withdrawal approved - ${requestData.method}`,
         provider: requestData.method,
         metadata: {
@@ -100,22 +101,36 @@ export class AdminWithdrawalService {
         updatedAt: Timestamp.now()
       });
 
-      // Update user balance (subtract the withdrawal amount)
+      // Update user balance: reduzir pendente; não subtrair disponível novamente
       const userRef = doc(db, 'users', requestData.userId);
       const userDoc = await getDoc(userRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const currentBalance = userData.testerWallet?.balance || 0;
-        const newBalance = Math.max(0, currentBalance - requestData.amount);
+        const currentPending = userData.testerWallet?.pendingBalance || 0;
+        const newPending = Math.max(0, currentPending - requestData.amount);
         
         batch.update(userRef, {
-          'testerWallet.balance': newBalance,
+          'testerWallet.pendingBalance': newPending,
           updatedAt: Timestamp.now()
         });
       }
 
       await batch.commit();
+
+      // Notificar usuário sobre aprovação
+      try {
+        await NotificationService.createNotification({
+          userId: requestData.userId,
+          type: 'withdrawal_approved',
+          title: 'Saque aprovado',
+          message: '✅ Seu saque foi aprovado com sucesso! O valor solicitado está em processamento e será creditado na sua conta em breve.',
+          read: false,
+          metadata: { withdrawalId: requestId },
+        });
+      } catch (notifyError) {
+        console.warn('Falha ao notificar usuário sobre aprovação de saque:', notifyError);
+      }
     } catch (error) {
       console.error('Error approving withdrawal:', error);
       throw error;
@@ -132,7 +147,13 @@ export class AdminWithdrawalService {
   ): Promise<void> {
     try {
       const requestRef = doc(db, 'withdrawalRequests', requestId);
-      
+      const requestDoc = await getDoc(requestRef);
+      if (!requestDoc.exists()) {
+        throw new Error('Withdrawal request not found');
+      }
+
+      const requestData = requestDoc.data();
+
       await updateDoc(requestRef, {
         status: 'rejected',
         processedAt: Timestamp.now(),
@@ -140,6 +161,34 @@ export class AdminWithdrawalService {
         rejectionReason,
         adminNotes: adminNotes || 'Rejected by admin'
       });
+
+      // Reverter saldos: devolver ao disponível e reduzir pendente
+      const userRef = doc(db, 'users', requestData.userId);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentAvailable = userData.testerWallet?.availableBalance || 0;
+        const currentPending = userData.testerWallet?.pendingBalance || 0;
+        await updateDoc(userRef, {
+          'testerWallet.availableBalance': currentAvailable + (requestData.amount || 0),
+          'testerWallet.pendingBalance': Math.max(0, currentPending - (requestData.amount || 0)),
+          updatedAt: Timestamp.now()
+        });
+      }
+
+      // Notificar usuário sobre rejeição
+      try {
+        await NotificationService.createNotification({
+          userId: requestData.userId,
+          type: 'withdrawal_rejected',
+          title: 'Saque rejeitado',
+          message: `Seu saque foi rejeitado. Motivo: ${rejectionReason}`,
+          read: false,
+          metadata: { withdrawalId: requestId },
+        });
+      } catch (notifyError) {
+        console.warn('Falha ao notificar usuário sobre rejeição de saque:', notifyError);
+      }
     } catch (error) {
       console.error('Error rejecting withdrawal:', error);
       throw error;

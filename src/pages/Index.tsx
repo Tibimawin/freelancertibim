@@ -163,7 +163,9 @@ const Index = () => {
           {/* Sidebar (Mover para o topo em mobile: order-1) */}
           <div className="lg:col-span-1 space-y-6 order-1 lg:order-2">
             {/* Wallet Card */}
-            <WalletCard />
+            <div className="hidden md:block">
+              <WalletCard />
+            </div>
 
             {/* Quick Stats */}
             {userData && (
@@ -396,7 +398,7 @@ const Index = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="flex-none w-56 md:w-auto snap-start">
                   <Label className="text-sm font-medium">Emp. Estatísticas</Label>
                   <Select value={stats || ''} onValueChange={(v) => setStats(v === 'all' ? null : v)}>
                     <SelectTrigger className="mt-1">

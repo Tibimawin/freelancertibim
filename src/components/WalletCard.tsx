@@ -8,6 +8,7 @@ import { Transaction } from "@/types/firebase";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DepositModal from "./DepositModal";
+import WithdrawalModal from "./WithdrawalModal";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +19,7 @@ const WalletCard = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
 
   if (!userData) {
     return (
@@ -142,11 +144,12 @@ const WalletCard = () => {
       return;
     }
     
-    // Se verificado e com saldo, o modal de saque será aberto pelo botão no Header
-    // Aqui, apenas notificamos se o saldo for baixo, se não, o Header lida com isso.
+    // Se verificado e com saldo suficiente, abrir modal de saque
+    setWithdrawalModalOpen(true);
   };
 
   return (
+    <>
     <Card className="p-6 bg-card border-border shadow-md">
       {/* Balance Section */}
       <div className="text-center mb-6">
@@ -319,6 +322,9 @@ const WalletCard = () => {
         method={depositModal.method || 'express'}
       />
     </Card>
+      {/* Modals */}
+      <WithdrawalModal isOpen={withdrawalModalOpen} onClose={() => setWithdrawalModalOpen(false)} />
+    </>
   );
 };
 

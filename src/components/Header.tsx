@@ -32,6 +32,9 @@ const Header = () => {
   const dmUnreadCount = useMemo(() => notifications.filter((n) => !n.read && n.type === 'message_received').length, [notifications]);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  const currentBalance = userData?.currentMode === 'tester'
+    ? (userData?.testerWallet?.availableBalance || 0)
+    : (userData?.posterWallet?.balance || 0);
 
   const handleSignOut = async () => {
     try {
@@ -232,10 +235,11 @@ const Header = () => {
                         {userData.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium">{userData.name}</p>
                       <p className="text-xs text-muted-foreground">{userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}</p>
                     </div>
+                    <div className="text-sm font-semibold">{currentBalance.toFixed(2)} Kz</div>
                   </div>
                   <ModeToggle />
                 </div>
@@ -460,9 +464,22 @@ const Header = () => {
                     variant="ghost" 
                     size="icon"
                     onClick={() => setShowWithdrawalModal(true)}
-                    className="text-muted-foreground hover:text-foreground hidden lg:flex" // Hide on mobile, available in sheet
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Wallet className="h-4 w-4" />
+                  </Button>
+                )}
+
+                {userData.currentMode === 'poster' && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground"
+                    asChild
+                  >
+                    <Link to="/transactions">
+                      <Wallet className="h-4 w-4" />
+                    </Link>
                   </Button>
                 )}
 

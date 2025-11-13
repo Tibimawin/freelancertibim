@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { JobService } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TaskInstruction, ProofRequirement } from "@/types/firebase";
+import { TaxonomyService, type NamedItem, type SubcategoryItem } from "@/services/taxonomyService";
 import { 
   Plus,
   X,
@@ -56,6 +57,91 @@ const CreateJob = () => {
     detailedInstructions: [] as TaskInstruction[],
     proofRequirements: [] as ProofRequirement[],
   });
+
+  // Dynamic taxonomy options
+  const [workLevels, setWorkLevels] = useState<NamedItem[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<NamedItem[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<NamedItem[]>([]);
+  const [locationOptions, setLocationOptions] = useState<NamedItem[]>([]);
+
+  // Fallback static options
+  const fallbackLevels: NamedItem[] = [
+    { id: "easy", name: t("easy") },
+    { id: "medium", name: t("medium") },
+    { id: "hard", name: t("hard") },
+  ];
+  const fallbackCategories: NamedItem[] = [
+    { id: "Mobile", name: "Mobile" },
+    { id: "Web", name: "Web" },
+    { id: "Social", name: "Social" },
+  ];
+  const fallbackSubcategoriesFor = (cat?: string): SubcategoryItem[] => {
+    switch (cat) {
+      case "Mobile":
+        return [
+          { id: "App", name: "App", category: "Mobile" },
+          { id: "Play Store", name: "Play Store", category: "Mobile" },
+          { id: "App Store", name: "App Store", category: "Mobile" },
+        ];
+      case "Web":
+        return [
+          { id: "Website", name: "Website", category: "Web" },
+          { id: "Visitar site", name: "Visitar site", category: "Web" },
+          { id: "Ver video no Youtube", name: "Ver video no Youtube", category: "Web" },
+        ];
+      case "Social":
+        return [
+          { id: "Facebook", name: "Facebook", category: "Social" },
+          { id: "Instagram", name: "Instagram", category: "Social" },
+          { id: "Tiktok", name: "Tiktok", category: "Social" },
+          { id: "Youtube", name: "Youtube", category: "Social" },
+          { id: "Telegram", name: "Telegram", category: "Social" },
+          { id: "WhatsApp", name: "WhatsApp", category: "Social" },
+          { id: "Pinterest", name: "Pinterest", category: "Social" },
+          { id: "Threads", name: "Threads", category: "Social" },
+          { id: "LinkedIn", name: "LinkedIn", category: "Social" },
+          { id: "Outras redes sociais", name: "Outras redes sociais", category: "Social" },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  useEffect(() => {
+    // Load initial dynamic lists
+    (async () => {
+      try {
+        const [levels, cats, locs] = await Promise.all([
+          TaxonomyService.getJobLevels(),
+          TaxonomyService.getCategories(),
+          TaxonomyService.getLocations(),
+        ]);
+        setWorkLevels(levels);
+        setCategoryOptions(cats);
+        setLocationOptions(locs);
+      } catch (e) {
+        // keep fallbacks if load fails
+        console.warn("Falha ao carregar taxonomias, usando opções padrão.", e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    // Load subcategories when category changes
+    (async () => {
+      const cat = formData.category;
+      if (!cat) {
+        setSubcategoryOptions([]);
+        return;
+      }
+      try {
+        const subs = await TaxonomyService.getSubcategories(cat);
+        setSubcategoryOptions(subs);
+      } catch (e) {
+        setSubcategoryOptions(fallbackSubcategoriesFor(cat));
+      }
+    })();
+  }, [formData.category]);
   
   const [currentRequirement, setCurrentRequirement] = useState("");
   const [currentInstruction, setCurrentInstruction] = useState("");
@@ -351,9 +437,9 @@ const CreateJob = () => {
                             <SelectValue placeholder={t("select_difficulty")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Fácil">{t("easy")}</SelectItem>
-                            <SelectItem value="Médio">{t("medium")}</SelectItem>
-                            <SelectItem value="Difícil">{t("hard")}</SelectItem>
+                            {(workLevels.length ? workLevels : fallbackLevels).map((lvl) => (
+                              <SelectItem key={lvl.id} value={lvl.name}>{lvl.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -373,9 +459,9 @@ const CreateJob = () => {
                             <SelectValue placeholder="Selecionar" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Mobile">Mobile</SelectItem>
-                            <SelectItem value="Web">Web</SelectItem>
-                            <SelectItem value="Social">Social</SelectItem>
+                            {(categoryOptions.length ? categoryOptions : fallbackCategories).map((cat) => (
+                              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -389,35 +475,9 @@ const CreateJob = () => {
                             <SelectValue placeholder="Selecionar" />
                           </SelectTrigger>
                           <SelectContent>
-                            {/* Opções dependentes da categoria */}
-                            {formData.category === 'Mobile' && (
-                              <>
-                                <SelectItem value="App">App</SelectItem>
-                                <SelectItem value="Play Store">Play Store</SelectItem>
-                                <SelectItem value="App Store">App Store</SelectItem>
-                              </>
-                            )}
-                            {formData.category === 'Web' && (
-                              <>
-                                <SelectItem value="Website">Website</SelectItem>
-                                <SelectItem value="Visitar site">Visitar site</SelectItem>
-                                <SelectItem value="Ver video no Youtube">Ver video no Youtube</SelectItem>
-                              </>
-                            )}
-                            {formData.category === 'Social' && (
-                              <>
-                                <SelectItem value="Facebook">Facebook</SelectItem>
-                                <SelectItem value="Instagram">Instagram</SelectItem>
-                                <SelectItem value="Tiktok">Tiktok</SelectItem>
-                                <SelectItem value="Youtube">Youtube</SelectItem>
-                                <SelectItem value="Telegram">Telegram</SelectItem>
-                                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                                <SelectItem value="Pinterest">Pinterest</SelectItem>
-                                <SelectItem value="Threads">Threads</SelectItem>
-                                <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                                <SelectItem value="Outras redes sociais">Outras redes sociais</SelectItem>
-                              </>
-                            )}
+                            {(subcategoryOptions.length ? subcategoryOptions : fallbackSubcategoriesFor(formData.category)).map((sub) => (
+                              <SelectItem key={sub.id} value={sub.name}>{sub.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -658,6 +718,21 @@ const CreateJob = () => {
                           value={formData.location}
                           onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                         />
+                        {locationOptions.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {locationOptions.slice(0, 12).map((loc) => (
+                              <Button
+                                key={loc.id}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setFormData(prev => ({ ...prev, location: loc.name }))}
+                              >
+                                {loc.name}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 

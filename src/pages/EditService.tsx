@@ -25,6 +25,8 @@ export default function EditServicePage() {
   const [price, setPrice] = useState<number>(0);
   const [currency, setCurrency] = useState<string>('KZ');
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [imagesText, setImagesText] = useState<string>('');
+  const [imageCaptionsText, setImageCaptionsText] = useState<string>('');
   const [tagsInput, setTagsInput] = useState<string>('');
   const [category, setCategory] = useState<string>('');
   const [subcategory, setSubcategory] = useState<string>('');
@@ -60,6 +62,8 @@ export default function EditServicePage() {
         setPrice(item.price || 0);
         setCurrency(item.currency || 'KZ');
         setImageUrl(item.imageUrl || '');
+        setImagesText((item.images || []).join('\n'));
+        setImageCaptionsText((item.imageCaptions || []).join('\n'));
         setTagsInput((item.tags || []).join(', '));
         setCategory(item.category || '');
         setSubcategory(item.subcategory || '');
@@ -88,10 +92,15 @@ export default function EditServicePage() {
       const includedItems = includedText.split('\n').map((l) => l.trim()).filter(Boolean);
       const excludedItems = excludedText.split('\n').map((l) => l.trim()).filter(Boolean);
       const clientRequirements = requirementsText.split('\n').map((l) => l.trim()).filter(Boolean);
+      const images = imagesText.split('\n').map((l) => l.trim()).filter(Boolean);
+      const imageCaptions = imageCaptionsText.split('\n').map((l) => l.trim());
+      const alignedCaptions = imageCaptions.slice(0, Math.max(0, images.length));
       await ServicesService.update(id, {
         title,
         description,
-        imageUrl: imageUrl || undefined,
+        imageUrl: images.length === 0 ? (imageUrl || undefined) : undefined,
+        images: images.length > 0 ? images : undefined,
+        imageCaptions: alignedCaptions.length > 0 ? alignedCaptions : undefined,
         tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
         sellerId: currentUser!.uid,
         sellerName: userData?.name || currentUser!.displayName || 'Usuário',
@@ -193,6 +202,19 @@ export default function EditServicePage() {
                   <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
                 </div>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Imagens da Galeria (uma por linha)</label>
+                  <Textarea value={imagesText} onChange={(e) => setImagesText(e.target.value)} placeholder="https://img1.jpg\nhttps://img2.jpg" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Legendas (uma por linha)</label>
+                  <Textarea value={imageCaptionsText} onChange={(e) => setImageCaptionsText(e.target.value)} placeholder="Antes\nDepois" />
+                </div>
+              </div>
+              {(imagesText.split('\n').filter(l => l.trim()).length > 0) && (imageCaptionsText.split('\n').length !== imagesText.split('\n').filter(l => l.trim()).length) && (
+                <p className="text-xs text-amber-600">Aviso: o número de legendas não corresponde ao número de imagens. As extras serão ignoradas.</p>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm font-medium">Categoria</label>

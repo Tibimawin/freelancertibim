@@ -98,14 +98,15 @@ export default function SellerServiceOrdersPage() {
         <div className="space-y-4">
           {filteredOrders.map((o) => {
             const l = listingMap[o.listingId];
+            const imgSrc = (l?.images && l.images.length > 0 ? l.images[0] : l?.imageUrl) || undefined;
             return (
               <Card key={o.id} className="bg-card border border-border shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <div className="w-16 h-16 rounded-md overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
-                        {l?.imageUrl ? (
-                          <img src={l.imageUrl} alt={l?.title || 'Serviço'} className="w-full h-full object-cover" />
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={l?.title || 'Serviço'} className="w-full h-full object-cover" />
                         ) : (
                           <ImageIcon className="w-6 h-6 text-muted-foreground" />
                         )}

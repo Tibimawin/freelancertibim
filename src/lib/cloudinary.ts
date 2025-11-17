@@ -60,3 +60,5 @@ export class CloudinaryService {
     }
   }
 }
+
+export const cloudinaryFetchUrl = (src: string) => `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${encodeURIComponent(src)}`;

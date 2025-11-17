@@ -39,8 +39,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [resetForm, setResetForm] = useState({ email: "" });
   const [unverified, setUnverified] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
-  const [recaptchaSiteKey, setRecaptchaSiteKey] = useState<string | null>(null);
+  
 
   // Password visibility states
   const [showSignInPassword, setShowSignInPassword] = useState(false);
@@ -54,35 +53,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [mfaSending, setMfaSending] = useState<boolean>(false);
   const [mfaRecaptcha, setMfaRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
-  // Load reCAPTCHA site key and script (v2 invisible) for login gate
-  useEffect(() => {
-    (async () => {
-      try {
-        const cfg = await (await import('@/services/admin')).AdminService.getSecurityConfig();
-        const key = cfg.recaptchaSiteKey || '';
-        if (!key) { setRecaptchaSiteKey(null); return; }
-        setRecaptchaSiteKey(key);
-        // Inject script if not present
-        if (!(window as any).grecaptcha) {
-          const s = document.createElement('script');
-          s.src = 'https://www.google.com/recaptcha/api.js?onload=__loginRecaptchaOnload&render=explicit';
-          s.async = true; s.defer = true;
-          (window as any).__loginRecaptchaOnload = () => {
-            try {
-              const id = (window as any).grecaptcha.render('login-recaptcha', { sitekey: key, size: 'invisible', badge: 'bottomright' });
-              setRecaptchaWidgetId(id);
-            } catch {}
-          };
-          document.head.appendChild(s);
-        } else {
-          try {
-            const id = (window as any).grecaptcha.render('login-recaptcha', { sitekey: key, size: 'invisible', badge: 'bottomright' });
-            setRecaptchaWidgetId(id);
-          } catch {}
-        }
-      } catch {}
-    })();
-  }, []);
+  
 
   if (!isOpen) return null;
 
@@ -91,25 +62,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setLoading(true);
 
     try {
-      if (recaptchaSiteKey) {
-        // Ensure reCAPTCHA executed before login
-        await new Promise<void>((resolve, reject) => {
-          try {
-            if (recaptchaWidgetId != null && (window as any).grecaptcha) {
-              (window as any).grecaptcha.execute(recaptchaWidgetId);
-              const tokenCheck = setInterval(() => {
-                try {
-                  const tok = (window as any).grecaptcha.getResponse(recaptchaWidgetId);
-                  if (tok) { clearInterval(tokenCheck); resolve(); }
-                } catch {}
-              }, 200);
-              setTimeout(() => { clearInterval(tokenCheck); reject(new Error('Falha ao validar reCAPTCHA')); }, 6000);
-            } else {
-              resolve(); // fallback
-            }
-          } catch (err) { reject(err as any); }
-        });
-      }
+      
       await signIn(signInForm.email, signInForm.password);
       toast({
         title: t("login_success"),
@@ -359,8 +312,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <TabsContent value="signin" className="mt-4">
                 {/* MFA reCAPTCHA container */}
                 <div id="mfa-recaptcha-container" />
-                {/* Login reCAPTCHA (invisible) */}
-                <div id="login-recaptcha" />
+                
                 {/* Render MFA code form when resolver is present */}
                 {mfaResolver ? (
                   <form onSubmit={handleVerifyMfaCode} className="space-y-4">

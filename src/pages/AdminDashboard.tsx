@@ -22,6 +22,7 @@ import {
 import { Smartphone } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useAdminStatistics, useAdminReports } from '@/hooks/useAdmin'; 
+import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
@@ -231,91 +232,7 @@ const AdminDashboard = () => {
 
           {/* Conteúdo */}
           <section className="lg:col-span-9 space-y-4">
-          {active === 'overview' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                    {t("pending_actions")}
-                  </CardTitle>
-                  <CardDescription>
-                    {t("items_need_attention")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      <span className="text-sm">{t("pending_withdrawals_short")}</span>
-                    </div>
-                    <Badge variant="secondary">
-                      {statsLoading ? '...' : '5'}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileCheck className="h-4 w-4" />
-                      <span className="text-sm">{t("pending_verifications")}</span>
-                    </div>
-                    <Badge variant="secondary">
-                      {statsLoading ? '...' : '12'}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm">{t("suspended_users")}</span>
-                    </div>
-                    <Badge variant="destructive">
-                      {statsLoading ? '...' : statistics?.users.suspended}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm">{t("pending_reports")}</span>
-                    </div>
-                    <Badge variant="destructive">
-                      {pendingReportsCount}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    {t("financial_summary")}
-                  </CardTitle>
-                  <CardDescription>
-                    {t("platform_financial_movement")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("total_deposits")}</span>
-                    <span className="font-medium">
-            {statsLoading ? '...' : `Kz ${statistics?.finances.totalDeposits.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("total_withdrawals")}</span>
-                    <span className="font-medium">
-            {statsLoading ? '...' : `Kz ${statistics?.finances.totalWithdrawals.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">{t("platform_fees")}</span>
-                    <span className="font-medium text-green-600">
-            {statsLoading ? '...' : `Kz ${statistics?.finances.platformFees.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {active === 'overview' && (<AdminAnalytics />)}
           {active === 'market' && (
             <div className="space-y-6">
               <AdminMarketManager />

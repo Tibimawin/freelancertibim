@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,8 @@ import { useAdmin } from '@/contexts/AdminContext';
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateJob = (location.state as { job?: Partial<Job> } | null)?.job || null;
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
@@ -45,9 +47,48 @@ const JobDetails = () => {
   const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
+    const primeFromStateOrCache = () => {
+      if (stateJob) {
+        const normalizedJob = {
+          detailedInstructions: [],
+          proofRequirements: [],
+          rating: 0,
+          ratingCount: 0,
+          applicantCount: 0,
+          status: 'active',
+          ...stateJob,
+        } as Job;
+        setJob(normalizedJob);
+        setEditTitle(normalizedJob.title || '');
+        setEditDescription(normalizedJob.description || '');
+        setEditLocation(normalizedJob.location || '');
+        setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
+      } else if (id) {
+        try {
+          const raw = sessionStorage.getItem(`job_preview_${id}`);
+          if (raw) {
+            const cached = JSON.parse(raw);
+            const normalizedJob = {
+              detailedInstructions: [],
+              proofRequirements: [],
+              rating: 0,
+              ratingCount: 0,
+              applicantCount: 0,
+              status: 'active',
+              ...cached,
+            } as Job;
+            setJob(normalizedJob);
+            setEditTitle(normalizedJob.title || '');
+            setEditDescription(normalizedJob.description || '');
+            setEditLocation(normalizedJob.location || '');
+            setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
+          }
+        } catch {}
+      }
+    };
+
     const fetchJob = async () => {
-      if (!id) return;
-      
+      if (!id) { setLoading(false); return; }
       try {
         const jobData = await JobService.getJobById(id);
         if (jobData) {
@@ -61,35 +102,30 @@ const JobDetails = () => {
           setEditDescription(normalizedJob.description || '');
           setEditLocation(normalizedJob.location || '');
           setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
-          
+
           const applications = await ApplicationService.getApplicationsForJob(id);
           setActualApplicantCount(applications.length);
-          // Encontrar aplicação do usuário logado para gerir reenvio de provas
           if (currentUser) {
             const mine = applications.find(app => app.testerId === currentUser.uid) || null;
             setMyApplication(mine);
           }
 
-          // Initialize proofs state based on requirements
           const initialProofs: { [key: string]: { text: string; file: null; comment: string } } = {};
           normalizedJob.proofRequirements.forEach(req => {
             initialProofs[req.id] = { text: '', file: null, comment: '' };
           });
           setProofs(initialProofs);
-
-        } else {
-          navigate('/');
         }
       } catch (error) {
         console.error('Error fetching job:', error);
-        navigate('/');
       } finally {
         setLoading(false);
       }
     };
 
+    primeFromStateOrCache();
     fetchJob();
-  }, [id, navigate]);
+  }, [id, stateJob, currentUser]);
 
   if (loading) {
     return (

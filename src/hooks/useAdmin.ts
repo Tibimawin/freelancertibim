@@ -294,3 +294,115 @@ export const useAdminStatistics = () => {
     refetch: fetchStatistics
   };
 };
+
+export const useAdminAnalytics = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  const fetchAnalytics = async (opts?: { year?: number }) => {
+    const year = opts?.year || new Date().getFullYear();
+    try {
+      setLoading(true);
+      // Lazy import services to avoid circular deps
+      const { collection, getDocs, query, orderBy } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      const months = Array.from({ length: 12 }, (_, i) => i); // 0-11
+
+      const ordersSnap = await getDocs(query(collection(db, 'service_orders'), orderBy('createdAt', 'desc')));
+      const transactionsSnap = await getDocs(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')));
+      const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+
+      const sumByMonth = (items: any[], dateGetter: (x: any) => Date, valueGetter?: (x: any) => number) => {
+        const arr = months.map((m) => ({ month: m, value: 0 }));
+        for (const d of items) {
+          const dtRaw = dateGetter(d);
+          const dt = (dtRaw as any)?.toDate ? dtRaw.toDate() : dtRaw;
+          if (!dt || dt.getFullYear() !== year) continue;
+          const idx = dt.getMonth();
+          arr[idx].value += valueGetter ? Number(valueGetter(d) || 0) : 1;
+        }
+        return arr;
+      };
+
+      const orders = ordersSnap.docs.map((doc) => doc.data());
+      const transactions = transactionsSnap.docs.map((doc) => doc.data());
+      const users = usersSnap.docs.map((doc) => doc.data());
+
+      const salesDynamics = sumByMonth(orders, (o) => o.createdAt || new Date(), () => 1).map((row, i) => ({
+        name: new Date(year, i, 1).toLocaleString('pt-BR', { month: 'short' }),
+        orders: row.value,
+      }));
+
+      const revenueMonthly = sumByMonth(transactions.filter(t => t.type === 'deposit' && t.status === 'completed'), (t) => t.createdAt || new Date(), (t) => t.amount).map((row, i) => ({
+        name: new Date(year, i, 1).toLocaleString('pt-BR', { month: 'short' }),
+        revenue: row.value,
+      }));
+
+      const userActivityMonthly = sumByMonth(transactions, (t) => t.createdAt || new Date(), () => 1).map((row, i) => ({
+        name: new Date(year, i, 1).toLocaleString('pt-BR', { month: 'short' }),
+        activity: row.value,
+      }));
+
+      const ordersCount = orders.length;
+      const approvedCount = orders.filter((o: any) => o.status === 'delivered' || o.buyerConfirmedDelivery).length;
+      const usersCount = users.length;
+      const subscriptionsCount = users.filter((u: any) => u.verificationStatus === 'approved').length;
+
+      const paidInvoices = transactions.filter((t: any) => t.type === 'deposit' && t.status === 'completed').reduce((s, t) => s + (t.amount || 0), 0);
+      const fundsReceived = transactions.filter((t: any) => t.type === 'payout' && t.status === 'completed').reduce((s, t) => s + (t.amount || 0), 0);
+
+      setData({
+        kpis: {
+          orders: ordersCount,
+          approved: approvedCount,
+          users: usersCount,
+          subscriptions: subscriptionsCount,
+          monthTotal: salesDynamics.reduce((s, r) => s + r.orders, 0),
+          revenue: revenueMonthly.reduce((s, r) => s + r.revenue, 0),
+        },
+        charts: {
+          salesDynamics,
+          userActivityMonthly,
+          revenueMonthly,
+          pies: {
+            users: [
+              { name: 'Verificados', value: subscriptionsCount },
+              { name: 'Não verificados', value: Math.max(0, usersCount - subscriptionsCount) },
+            ],
+            subscriptions: [
+              { name: 'Pago', value: paidInvoices },
+              { name: 'Payout', value: fundsReceived },
+            ],
+          },
+        },
+        finances: {
+          paidInvoices,
+          fundsReceived,
+        },
+        table: {
+          customerOrders: orders.slice(0, 6).map((o: any) => ({
+            profile: o.buyerName || o.buyerId,
+            address: o.buyerCity || o.buyerAddress || '—',
+            date: ((o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt) || new Date()).toLocaleDateString('pt-BR'),
+            status: o.status || 'pending',
+            price: Number(o.amount || 0),
+          })),
+        },
+      });
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching admin analytics:', err);
+      setError('Erro ao carregar analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  return { data, loading, error, refetch: fetchAnalytics };
+};

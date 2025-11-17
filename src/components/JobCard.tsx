@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, MapPin, Smartphone, Monitor, Globe, DollarSign } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import JobApplyButton from "./JobApplyButton";
 import { useTranslation } from 'react-i18next';
 import { Progress } from "@/components/ui/progress";
@@ -44,8 +44,37 @@ const JobCard = ({
   const isOwnJob = currentUser && posterId === currentUser.uid;
   const { t } = useTranslation();
 
+  const preview = {
+    id,
+    title,
+    description,
+    posterId,
+    posterName: postedBy,
+    bounty,
+    platform,
+    difficulty,
+    timeEstimate,
+    location,
+    applicantCount: applicants,
+    maxApplicants,
+    status: status || 'active',
+    rating,
+    ratingCount: undefined,
+    detailedInstructions: [],
+    proofRequirements: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const storePreview = () => {
+    try {
+      sessionStorage.setItem(`job_preview_${id}`, JSON.stringify(preview));
+    } catch {}
+  };
+
   const handleCardClick = () => {
-    navigate(`/job/${id}`);
+    storePreview();
+    navigate(`/job/${id}`, { state: { job: preview } });
   };
 
   const getPlatformIcon = () => {
@@ -161,11 +190,18 @@ const JobCard = ({
               {t("applications_full")}
             </Badge>
           ) : (
-            <JobApplyButton jobId={id} posterId={posterId} />
+            <div onClick={storePreview}>
+              <JobApplyButton jobId={id} posterId={posterId} />
+            </div>
           )}
-          <div className="text-sm text-primary hover:text-primary-hover transition-colors">
+          <Link
+            to={`/job/${id}`}
+            state={{ job: preview }}
+            onClick={storePreview}
+            className="text-sm text-primary hover:text-primary-hover transition-colors"
+          >
             {t("view_details")} →
-          </div>
+          </Link>
         </div>
       </div>
     </div>

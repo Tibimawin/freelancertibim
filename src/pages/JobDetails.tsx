@@ -17,6 +17,9 @@ import JobComments from '@/components/JobComments';
 import { CloudinaryService } from '@/lib/cloudinary';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { useAdmin } from '@/contexts/AdminContext';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +35,14 @@ const JobDetails = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { isAdmin } = useAdmin();
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -46,6 +57,10 @@ const JobDetails = () => {
             proofRequirements: jobData.proofRequirements || [],
           };
           setJob(normalizedJob);
+          setEditTitle(normalizedJob.title || '');
+          setEditDescription(normalizedJob.description || '');
+          setEditLocation(normalizedJob.location || '');
+          setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
           
           const applications = await ApplicationService.getApplicationsForJob(id);
           setActualApplicantCount(applications.length);
@@ -294,6 +309,48 @@ const JobDetails = () => {
   };
 
   const isContractorMode = userData?.currentMode === 'poster';
+  const isOwner = !!(currentUser && job.posterId === currentUser.uid);
+  const canDelete = Boolean(
+    job && (
+      isAdmin || (
+        isOwner && (
+          job.status === 'completed' || (typeof job.maxApplicants === 'number' && actualApplicantCount >= (job.maxApplicants || 0))
+        )
+      )
+    )
+  );
+
+  const handleSaveEdit = async () => {
+    if (!id) return;
+    setSavingEdit(true);
+    try {
+      await JobService.updateJob(id, {
+        title: editTitle || job?.title,
+        description: editDescription || job?.description,
+        location: editLocation || undefined,
+        dueDate: editDueDate ? new Date(editDueDate) : undefined,
+      } as any);
+      toast({ title: 'Anúncio atualizado', description: 'As alterações foram salvas.' });
+      setEditOpen(false);
+      const refreshed = await JobService.getJobById(id);
+      if (refreshed) setJob(refreshed);
+    } catch (e: any) {
+      toast({ title: 'Erro ao atualizar', description: e?.message || 'Falha ao salvar alterações.', variant: 'destructive' });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (!id) return;
+    try {
+      await JobService.deleteJob(id);
+      toast({ title: 'Anúncio removido', description: 'Seu anúncio foi removido.' });
+      navigate('/');
+    } catch (e: any) {
+      toast({ title: 'Não foi possível remover', description: e?.message || 'Verifique se o anúncio já está concluído ou contate o admin.', variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -350,8 +407,14 @@ const JobDetails = () => {
                 </Badge>
               </div>
               <div className="text-right">
-        <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
+                <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
                 <p className="text-sm text-muted-foreground">{t("applicants_count", { count: actualApplicantCount })}</p>
+                {(isOwner || isAdmin) && (
+                  <div className="mt-3 flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Editar</Button>
+                    <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} disabled={!canDelete}>Eliminar</Button>
+                  </div>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -362,6 +425,23 @@ const JobDetails = () => {
               <h3 className="font-semibold mb-2 text-foreground">{t("detailed_description")}</h3>
               <p className="text-muted-foreground leading-relaxed">{job.description}</p>
             </div>
+
+            {/* Applicants Progress */}
+            {typeof job.maxApplicants === 'number' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{t("applicants_count", { count: actualApplicantCount })}</span>
+                  <span>{t("max_applicants")}: {job.maxApplicants}</span>
+                </div>
+                <Progress
+                  value={Math.min(100, Math.round(((actualApplicantCount || 0) / job.maxApplicants) * 100))}
+                  className="h-2"
+                />
+                {actualApplicantCount >= job.maxApplicants && (
+                  <p className="text-sm text-destructive">{t("applications_full")}</p>
+                )}
+              </div>
+            )}
 
             {/* Detailed Instructions */}
             <div>
@@ -628,6 +708,54 @@ const JobDetails = () => {
           </Card>
         )}
       </div>
+      {/* Edit Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Anúncio</DialogTitle>
+            <DialogDescription>Atualize informações básicas do anúncio.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Título</label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Descrição</label>
+              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Localização</label>
+                <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Data limite</label>
+                <Input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit}>{savingEdit ? 'Salvando...' : 'Salvar'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete confirm */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. {isAdmin ? 'Como administrador, você pode remover imediatamente.' : 'Você só pode remover anúncios concluídos com todas as vagas preenchidas.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteJob} disabled={!canDelete}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

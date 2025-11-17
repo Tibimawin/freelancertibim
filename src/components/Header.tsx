@@ -32,9 +32,10 @@ const Header = () => {
   const dmUnreadCount = useMemo(() => notifications.filter((n) => !n.read && n.type === 'message_received').length, [notifications]);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  const contractorBalance = (userData?.posterWallet?.balance || 0) + (userData?.posterWallet?.bonusBalance || 0);
   const currentBalance = userData?.currentMode === 'tester'
     ? (userData?.testerWallet?.availableBalance || 0)
-    : (userData?.posterWallet?.balance || 0);
+    : contractorBalance;
 
   const handleSignOut = async () => {
     try {
@@ -131,13 +132,19 @@ const Header = () => {
   const renderUserMenu = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8 border border-primary/50">
-            <AvatarImage src={userData?.avatarUrl} alt={userData?.name} />
-            <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-              {userData?.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" className="relative h-8 rounded-full px-2">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8 border border-primary/50">
+              <AvatarImage src={userData?.avatarUrl} alt={userData?.name} />
+              <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                {userData?.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium max-w-[120px] truncate hidden md:inline">{userData?.name}</span>
+            <span className="inline-flex items-center rounded bg-green-500 text-white text-xs font-semibold px-2 py-0.5">
+              Kz {currentBalance.toFixed(2)}
+            </span>
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
@@ -154,7 +161,7 @@ const Header = () => {
                   <div>{t("pending_balance")}: {(userData.testerWallet?.pendingBalance || 0).toFixed(2)} Kz</div>
                 </>
               ) : (
-                <div>{t("current_balance")}: {(userData?.posterWallet?.balance || 0).toFixed(2)} Kz</div>
+                  <div>{t("current_balance")}: {contractorBalance.toFixed(2)} Kz</div>
               )}
             </div>
           </div>
@@ -239,7 +246,7 @@ const Header = () => {
                       <p className="font-medium">{userData.name}</p>
                       <p className="text-xs text-muted-foreground">{userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}</p>
                     </div>
-                    <div className="text-sm font-semibold">{currentBalance.toFixed(2)} Kz</div>
+                    <div className="inline-flex items-center rounded bg-green-500 text-white text-xs font-semibold px-2 py-0.5">Kz {currentBalance.toFixed(2)}</div>
                   </div>
                   <ModeToggle />
                 </div>
@@ -270,6 +277,16 @@ const Header = () => {
                 <Link to="/referral" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <Users className="h-4 w-4" />
                   <span>{t("referral_program")}</span>
+                </Link>
+
+                {/* Serviços */}
+                <Link to="/services" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <Store className="h-4 w-4" />
+                  <span>Serviços</span>
+                </Link>
+                <Link to="/services/pedidos" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <History className="h-4 w-4" />
+                  <span>Meus Serviços</span>
                 </Link>
 
                 {userData.currentMode === 'poster' && (
@@ -343,6 +360,13 @@ const Header = () => {
               </Link>
               <Link to="/market/compras" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                 Minhas Compras
+              </Link>
+              <Link to="/services" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <Store className="h-7 w-7" />
+                <span className="text-sm font-medium">Serviços</span>
+              </Link>
+              <Link to="/services/pedidos" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                Meus Serviços
               </Link>
             </div>
           </div>

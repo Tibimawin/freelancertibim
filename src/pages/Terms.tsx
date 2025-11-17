@@ -38,7 +38,7 @@ const Terms = () => {
             <h2>Privacidade</h2>
             <p>
               Nossa Política de Privacidade, que pode ser encontrada em
-              {' '}<a href="https://sproutgigs.com/privacy.php" target="_blank" rel="noreferrer" className="text-primary hover:underline">sproutgigs.com/privacy.php</a>,
+              {' '}<a href="https://www.angotarefas.online/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">https://www.angotarefas.online/privacy</a>,
               também rege o uso de nossos Serviços. Ela explica como coletamos, usamos e compartilhamos suas informações.
               Você só pode usar a conta para transações descritas neste Contrato. Reservamo-nos o direito de modificar
               ou cancelar nossos Serviços a qualquer momento, sem aviso prévio, e de implementar controles de monitoramento

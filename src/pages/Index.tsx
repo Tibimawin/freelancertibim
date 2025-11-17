@@ -16,16 +16,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { LevelService } from "@/services/levelService";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useSettings } from "@/hooks/useSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { TaxonomyService, NamedItem, SubcategoryItem, PaymentRangeItem } from "@/services/taxonomyService";
+import ServicesPage from "@/pages/Services";
 
 const Index = () => {
   const { userData, currentUser, switchUserMode } = useAuth();
   const { jobs, loading: jobsLoading } = useJobs({ limitCount: 10 });
   const navigate = useNavigate();
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'micro' | 'surveys'>('micro');
+  const [activeSection, setActiveSection] = useState<'micro' | 'services'>('micro');
   const [workLevel, setWorkLevel] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [subcategory, setSubcategory] = useState<string | null>(null);
@@ -44,10 +47,64 @@ const Index = () => {
   const [userLevelIndex, setUserLevelIndex] = useState<0 | 1 | 2>(0);
   const { settings, updateSettings } = useSettings();
   const [showTips, setShowTips] = useState<boolean>(false);
+  const [showTutorial, setShowTutorial] = useState<boolean>(false);
+  const [tutorialStep, setTutorialStep] = useState<number>(1);
+  const TOTAL_STEPS = 5;
+  const [highlightRect, setHighlightRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     setShowTips(settings?.showOnboardingTips !== false);
   }, [settings?.showOnboardingTips]);
+
+  useEffect(() => {
+    if (currentUser) {
+      setShowTutorial(settings?.showTutorial !== false);
+    } else {
+      try {
+        const dismissed = localStorage.getItem('tutorialDismissed') === 'true';
+        setShowTutorial(!dismissed);
+      } catch {}
+    }
+  }, [currentUser, settings?.showTutorial]);
+
+  useEffect(() => {
+    if (!showTutorial) return;
+    if (tutorialStep === 2 && activeSection !== 'services') setActiveSection('services');
+    if (tutorialStep === 5 && activeSection !== 'micro') setActiveSection('micro');
+  }, [showTutorial, tutorialStep, activeSection]);
+
+  useEffect(() => {
+    if (!showTutorial) return;
+    const selector = tutorialStep === 1
+      ? '[data-tour="toggle-services"]'
+      : tutorialStep === 2
+      ? '[data-tour="create-service"]'
+      : tutorialStep === 3
+      ? '#tour-wallet-card'
+      : tutorialStep === 4
+      ? '[aria-label="Fale com a gente agora"]'
+      : '[data-tour="toggle-micro"]';
+    const computeRect = () => {
+      const el = document.querySelector(selector) as HTMLElement | null;
+      if (el) {
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+        const r = el.getBoundingClientRect();
+        const top = Math.max(8, r.top);
+        const left = Math.max(8, r.left);
+        setHighlightRect({ top, left, width: r.width, height: r.height });
+      } else {
+        setHighlightRect(null);
+      }
+    };
+    computeRect();
+    const onResize = () => computeRect();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onResize, { passive: true } as any);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onResize as any);
+    };
+  }, [showTutorial, tutorialStep]);
 
   useEffect(() => {
     const computeLevel = async () => {
@@ -140,6 +197,233 @@ const Index = () => {
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        <Dialog open={false} onOpenChange={setShowTutorial}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Tutorial Passo a Passo</DialogTitle>
+              <DialogDescription>
+                Guia rápido das funcionalidades principais.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs">Passo {tutorialStep} de {TOTAL_STEPS}</div>
+                  <div className="text-xs">{Math.round((tutorialStep / TOTAL_STEPS) * 100)}%</div>
+                </div>
+                <Progress value={(tutorialStep / TOTAL_STEPS) * 100} />
+              </div>
+
+              {tutorialStep === 1 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Seções principais</h4>
+                  <ul className="list-disc list-inside text-foreground">
+                    <li>Micro Empregos: tarefas rápidas criadas por contratantes.</li>
+                    <li>Serviços: ofertas de freelancers para contratação direta.</li>
+                  </ul>
+                  <div className="flex gap-2 mt-2">
+                    <Button variant="outline" onClick={() => setActiveSection('micro')}>Ver Micro Empregos</Button>
+                    <Button onClick={() => setActiveSection('services')} className="glow-effect">Ver Serviços</Button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 2 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Serviços</h4>
+                  <p>Crie sua oferta de serviço e seja contratado diretamente.</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => navigate('/services')}>Explorar Serviços</Button>
+                    <Button onClick={() => navigate('/services/create')} className="glow-effect">Criar Serviço</Button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 3 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Modos de conta</h4>
+                  <ul className="list-disc list-inside text-foreground">
+                    <li>Freelancer: aplica em tarefas e recebe pagamentos.</li>
+                    <li>Contratante: cria tarefas e compra serviços.</li>
+                  </ul>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => switchUserMode('tester')}>Mudar para Freelancer</Button>
+                    <Button onClick={() => switchUserMode('poster')} className="glow-effect">Mudar para Contratante</Button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 4 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Carteira e pagamentos</h4>
+                  <ul className="list-disc list-inside text-foreground">
+                    <li>Escrow: pagamento fica pendente até aprovação.</li>
+                    <li>Saldo disponível e pendente visíveis no Dashboard.</li>
+                  </ul>
+                  <div className="flex gap-2">
+                    <Button onClick={() => navigate('/dashboard')} className="glow-effect">Abrir Dashboard</Button>
+                  </div>
+                </div>
+              )}
+
+              {tutorialStep === 5 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Suporte</h4>
+                  <ul className="list-disc list-inside text-foreground">
+                    <li>Suporte ao vivo no canto inferior direito.</li>
+                    <li>Atendimento via WhatsApp disponível.</li>
+                  </ul>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => window.open('https://wa.me/244998984504', '_blank')}>Abrir WhatsApp</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <div className="flex gap-2 w-full justify-between">
+                <div className="flex gap-2">
+                  {tutorialStep > 1 && (
+                    <Button variant="outline" onClick={() => setTutorialStep((s) => Math.max(1, s - 1))}>Anterior</Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowTutorial(false)}>Fechar</Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        if (currentUser) {
+                          await updateSettings({ showTutorial: false });
+                        } else {
+                          localStorage.setItem('tutorialDismissed', 'true');
+                        }
+                      } catch {}
+                      setShowTutorial(false);
+                    }}
+                  >
+                    Não mostrar novamente
+                  </Button>
+                  {tutorialStep < TOTAL_STEPS ? (
+                    <Button className="glow-effect" onClick={() => setTutorialStep((s) => Math.min(TOTAL_STEPS, s + 1))}>Próximo</Button>
+                  ) : (
+                    <Button className="glow-effect" onClick={() => setShowTutorial(false)}>Concluir</Button>
+                  )}
+                </div>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {showTutorial && (
+          <div className="fixed inset-0 z-50">
+            {highlightRect && (
+              <div
+                className="fixed border-2 border-primary rounded-lg animate-pulse"
+                style={{
+                  top: highlightRect.top,
+                  left: highlightRect.left,
+                  width: highlightRect.width,
+                  height: highlightRect.height,
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                }}
+              />
+            )}
+            <div
+              className="fixed bg-card border border-border rounded-lg shadow-lg p-4 max-w-sm"
+              style={{
+                top: (highlightRect
+                  ? (highlightRect.top + highlightRect.height + 12 + 220 > window.innerHeight
+                      ? Math.max(12, highlightRect.top - 220)
+                      : highlightRect.top + highlightRect.height + 12)
+                  : 24),
+                left: (highlightRect ? Math.min(highlightRect.left, window.innerWidth - 360) : 24),
+                zIndex: 1001,
+              }}
+            >
+              <div style={{ position: 'absolute', top: -8, left: 24, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid var(--card)' }} />
+              <div className="text-xs mb-2">Passo {tutorialStep} de {TOTAL_STEPS}</div>
+              <Progress value={(tutorialStep / TOTAL_STEPS) * 100} />
+              <div className="mt-3 space-y-2 text-sm">
+                {tutorialStep === 1 && (
+                  <div>
+                    <div className="font-semibold">Seções principais</div>
+                    <div className="text-muted-foreground">Alternar entre Micro Empregos e Serviços.</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" onClick={() => setActiveSection('micro')}>Ver Micro Empregos</Button>
+                      <Button onClick={() => setActiveSection('services')} className="glow-effect">Ver Serviços</Button>
+                    </div>
+                  </div>
+                )}
+                {tutorialStep === 2 && (
+                  <div>
+                    <div className="font-semibold">Serviços</div>
+                    <div className="text-muted-foreground">Crie sua oferta de serviço.</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" onClick={() => navigate('/services')}>Explorar Serviços</Button>
+                      <Button onClick={() => navigate('/services/create')} className="glow-effect">Criar Serviço</Button>
+                    </div>
+                  </div>
+                )}
+                {tutorialStep === 3 && (
+                  <div>
+                    <div className="font-semibold">Carteira</div>
+                    <div className="text-muted-foreground">Veja saldo disponível e pendente.</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button onClick={() => navigate('/dashboard')} className="glow-effect">Abrir Dashboard</Button>
+                    </div>
+                  </div>
+                )}
+                {tutorialStep === 4 && (
+                  <div>
+                    <div className="font-semibold">Suporte ao vivo</div>
+                    <div className="text-muted-foreground">Converse com a equipe ou use WhatsApp.</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" onClick={() => window.open('https://wa.me/244998984504', '_blank')}>Abrir WhatsApp</Button>
+                    </div>
+                  </div>
+                )}
+                {tutorialStep === 5 && (
+                  <div>
+                    <div className="font-semibold">Micro Empregos</div>
+                    <div className="text-muted-foreground">Tarefas rápidas criadas por contratantes.</div>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" onClick={() => setActiveSection('micro')}>Ver Micro Empregos</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <div className="flex gap-2">
+                  {tutorialStep > 1 && (
+                    <Button variant="outline" onClick={() => setTutorialStep((s) => Math.max(1, s - 1))}>Anterior</Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowTutorial(false)}>Fechar</Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        if (currentUser) {
+                          await updateSettings({ showTutorial: false });
+                        } else {
+                          localStorage.setItem('tutorialDismissed', 'true');
+                        }
+                      } catch {}
+                      setShowTutorial(false);
+                    }}
+                  >
+                    Não mostrar novamente
+                  </Button>
+                  {tutorialStep < TOTAL_STEPS ? (
+                    <Button className="glow-effect" onClick={() => setTutorialStep((s) => Math.min(TOTAL_STEPS, s + 1))}>Próximo</Button>
+                  ) : (
+                    <Button className="glow-effect" onClick={() => setShowTutorial(false)}>Concluir</Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Aviso: modo contratante não permite fazer tarefas */}
         {userData?.currentMode === 'poster' && (
           <div className="mb-6">
@@ -163,7 +447,7 @@ const Index = () => {
           {/* Sidebar (Mover para o topo em mobile: order-1) */}
           <div className="lg:col-span-1 space-y-6 order-1 lg:order-2">
             {/* Wallet Card */}
-            <div className="hidden md:block">
+            <div className="hidden md:block" id="tour-wallet-card">
               <WalletCard />
             </div>
 
@@ -257,52 +541,67 @@ const Index = () => {
                   <button
                     className={`px-4 py-2 rounded-md font-medium ${activeSection === 'micro' ? 'bg-warning/20 text-warning border-b-2 border-warning' : 'text-foreground'}`}
                     onClick={() => setActiveSection('micro')}
+                    data-tour="toggle-micro"
                   >
                     Micro Empregos
                   </button>
                   <button
-                    className={`px-4 py-2 rounded-md font-medium ${activeSection === 'surveys' ? 'bg-warning/20 text-warning border-b-2 border-warning' : 'text-foreground'}`}
-                    onClick={() => setActiveSection('surveys')}
+                    className={`px-4 py-2 rounded-md font-medium ${activeSection === 'services' ? 'bg-primary/15 text-primary border-b-2 border-primary' : 'text-foreground'}`}
+                    onClick={() => setActiveSection('services')}
+                    data-tour="toggle-services"
                   >
-                    Pesquisas pagas
+                    Serviços
                   </button>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => window.location.reload()}>
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  {activeSection === 'micro' && (
+                    <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => window.location.reload()}>
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-pressed={viewMode === 'grid'}
-                    onClick={() => setViewMode('grid')}
-                    className={viewMode === 'grid' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-pressed={viewMode === 'panels'}
-                    onClick={() => setViewMode('panels')}
-                    className={viewMode === 'panels' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
-                  >
-                    <PanelsTopLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-pressed={viewMode === 'list'}
-                    onClick={() => setViewMode('list')}
-                    className={viewMode === 'list' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+                  {activeSection === 'micro' && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-pressed={viewMode === 'grid'}
+                        onClick={() => setViewMode('grid')}
+                        className={viewMode === 'grid' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-pressed={viewMode === 'panels'}
+                        onClick={() => setViewMode('panels')}
+                        className={viewMode === 'panels' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                      >
+                        <PanelsTopLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-pressed={viewMode === 'list'}
+                        onClick={() => setViewMode('list')}
+                        className={viewMode === 'list' ? 'text-primary bg-muted/30' : 'text-muted-foreground'}
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  {activeSection === 'services' && (
+                    <Button className="glow-effect" onClick={() => navigate('/services/create')} data-tour="create-service">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Serviço
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Linha de filtros conforme imagem */}
+            {/* Linha de filtros (apenas Micro Empregos) */}
+            {activeSection === 'micro' && (
             <div className="mb-8 rounded-md bg-muted/30 border border-border p-3">
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
@@ -417,46 +716,53 @@ const Index = () => {
                 </div>
               </div>
             </div>
+            )}
 
-            {/* Lista de tarefas */}
-            <div className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                : viewMode === 'panels'
-                ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
-                : 'space-y-6'
-            }>
-              {jobsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredJobs.length > 0 ? (
-                filteredJobs.map((job) => (
-                  <JobCard 
-                    key={job.id}
-                    {...job}
-                    applicants={job.applicantCount}
-                    postedBy={job.posterName}
-                    posterId={job.posterId}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    {difficultyFilter 
-                      ? t("no_tasks_for_difficulty", { difficulty: difficultyFilter })
-                      : t("no_tasks_found")}
-                  </p>
-                </div>
-              )}
-            </div>
+            {activeSection === 'micro' ? (
+              <div className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                  : viewMode === 'panels'
+                  ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
+                  : 'space-y-6'
+              }>
+                {jobsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredJobs.length > 0 ? (
+                  filteredJobs.map((job) => (
+                    <JobCard 
+                      key={job.id}
+                      {...job}
+                      applicants={job.applicantCount}
+                      postedBy={job.posterName}
+                      posterId={job.posterId}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      {difficultyFilter 
+                        ? t("no_tasks_for_difficulty", { difficulty: difficultyFilter })
+                        : t("no_tasks_found")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="mt-4">
+                <ServicesPage hideHeader />
+              </div>
+            )}
 
-            {/* Load More */}
-            <div className="text-center mt-8">
-              <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10">
-                {t("load_more_tasks")}
-              </Button>
-            </div>
+            {activeSection === 'micro' && (
+              <div className="text-center mt-8">
+                <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10">
+                  {t("load_more_tasks")}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 

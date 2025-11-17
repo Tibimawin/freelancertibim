@@ -3,9 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Users, DollarSign, Clock } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <div className="relative overflow-hidden bg-nebula-bg min-h-[70vh] flex items-center justify-center">
@@ -52,13 +54,19 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-scale-in">
-            <Button variant="hero" size="lg" className="text-lg px-8 py-4 glow-effect">
+            <Button
+              variant="hero"
+              size="lg"
+              className="text-lg px-8 py-4 glow-effect"
+              onClick={() => navigate('/login')}
+            >
               {t("start_working_now")}
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-4 bg-transparent border-electric-purple/50 text-electric-purple hover:bg-electric-purple/10 backdrop-blur-sm"
+              onClick={() => navigate('/create-job')}
             >
               {t("post_task")}
             </Button>

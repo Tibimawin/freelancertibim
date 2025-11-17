@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import JobApplyButton from "./JobApplyButton";
 import { useTranslation } from 'react-i18next';
+import { Progress } from "@/components/ui/progress";
 
 interface JobCardProps {
   id: string;
@@ -18,6 +19,8 @@ interface JobCardProps {
   postedBy: string;
   applicants: number;
   posterId: string;
+  maxApplicants?: number;
+  status?: 'active' | 'completed' | 'paused' | 'cancelled' | string;
 }
 
 const JobCard = ({ 
@@ -32,7 +35,9 @@ const JobCard = ({
   location, 
   postedBy,
   applicants,
-  posterId
+  posterId,
+  maxApplicants,
+  status
 }: JobCardProps) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -68,6 +73,11 @@ const JobCard = ({
     }
   };
 
+  const isFull = typeof maxApplicants === 'number' && (applicants || 0) >= maxApplicants;
+  const progressValue = typeof maxApplicants === 'number' && maxApplicants > 0
+    ? Math.min(100, Math.round(((applicants || 0) / maxApplicants) * 100))
+    : undefined;
+
   return (
     <div 
       className="card-hover group rounded-xl bg-card p-6 shadow-md cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border border-border" 
@@ -94,6 +104,19 @@ const JobCard = ({
       <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
         {description}
       </p>
+
+      {typeof maxApplicants === 'number' && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>{t("applicants_count", { count: applicants || 0 })}</span>
+            <span>{t("max_applicants")}: {maxApplicants}</span>
+          </div>
+          <Progress value={progressValue} className="h-2" />
+          {isFull && (
+            <div className="mt-1 text-xs font-medium text-destructive">{t("applications_full")}</div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
         <div className="flex items-center space-x-4">
@@ -133,7 +156,13 @@ const JobCard = ({
         </div>
         
         <div className="flex items-center gap-2">
-          <JobApplyButton jobId={id} posterId={posterId} />
+          {isFull || status === 'completed' ? (
+            <Badge variant="secondary" className="bg-muted/40 text-muted-foreground border-border">
+              {t("applications_full")}
+            </Badge>
+          ) : (
+            <JobApplyButton jobId={id} posterId={posterId} />
+          )}
           <div className="text-sm text-primary hover:text-primary-hover transition-colors">
             {t("view_details")} →
           </div>

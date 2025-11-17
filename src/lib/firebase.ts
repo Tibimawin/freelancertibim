@@ -7,14 +7,18 @@ import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAdvDm7ayEA5WQbcXadapXgJAcDPvMt0ZM",
-  authDomain: "freelincer-a4e3f.firebaseapp.com",
-  projectId: "freelincer-a4e3f",
-  storageBucket: "freelincer-a4e3f.firebasestorage.app",
-  messagingSenderId: "58211617758",
-  appId: "1:58211617758:web:5603c1c863b046d258ab4f",
-  measurementId: "G-WTCHMPNJHX"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string,
 };
+
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
+  console.error('Configuração do Firebase ausente. Defina variáveis VITE_FIREBASE_* no seu .env.local.');
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

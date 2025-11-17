@@ -123,6 +123,7 @@ export class AuthService {
         if (enforceLimit && wouldAdd > maxUidsPerDevice) {
           const err: any = new Error('Limite de contas por dispositivo atingido. Entre em contato com o suporte.');
           err.code = 'device_limit_exceeded';
+          try { await firebaseSignOut(auth); } catch {}
           throw err;
         }
         if (monitorOnly && wouldAdd >= alertThreshold) {
@@ -235,6 +236,7 @@ export class AuthService {
         if (enforceLimit && wouldAdd > maxUidsPerDevice) {
           const err: any = new Error('Limite de contas por dispositivo atingido. Entre em contato com o suporte.');
           err.code = 'device_limit_exceeded';
+          try { await firebaseSignOut(auth); } catch {}
           throw err;
         }
         if (monitorOnly && wouldAdd >= alertThreshold) {

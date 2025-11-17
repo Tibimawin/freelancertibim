@@ -2,10 +2,20 @@ import { Link } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Mail, Rss, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AdminService } from '@/services/admin';
 
 const Footer = () => {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  const [links, setLinks] = useState<{ email?: string; rss?: string; facebook?: string; twitter?: string; instagram?: string; linkedin?: string }>({});
+
+  useEffect(() => {
+    (async () => {
+      const rs = await AdminService.getSocialLinks();
+      setLinks(rs);
+    })();
+  }, []);
 
   const handleToggle = (checked: boolean) => {
     setTheme(checked ? 'dark' : 'light');
@@ -42,12 +52,12 @@ const Footer = () => {
         </div>
 
         <div className="mt-4 flex items-center gap-4">
-          <a href="mailto:suporte@freelincer.com" className="hover:text-foreground" aria-label="Email"><Mail size={18} /></a>
-          <a href="#" className="hover:text-foreground" aria-label="Blog"><Rss size={18} /></a>
-          <a href="#" className="hover:text-foreground" aria-label="Facebook"><Facebook size={18} /></a>
-          <a href="#" className="hover:text-foreground" aria-label="Twitter"><Twitter size={18} /></a>
-          <a href="#" className="hover:text-foreground" aria-label="Instagram"><Instagram size={18} /></a>
-          <a href="#" className="hover:text-foreground" aria-label="LinkedIn"><Linkedin size={18} /></a>
+          <a href={links.email || 'mailto:suporte@freelincer.com'} className="hover:text-foreground" aria-label="Email" target={links.email?.startsWith('http') ? '_blank' : undefined}><Mail size={18} /></a>
+          <a href={links.rss || '#'} className="hover:text-foreground" aria-label="Blog" target="_blank" rel="noreferrer"><Rss size={18} /></a>
+          <a href={links.facebook || '#'} className="hover:text-foreground" aria-label="Facebook" target="_blank" rel="noreferrer"><Facebook size={18} /></a>
+          <a href={links.twitter || '#'} className="hover:text-foreground" aria-label="Twitter" target="_blank" rel="noreferrer"><Twitter size={18} /></a>
+          <a href={links.instagram || '#'} className="hover:text-foreground" aria-label="Instagram" target="_blank" rel="noreferrer"><Instagram size={18} /></a>
+          <a href={links.linkedin || '#'} className="hover:text-foreground" aria-label="LinkedIn" target="_blank" rel="noreferrer"><Linkedin size={18} /></a>
         </div>
 
         <p className="mt-4 text-[11px] leading-relaxed">

@@ -558,4 +558,82 @@ export class AdminService {
       throw error;
     }
   }
+
+  // Social links for footer
+  static async getSocialLinks(): Promise<{
+    email?: string;
+    rss?: string;
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+  }> {
+    try {
+      const ref = doc(db, 'admin_settings', 'socialLinks');
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return {};
+      const data = snap.data() as any;
+      return {
+        email: typeof data.email === 'string' ? data.email : undefined,
+        rss: typeof data.rss === 'string' ? data.rss : undefined,
+        facebook: typeof data.facebook === 'string' ? data.facebook : undefined,
+        twitter: typeof data.twitter === 'string' ? data.twitter : undefined,
+        instagram: typeof data.instagram === 'string' ? data.instagram : undefined,
+        linkedin: typeof data.linkedin === 'string' ? data.linkedin : undefined,
+      };
+    } catch (e) {
+      console.error('Error getting social links', e);
+      return {};
+    }
+  }
+
+  static async updateSocialLinks(links: Partial<{
+    email: string;
+    rss: string;
+    facebook: string;
+    twitter: string;
+    instagram: string;
+    linkedin: string;
+  }>): Promise<void> {
+    try {
+      const ref = doc(db, 'admin_settings', 'socialLinks');
+      await setDoc(ref, { ...links, updatedAt: Timestamp.now() }, { merge: true });
+    } catch (e) {
+      console.error('Error updating social links', e);
+      throw e;
+    }
+  }
+
+  static async getSiteStatus(): Promise<{ maintenance: boolean; message?: string }> {
+    try {
+      const ref = doc(db, 'admin_settings', 'siteStatus');
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return { maintenance: false };
+      const data = snap.data() as any;
+      return { maintenance: !!data.maintenance, message: typeof data.message === 'string' ? data.message : undefined };
+    } catch (e) {
+      return { maintenance: false };
+    }
+  }
+
+  static async updateSiteStatus(status: { maintenance: boolean; message?: string }): Promise<void> {
+    const ref = doc(db, 'admin_settings', 'siteStatus');
+    await setDoc(ref, { maintenance: !!status.maintenance, message: status.message || '', updatedAt: Timestamp.now() }, { merge: true });
+  }
+
+  static async getSecurityConfig(): Promise<{ recaptchaSiteKey?: string }> {
+    try {
+      const ref = doc(db, 'admin_settings', 'security');
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? (snap.data() as any) : {};
+      return { recaptchaSiteKey: typeof data.recaptchaSiteKey === 'string' ? data.recaptchaSiteKey : undefined };
+    } catch {
+      return {};
+    }
+  }
+
+  static async updateSecurityConfig(cfg: { recaptchaSiteKey?: string }): Promise<void> {
+    const ref = doc(db, 'admin_settings', 'security');
+    await setDoc(ref, { recaptchaSiteKey: cfg.recaptchaSiteKey || '' , updatedAt: Timestamp.now() }, { merge: true });
+  }
 }

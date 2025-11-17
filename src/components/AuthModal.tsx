@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +12,8 @@ import { Loader2, Mail, Lock, User, ArrowLeft, Users, Eye, EyeOff } from "lucide
 import { useTranslation } from 'react-i18next';
 import { auth } from '@/lib/firebase';
 import { MultiFactorResolver, RecaptchaVerifier, PhoneAuthProvider, PhoneMultiFactorGenerator } from 'firebase/auth';
+import { Checkbox } from "@/components/ui/checkbox";
+import { AuthService } from "@/services/auth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -35,6 +38,9 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   });
   const [resetForm, setResetForm] = useState({ email: "" });
   const [unverified, setUnverified] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
+  const [recaptchaSiteKey, setRecaptchaSiteKey] = useState<string | null>(null);
 
   // Password visibility states
   const [showSignInPassword, setShowSignInPassword] = useState(false);
@@ -48,6 +54,36 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [mfaSending, setMfaSending] = useState<boolean>(false);
   const [mfaRecaptcha, setMfaRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
+  // Load reCAPTCHA site key and script (v2 invisible) for login gate
+  useEffect(() => {
+    (async () => {
+      try {
+        const cfg = await (await import('@/services/admin')).AdminService.getSecurityConfig();
+        const key = cfg.recaptchaSiteKey || '';
+        if (!key) { setRecaptchaSiteKey(null); return; }
+        setRecaptchaSiteKey(key);
+        // Inject script if not present
+        if (!(window as any).grecaptcha) {
+          const s = document.createElement('script');
+          s.src = 'https://www.google.com/recaptcha/api.js?onload=__loginRecaptchaOnload&render=explicit';
+          s.async = true; s.defer = true;
+          (window as any).__loginRecaptchaOnload = () => {
+            try {
+              const id = (window as any).grecaptcha.render('login-recaptcha', { sitekey: key, size: 'invisible', badge: 'bottomright' });
+              setRecaptchaWidgetId(id);
+            } catch {}
+          };
+          document.head.appendChild(s);
+        } else {
+          try {
+            const id = (window as any).grecaptcha.render('login-recaptcha', { sitekey: key, size: 'invisible', badge: 'bottomright' });
+            setRecaptchaWidgetId(id);
+          } catch {}
+        }
+      } catch {}
+    })();
+  }, []);
+
   if (!isOpen) return null;
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -55,6 +91,25 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setLoading(true);
 
     try {
+      if (recaptchaSiteKey) {
+        // Ensure reCAPTCHA executed before login
+        await new Promise<void>((resolve, reject) => {
+          try {
+            if (recaptchaWidgetId != null && (window as any).grecaptcha) {
+              (window as any).grecaptcha.execute(recaptchaWidgetId);
+              const tokenCheck = setInterval(() => {
+                try {
+                  const tok = (window as any).grecaptcha.getResponse(recaptchaWidgetId);
+                  if (tok) { clearInterval(tokenCheck); resolve(); }
+                } catch {}
+              }, 200);
+              setTimeout(() => { clearInterval(tokenCheck); reject(new Error('Falha ao validar reCAPTCHA')); }, 6000);
+            } else {
+              resolve(); // fallback
+            }
+          } catch (err) { reject(err as any); }
+        });
+      }
       await signIn(signInForm.email, signInForm.password);
       toast({
         title: t("login_success"),
@@ -95,6 +150,12 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           toast({
             title: t('login_error'),
             description: 'Email ou senha errado',
+            variant: 'destructive',
+          });
+        } else if (error?.code === 'device_limit_exceeded') {
+          toast({
+            title: t('login_error'),
+            description: error.message || 'Limite de contas por dispositivo atingido.',
             variant: 'destructive',
           });
         } else if (error?.code === 'auth/email-not-verified') {
@@ -156,19 +217,50 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       return;
     }
 
-    if (signUpForm.password.length < 6) {
+    const hasMinLength = signUpForm.password.length >= 8;
+    const hasUpper = /[A-Z]/.test(signUpForm.password);
+    const hasLower = /[a-z]/.test(signUpForm.password);
+    const hasDigit = /\d/.test(signUpForm.password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(signUpForm.password);
+    if (!(hasMinLength && hasUpper && hasLower && hasDigit && hasSymbol)) {
       toast({
         title: t("weak_password"),
-        description: t("weak_password_description"),
+        description: "A senha deve ter pelo menos 8 caracteres e incluir letras maiúsculas, minúsculas, números e símbolos.",
         variant: "destructive",
       });
       return;
     }
 
+    if (!termsAccepted) {
+      toast({
+        title: 'Aceite necessário',
+        description: 'Você deve ler e aceitar os Termos de Uso e a Política de Privacidade para criar sua conta.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    
+
     setLoading(true);
 
     try {
       await signUp(signUpForm.email, signUpForm.password, signUpForm.name, signUpForm.referralCode.toUpperCase());
+      // Persistir aceite dos termos e privacidade no documento do usuário
+      try {
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await AuthService.updateUserData(uid, {
+            termsAccepted: true,
+            termsAcceptedAt: new Date(),
+            termsVersion: '2024-10-08',
+            privacyAccepted: true,
+            privacyAcceptedAt: new Date(),
+          });
+        }
+      } catch (persistErr) {
+        console.warn('Falha ao salvar aceite de termos no usuário:', persistErr);
+      }
       toast({
         title: t('verification_email_sent'),
         description: t('please_check_email_to_activate'),
@@ -267,6 +359,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <TabsContent value="signin" className="mt-4">
                 {/* MFA reCAPTCHA container */}
                 <div id="mfa-recaptcha-container" />
+                {/* Login reCAPTCHA (invisible) */}
+                <div id="login-recaptcha" />
                 {/* Render MFA code form when resolver is present */}
                 {mfaResolver ? (
                   <form onSubmit={handleVerifyMfaCode} className="space-y-4">
@@ -411,30 +505,54 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">{t("password")}</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type={showSignUpPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10 pr-10 bg-input border-border text-foreground"
-                        value={signUpForm.password}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
-                        required
-                      />
-                      <button
-                        type="button"
-                        aria-label={showSignUpPassword ? t("hide_password") : t("show_password")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        onClick={() => setShowSignUpPassword(v => !v)}
-                      >
-                        {showSignUpPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="signup-password"
+                    type={showSignUpPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10 bg-input border-border text-foreground"
+                    value={signUpForm.password}
+                    onChange={(e) => setSignUpForm(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label={showSignUpPassword ? t("hide_password") : t("show_password")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowSignUpPassword(v => !v)}
+                  >
+                    {showSignUpPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1">
+                  {(() => {
+                    const pwd = signUpForm.password || "";
+                    const len = pwd.length >= 8;
+                    const up = /[A-Z]/.test(pwd);
+                    const low = /[a-z]/.test(pwd);
+                    const dig = /\d/.test(pwd);
+                    const sym = /[^A-Za-z0-9]/.test(pwd);
+                    let score = 0;
+                    if (len) score += 25;
+                    if (up && low) score += 25;
+                    if (dig) score += 25;
+                    if (sym) score += 25;
+                    const label = score < 50 ? 'Fraca' : score < 75 ? 'Média' : score < 100 ? 'Forte' : 'Excelente';
+                    const color = score < 50 ? 'text-destructive' : score < 75 ? 'text-warning' : 'text-success';
+                    return (
+                      <>
+                        <Progress value={score} />
+                        <div className={`text-xs ${color}`}>Força da senha: {label}</div>
+                        <div className="text-[11px] text-muted-foreground">Mínimo 8 caracteres, incluir maiúsculas, minúsculas, números e símbolos.</div>
+                      </>
+                    );
+                  })()}
+                </div>
                   </div>
 
                   <div className="space-y-2">
@@ -465,32 +583,46 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     </div>
                   </div>
                   
-                  {/* Novo campo de código de referência */}
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-referral">{t("referral_code_optional")}</Label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="signup-referral"
-                        placeholder={t("referral_code_placeholder")}
-                        className="pl-10 bg-input border-border text-foreground uppercase"
-                        value={signUpForm.referralCode}
-                        onChange={(e) => setSignUpForm(prev => ({ ...prev, referralCode: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+              {/* Novo campo de código de referência */}
+              <div className="space-y-2">
+                <Label htmlFor="signup-referral">{t("referral_code_optional")}</Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="signup-referral"
+                    placeholder={t("referral_code_placeholder")}
+                    className="pl-10 bg-input border-border text-foreground uppercase"
+                    value={signUpForm.referralCode}
+                    onChange={(e) => setSignUpForm(prev => ({ ...prev, referralCode: e.target.value }))}
+                  />
+                </div>
+              </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full glow-effect" 
-                    variant="hero"
-                    disabled={loading}
-                  >
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t("create_account")}
-                  </Button>
-                </form>
-              </TabsContent>
+              {/* Aceite de Termos e Privacidade */}
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <Checkbox id="accept-terms" checked={termsAccepted} onCheckedChange={(v) => setTermsAccepted(!!v)} />
+                  <Label htmlFor="accept-terms" className="text-sm text-muted-foreground">
+                    Eu li e aceito os
+                    {' '}<a href="/terms" target="_blank" rel="noreferrer" className="text-primary hover:underline">Termos de Uso</a>
+                    {' '}e a{' '}
+                    <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">Política de Privacidade</a>.
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">Para criar a conta é obrigatório aceitar nossos termos e políticas, dado que o site exige KYC e acessa dados pessoais.</p>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full glow-effect" 
+                variant="hero"
+                disabled={loading || !termsAccepted}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t("create_account")}
+              </Button>
+            </form>
+          </TabsContent>
             </Tabs>
           ) : (
             <form onSubmit={handleResetPassword} className="space-y-4 mt-4">

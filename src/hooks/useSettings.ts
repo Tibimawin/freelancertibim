@@ -34,6 +34,7 @@ export interface UserSettings {
   loginAlerts: boolean;
   sessionTimeout: string;
   showOnboardingTips?: boolean;
+  showTutorial?: boolean;
   
   // Social Media Accounts
   socialAccounts?: {
@@ -67,6 +68,7 @@ export const useSettings = () => {
     loginAlerts: true,
     sessionTimeout: "30",
     showOnboardingTips: true,
+    showTutorial: true,
     socialAccounts: {},
     messageTemplates: {
       directMessageInitial: 'tenho interesse nesse produto: {{title}}',
@@ -129,6 +131,7 @@ export const useSettings = () => {
       loginAlerts: true,
       sessionTimeout: "30",
       showOnboardingTips: true,
+      showTutorial: true,
       socialAccounts: {},
       messageTemplates: {
         directMessageInitial: 'tenho interesse nesse produto: {{title}}',

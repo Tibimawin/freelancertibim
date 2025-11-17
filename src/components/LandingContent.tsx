@@ -16,9 +16,11 @@ import {
   Award
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from "react-router-dom";
 
 const LandingContent = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-20 py-16 bg-nebula-bg text-nebula-fg">
@@ -115,7 +117,12 @@ const LandingContent = () => {
                 </div>
               </div>
 
-              <Button size="lg" variant="hero" className="text-lg px-8 glow-effect">
+              <Button
+                size="lg"
+                variant="hero"
+                className="text-lg px-8 glow-effect"
+                onClick={() => navigate('/login')}
+              >
                 {t("start_working_now")}
               </Button>
             </div>
@@ -206,7 +213,12 @@ const LandingContent = () => {
               </div>
             </div>
 
-            <Button variant="outline" size="lg" className="text-lg px-8 bg-transparent border-cosmic-blue/50 text-cosmic-blue hover:bg-cosmic-blue/10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 bg-transparent border-cosmic-blue/50 text-cosmic-blue hover:bg-cosmic-blue/10"
+              onClick={() => navigate('/create-job')}
+            >
               {t("post_task")}
             </Button>
           </div>
@@ -357,13 +369,19 @@ const LandingContent = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="lg" className="text-lg px-8 py-4 glow-effect">
+            <Button
+              variant="hero"
+              size="lg"
+              className="text-lg px-8 py-4 glow-effect"
+              onClick={() => navigate('/profile')}
+            >
               {t("register_as_freelancer")}
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="text-lg px-8 py-4 bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+              onClick={() => navigate('/create-job')}
             >
               {t("post_task")}
             </Button>

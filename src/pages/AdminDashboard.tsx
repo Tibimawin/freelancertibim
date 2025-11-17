@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,9 @@ import {
   Flag,
   Briefcase, // Importado Briefcase
   MessageSquare,
-  ShoppingBag
+  ShoppingBag,
+  Share2,
+  ShieldCheck
 } from 'lucide-react';
 import { Smartphone } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -36,15 +38,19 @@ import AdminMarketOrders from '@/components/admin/AdminMarketOrders';
 import AdminAffiliateAnalytics from '@/components/admin/AdminAffiliateAnalytics';
 import AdminDevices from '@/components/admin/AdminDevices';
 import AdminDefaultAvatars from '@/components/admin/AdminDefaultAvatars';
+import AdminSocialLinks from '@/components/admin/AdminSocialLinks';
+import AdminMaintenance from '@/components/admin/AdminMaintenance';
+import AdminSecurity from '@/components/admin/AdminSecurity';
 import AdminTaxonomyManager from '@/components/admin/AdminTaxonomyManager';
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
+  const navigate = useNavigate();
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
   const { reports, fetchReports } = useAdminReports(); 
   const { t } = useTranslation();
-  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'|'taxonomies'>('overview');
+  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'|'taxonomies'|'footerLinks'|'maintenance'|'security'>('overview');
 
   useEffect(() => {
     // Refresh stats every 30 seconds
@@ -176,6 +182,9 @@ const AdminDashboard = () => {
                 <button onClick={() => setActive('market')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='market' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <ShoppingBag className="h-4 w-4" /> Mercado
                 </button>
+                <button onClick={() => navigate('/admin/services/orders')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 hover:bg-muted text-muted-foreground`}>
+                  <Briefcase className="h-4 w-4" /> Serviços: Pedidos
+                </button>
                 <button onClick={() => setActive('taxonomies')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='taxonomies' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <Briefcase className="h-4 w-4" /> Listas (Taxonomias)
                 </button>
@@ -211,6 +220,15 @@ const AdminDashboard = () => {
                 </button>
                 <button onClick={() => setActive('avatars')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='avatars' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <Users className="h-4 w-4" /> Avatares
+                </button>
+                <button onClick={() => setActive('footerLinks')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='footerLinks' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <Share2 className="h-4 w-4" /> Links do Rodapé
+                </button>
+                <button onClick={() => setActive('maintenance')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='maintenance' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <AlertTriangle className="h-4 w-4" /> Manutenção
+                </button>
+                <button onClick={() => setActive('security')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='security' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
+                  <ShieldCheck className="h-4 w-4" /> Segurança
                 </button>
               </nav>
             </div>
@@ -322,6 +340,9 @@ const AdminDashboard = () => {
           {active === 'referrals' && (<AdminReferrals />)}
           {active === 'devices' && (<AdminDevices />)}
           {active === 'avatars' && (<AdminDefaultAvatars />)}
+          {active === 'footerLinks' && (<AdminSocialLinks />)}
+          {active === 'maintenance' && (<AdminMaintenance />)}
+          {active === 'security' && (<AdminSecurity />)}
           </section>
         </div>
       </div>

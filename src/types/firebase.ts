@@ -4,6 +4,7 @@ interface User {
   email: string;
   avatarUrl?: string;
   bio?: string;
+  responseTime?: string; // tempo de resposta estimado do vendedor
   phone?: string;
   location?: string;
   skills?: string[];
@@ -37,6 +38,12 @@ interface User {
   referredBy?: string;
   // Status de Verificação
   verificationStatus: 'incomplete' | 'pending' | 'approved' | 'rejected';
+  // Aceite de Termos e Privacidade
+  termsAccepted?: boolean;
+  termsAcceptedAt?: Date;
+  termsVersion?: string;
+  privacyAccepted?: boolean;
+  privacyAcceptedAt?: Date;
 }
 
 export interface UserSettings {
@@ -248,7 +255,7 @@ export interface WithdrawalRequest {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'task_approved' | 'task_rejected' | 'task_submitted' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed' | 'message_received' | 'comment_submitted' | 'support_message' | 'market_order_delivered';
+  type: 'task_approved' | 'task_rejected' | 'task_submitted' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed' | 'message_received' | 'comment_submitted' | 'support_message' | 'market_order_delivered' | 'service_order_delivered' | 'service_order_dispute_opened' | 'service_order_dispute_resolved';
   title: string;
   message: string;
   read: boolean;
@@ -262,6 +269,7 @@ export interface Notification {
     orderId?: string;
     listingId?: string;
     downloadTokenId?: string;
+    receiptId?: string;
   };
   createdAt: Date;
 }
@@ -379,6 +387,38 @@ export interface MarketListing {
   createdAt: Date;
 }
 
+// Serviços (seção separada do Mercado)
+export interface ServiceListing {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  images?: string[];
+   imageCaptions?: string[]; // legenda opcional para cada imagem (alinhado às imagens)
+  tags?: string[];
+  sellerId: string;
+  sellerName: string;
+  price: number;
+  currency: string; // ex.: 'KZ'
+  // Classificação e status
+  rating?: number;
+  ratingCount?: number;
+  status: 'active' | 'inactive';
+  createdAt: Date;
+  // Metadados adicionais do serviço
+  category?: string;
+  subcategory?: string;
+  deliveryTime?: string; // prazo de entrega
+  includedItems?: string[]; // o que está incluído
+  excludedItems?: string[]; // o que não está incluído
+  clientRequirements?: string[]; // requisitos do cliente para iniciar
+  revisionsIncluded?: number; // quantidade de revisões
+  terms?: string; // termos e condições
+  portfolioUrl?: string; // link para portfólio ou exemplos
+  availability?: string; // disponibilidade/horários e tempo de resposta
+  faqs?: { question: string; answer: string }[]; // perguntas frequentes por serviço
+}
+
 export interface MarketOrder {
   id: string;
   listingId: string;
@@ -401,6 +441,42 @@ export interface MarketOrder {
   affiliateCommissionAmount?: number; // valor pago ao afiliado
   affiliateCommissionStatus?: 'pending' | 'paid';
   affiliatePaidAt?: Date;
+}
+
+// Pedidos para Serviços (sem fluxo de afiliados)
+export interface ServiceOrder {
+  id: string;
+  listingId: string;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'delivered' | 'cancelled';
+  createdAt: Date;
+  updatedAt?: Date;
+  // Avaliação pós-entrega
+  rating?: number;
+  review?: string;
+  ratedAt?: Date;
+  // Confirmação de entrega pelo comprador (para liberação por admin)
+  buyerConfirmedDelivery?: boolean;
+  buyerConfirmedAt?: Date;
+  // Disputa
+  disputeStatus?: 'open' | 'in_review' | 'resolved' | 'closed';
+  disputeReason?: string;
+  disputeDescription?: string;
+  disputeEvidenceUrls?: string[];
+  disputeOpenedBy?: string; // userId
+  disputeOpenedAt?: Date;
+  disputeResolution?: {
+    decision: 'refund_buyer' | 'pay_seller' | 'partial_refund';
+    amount?: number;
+    reason: string;
+    resolvedBy: string; // adminId
+    resolvedAt: Date;
+  };
 }
 
 // Token temporário para download seguro de produtos digitais

@@ -83,15 +83,15 @@ export class AdminWithdrawalService {
         adminNotes: adminNotes || 'Approved by admin'
       });
 
-      // Create transaction record (mantém como 'pending' para refletir processamento)
+      // Create transaction record como 'completed' ao aprovar
       const transactionRef = doc(collection(db, 'transactions'));
       batch.set(transactionRef, {
         userId: requestData.userId,
         type: 'payout',
         amount: requestData.amount,
         currency: requestData.currency || 'KZ',
-        status: 'pending',
-        description: `Withdrawal approved - ${requestData.method}`,
+        status: 'completed',
+        description: `Withdrawal completed - ${requestData.method}`,
         provider: requestData.method,
         metadata: {
           withdrawalRequestId: requestId,
@@ -118,13 +118,13 @@ export class AdminWithdrawalService {
 
       await batch.commit();
 
-      // Notificar usuário sobre aprovação
+      // Notificar usuário sobre conclusão
       try {
         await NotificationService.createNotification({
           userId: requestData.userId,
           type: 'withdrawal_approved',
-          title: 'Saque aprovado',
-          message: '✅ Seu saque foi aprovado com sucesso! O valor solicitado está em processamento e será creditado na sua conta em breve.',
+          title: 'Saque concluído',
+          message: '✅ Seu saque foi aprovado e concluído com sucesso! O valor será creditado conforme o método selecionado.',
           read: false,
           metadata: { withdrawalId: requestId },
         });

@@ -32,11 +32,10 @@ const KYCPage = () => {
   const [submitting, setSubmitting] = useState(false);
   // Estado dos documentos para envio unificado
   interface DocumentFile { file: File | null; status: 'idle' | 'uploading' | 'uploaded' | 'error'; url?: string; publicId?: string; }
-  const initialDocs: { id_front: DocumentFile; id_back: DocumentFile; selfie: DocumentFile; address_proof: DocumentFile } = {
+  const initialDocs: { id_front: DocumentFile; id_back: DocumentFile; selfie: DocumentFile } = {
     id_front: { file: null, status: 'idle' },
     id_back: { file: null, status: 'idle' },
     selfie: { file: null, status: 'idle' },
-    address_proof: { file: null, status: 'idle' },
   };
   const [documents, setDocuments] = useState(initialDocs);
 

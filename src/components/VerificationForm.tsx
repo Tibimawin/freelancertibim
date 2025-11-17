@@ -18,7 +18,6 @@ const initialDocs = {
   id_front: { file: null, status: 'idle' } as DocumentFile,
   id_back: { file: null, status: 'idle' } as DocumentFile,
   selfie: { file: null, status: 'idle' } as DocumentFile,
-  address_proof: { file: null, status: 'idle' } as DocumentFile,
 };
 
 type DocsState = typeof initialDocs;
@@ -152,20 +151,7 @@ const VerificationForm = ({ documents, onChangeDocument, isSubmitting, verificat
               />
             </div>
 
-            {/* Comprovante de Residência (Opcional) */}
-            <div className="space-y-2">
-              <Label htmlFor="address_proof" className="flex items-center space-x-2">
-                {getDocStatus('address_proof')}
-                <span>{t("proof_of_address")} ({t("optional")})</span>
-              </Label>
-              <Input
-                id="address_proof"
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e) => handleFileChange('address_proof', e.target.files?.[0] || null)}
-                disabled={isSubmitting || isVerificationLocked}
-              />
-            </div>
+            
           </div>
           <Button
             type="button"

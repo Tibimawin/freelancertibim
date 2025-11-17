@@ -20,14 +20,25 @@ import MarketPage from "./pages/Market";
 import MarketDetailsPage from "./pages/MarketDetails";
 import MarketOrdersPage from "./pages/MarketOrders";
 import DownloadPage from "./pages/Download";
+import ServicesPage from "./pages/Services";
+import ServiceDetailsPage from "./pages/ServiceDetails";
+import ServiceOrdersPage from "./pages/ServiceOrders";
+import SellerServiceOrdersPage from "./pages/SellerServiceOrders";
+import AdminServiceOrdersPage from "./pages/AdminServiceOrders";
+import AdminServiceDisputesPage from "./pages/AdminServiceDisputes";
+import CreateServicePage from "./pages/CreateService";
+import EditServicePage from "./pages/EditService";
 import SupportLauncher from "@/components/SupportLauncher";
 import TransactionsPage from "./pages/Transactions";
 import KYCPage from "./pages/KYC";
 import AppLayout from "@/components/AppLayout";
+import KycGuard from "@/components/KycGuard";
+import MaintenanceGuard from "@/components/MaintenanceGuard";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import FAQ from "./pages/FAQ";
 import SobreNos from "./pages/SobreNos";
+import LoginPage from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -45,10 +56,11 @@ const App = () => (
             v7_relativeSplatPath: true,
           }}
         >
-          <Routes>
-            {/* Rotas com Header global */}
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Index />} />
+          <MaintenanceGuard>
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Index />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/faq" element={<FAQ />} />
@@ -65,17 +77,27 @@ const App = () => (
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/kyc" element={<KYCPage />} />
               <Route path="/market" element={<MarketPage />} />
-              <Route path="/market/:id" element={<MarketDetailsPage />} />
-              <Route path="/market/compras" element={<MarketOrdersPage />} />
-              <Route path="/download/:token" element={<DownloadPage />} />
-            </Route>
+              <Route path="/market/:id" element={<KycGuard><MarketDetailsPage /></KycGuard>} />
+              <Route path="/market/compras" element={<KycGuard><MarketOrdersPage /></KycGuard>} />
+              {/* Serviços - seção independente do Mercado */}
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/services/create" element={<KycGuard><CreateServicePage /></KycGuard>} />
+              <Route path="/services/:id/edit" element={<KycGuard><EditServicePage /></KycGuard>} />
+              <Route path="/services/:id" element={<KycGuard><ServiceDetailsPage /></KycGuard>} />
+              <Route path="/services/pedidos" element={<KycGuard><ServiceOrdersPage /></KycGuard>} />
+              <Route path="/services/vendas" element={<KycGuard><SellerServiceOrdersPage /></KycGuard>} />
+                <Route path="/download/:token" element={<DownloadPage />} />
+              </Route>
 
             {/* Rotas específicas (sem Header global) */}
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/services/orders" element={<AdminServiceOrdersPage />} />
+            <Route path="/admin/services/disputes" element={<AdminServiceDisputesPage />} />
 
             {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </MaintenanceGuard>
         </BrowserRouter>
       </TooltipProvider>
       </AdminProvider>

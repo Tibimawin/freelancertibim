@@ -178,16 +178,65 @@ export class ApplicationService {
       }
 
       // Permitir envio se status for 'applied', 'accepted' ou 'rejected'
+      // Registrar envio e criar hold pendente na carteira do freelancer (e reserva no contratante)
+      const job = await JobService.getJobById(appData.jobId);
+
+      // Atualiza o documento da aplicação com provas e marca como 'submitted'
       await updateDoc(appRef, {
         'proofSubmission.proofs': proofs,
         'proofSubmission.submittedAt': Timestamp.now(),
         status: 'submitted',
       });
 
-      // Fetch job data to get posterId and job title
-      const job = await JobService.getJobById(appData.jobId);
       if (job) {
-        // Create notification for the poster (contractor)
+        const bounty = job.bounty;
+        const testerRef = doc(db, 'users', appData.testerId);
+        const posterRef = doc(db, 'users', job.posterId);
+
+        await runTransaction(db, async (transaction) => {
+          const testerDoc = await transaction.get(testerRef);
+          if (!testerDoc.exists()) {
+            throw new Error('Tester user not found');
+          }
+          const testerData = testerDoc.data() as any;
+          const currentPending = testerData.testerWallet?.pendingBalance || 0;
+
+          // 1) Adicionar saldo pendente ao freelancer
+          transaction.update(testerRef, {
+            'testerWallet.pendingBalance': currentPending + bounty,
+            updatedAt: Timestamp.now(),
+          });
+
+          // 2) Reservar saldo pendente do contratante (se existir carteira do contratante)
+          const posterDoc = await transaction.get(posterRef);
+          if (posterDoc.exists()) {
+            const posterData = posterDoc.data() as any;
+            const posterPending = posterData.posterWallet?.pendingBalance || 0;
+            transaction.update(posterRef, {
+              'posterWallet.pendingBalance': posterPending + bounty,
+              updatedAt: Timestamp.now(),
+            });
+          }
+
+          // 3) Criar transação de escrow pendente para rastreio do valor
+          const transactionRef = doc(collection(db, 'transactions'));
+          transaction.set(transactionRef, {
+            userId: appData.testerId,
+            type: 'escrow',
+            amount: bounty,
+            currency: 'KZ',
+            status: 'pending',
+            description: `Valor em análise pela tarefa: ${job.title}`,
+            metadata: {
+              jobId: appData.jobId,
+              applicationId: applicationId,
+            },
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          });
+        });
+
+        // Notificar o contratante sobre submissão
         await NotificationService.createNotification({
           userId: job.posterId,
           type: 'task_submitted',
@@ -372,6 +421,36 @@ export class ApplicationService {
           },
         });
       } else {
+        // Em caso de rejeição, liberar saldo pendente do freelancer e reserva do contratante
+        if (job) {
+          const bounty = job.bounty;
+          const testerRef = doc(db, 'users', appData.testerId);
+          const posterRef = doc(db, 'users', job.posterId);
+
+          await runTransaction(db, async (transaction) => {
+            const testerDoc = await transaction.get(testerRef);
+            const posterDoc = await transaction.get(posterRef);
+
+            if (testerDoc.exists()) {
+              const testerData = testerDoc.data() as any;
+              const currentPending = testerData.testerWallet?.pendingBalance || 0;
+              transaction.update(testerRef, {
+                'testerWallet.pendingBalance': Math.max(0, currentPending - bounty),
+                updatedAt: Timestamp.now(),
+              });
+            }
+
+            if (posterDoc.exists()) {
+              const posterData = posterDoc.data() as any;
+              const posterPending = posterData.posterWallet?.pendingBalance || 0;
+              transaction.update(posterRef, {
+                'posterWallet.pendingBalance': Math.max(0, posterPending - bounty),
+                updatedAt: Timestamp.now(),
+              });
+            }
+          });
+        }
+
         // Criar notificação de rejeição para o freelancer
         await NotificationService.createNotification({
           userId: appData.testerId,

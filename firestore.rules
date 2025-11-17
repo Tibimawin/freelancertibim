@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/admins/$(request.auth.uid)).exists();
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // --- Admin Settings ---
+    match /admin_settings/{docId} {
+      // Publicly readable settings (maintenance, taxonomies, etc.)
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Device Links ---
+    match /device_links/{deviceId} {
+      // Admin can read all
+      allow read: if isAdmin();
+
+      // Create: first link must only include the current user
+      allow create: if isSignedIn() &&
+        request.resource.data.uids.size() == 1 &&
+        request.resource.data.uids[0] == request.auth.uid;
+
+      // Update: allow authenticated updates
+      allow update: if isSignedIn();
+    }
+
+    // --- Jobs ---
+    match /jobs/{jobId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.posterId == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.posterId);
+      allow delete: if isAdmin() || (
+        isSignedIn() && request.auth.uid == resource.data.posterId && (
+          resource.data.status == 'completed' || (
+            resource.data.maxApplicants != null && resource.data.applicantCount >= resource.data.maxApplicants
+          )
+        )
+      );
+    }
+
+    // --- Applications ---
+    match /applications/{appId} {
+      allow read: if isSignedIn() && (resource.data.testerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.testerId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // --- Services Listings ---
+    match /services_listings/{sid} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.sellerId == request.auth.uid);
+    }
+
+    // --- Service Orders ---
+    match /service_orders/{orderId} {
+      allow read: if isSignedIn() && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isAdmin() || (
+        isSignedIn() && request.auth.uid == resource.data.buyerId &&
+        resource.data.status == 'paid' &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['buyerConfirmedDelivery','buyerConfirmedAt','updatedAt']) &&
+        request.resource.data.buyerConfirmedDelivery == true
+      );
+    }
+
+    // --- Transactions ---
+    match /transactions/{txId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
+    // --- Notifications ---
+    match /notifications/{id} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.userId == request.auth.uid);
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // --- Reports ---
+    match /reports/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.reporterId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.reporterId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // --- Verifications ---
+    match /verifications/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // --- Withdrawal Requests ---
+    match /withdrawalRequests/{id} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // --- Admin Alerts ---
+    match /admin_alerts/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+    }
+  }
+}

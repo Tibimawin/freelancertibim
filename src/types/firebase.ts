@@ -329,6 +329,7 @@ export interface JobComment {
   text: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
+  parentId?: string;
 }
 
 // Chat direto entre usuários

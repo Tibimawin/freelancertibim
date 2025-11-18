@@ -483,7 +483,7 @@ const JobDetails = () => {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
-                <p className="text-sm text-muted-foreground">{t("applicants_count", { count: actualApplicantCount })}</p>
+                <p className="text-sm text-muted-foreground">{t("applicants_count", { count: applicantCount })}</p>
                 {(isOwner || isAdmin) && (
                   <div className="mt-3 flex gap-2 justify-end">
                     <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Editar</Button>

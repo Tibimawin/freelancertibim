@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useJobComments } from '@/hooks/useJobComments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,14 +11,36 @@ interface JobCommentsProps {
 
 const JobComments = ({ jobId }: JobCommentsProps) => {
   const { t } = useTranslation();
-  const { comments, loading, addComment } = useJobComments(jobId);
+  const { comments, loading, addComment, addReply } = useJobComments(jobId);
   const [text, setText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   const handleSubmit = async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
     await addComment(trimmed);
     setText('');
+  };
+
+  const grouped = useMemo(() => {
+    const parents = comments.filter((c) => !c.parentId);
+    const childrenMap: Record<string, typeof comments> = {} as any;
+    for (const c of comments) {
+      if (c.parentId) {
+        if (!childrenMap[c.parentId]) childrenMap[c.parentId] = [] as any;
+        (childrenMap[c.parentId] as any).push(c);
+      }
+    }
+    return { parents, childrenMap };
+  }, [comments]);
+
+  const handleReplySubmit = async (parentId: string) => {
+    const trimmed = replyText.trim();
+    if (!trimmed) return;
+    await addReply(parentId, trimmed);
+    setReplyText('');
+    setReplyingTo(null);
   };
 
   return (
@@ -33,10 +55,25 @@ const JobComments = ({ jobId }: JobCommentsProps) => {
           {!loading && comments.length === 0 && (
             <div className="text-sm text-muted-foreground">{t('no_comments_yet')}</div>
           )}
-          {comments.map((c) => (
+          {grouped.parents.map((c) => (
             <div key={c.id} className="p-3 rounded-lg border border-border bg-muted/20">
               <div className="text-sm text-foreground"><span className="font-semibold">{c.userName}:</span> {c.text}</div>
               <div className="text-xs text-muted-foreground mt-1">{new Date(c.createdAt).toLocaleString()}</div>
+              <div className="mt-2 flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setReplyingTo(c.id)}>{t('reply')}</Button>
+              </div>
+              {replyingTo === c.id && (
+                <div className="mt-2 flex gap-2">
+                  <Input placeholder={t('type_a_reply')} value={replyText} onChange={(e) => setReplyText(e.target.value)} />
+                  <Button onClick={() => handleReplySubmit(c.id)} disabled={!replyText.trim()}>{t('send')}</Button>
+                </div>
+              )}
+              {(grouped.childrenMap[c.id] || []).map((r) => (
+                <div key={r.id} className="mt-3 ml-6 p-3 rounded-lg border border-border bg-muted/10">
+                  <div className="text-sm text-foreground"><span className="font-semibold">{r.userName}:</span> {r.text}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{new Date(r.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
             </div>
           ))}
         </div>

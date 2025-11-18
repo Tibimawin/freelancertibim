@@ -29,5 +29,15 @@ export const useJobComments = (jobId: string) => {
     }
   };
 
-  return { comments, loading, error, addComment };
+  const addReply = async (parentId: string, text: string) => {
+    if (!currentUser) throw new Error('User not authenticated');
+    try {
+      await CommentsService.addReply(jobId, parentId, currentUser.uid, currentUser.displayName || 'Usuário', text);
+    } catch (err) {
+      console.error('Error adding reply:', err);
+      setError('Erro ao adicionar resposta');
+    }
+  };
+
+  return { comments, loading, error, addComment, addReply };
 };

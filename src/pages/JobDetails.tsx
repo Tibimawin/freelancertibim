@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,27 @@ const JobDetails = () => {
   const [editLocation, setEditLocation] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [showSubmittedBanner, setShowSubmittedBanner] = useState(false);
+  const applicantCount = useMemo(() => {
+    return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;
+  }, [job?.applicantCount, actualApplicantCount]);
+
+  const overallProgress = useMemo(() => {
+    const reqs = job?.proofRequirements || [];
+    if (!reqs.length) return 0;
+    let sum = 0;
+    for (const req of reqs) {
+      if (req.type === 'screenshot' || req.type === 'file') {
+        const p = uploadProgress[req.id];
+        const hasFile = !!(proofs[req.id]?.file);
+        sum += p !== undefined ? p : (hasFile ? 0 : 100);
+      } else {
+        const hasText = !!(proofs[req.id]?.text);
+        sum += hasText ? 100 : 0;
+      }
+    }
+    return Math.min(100, Math.round(sum / reqs.length));
+  }, [job, uploadProgress, proofs]);
 
   useEffect(() => {
     const primeFromStateOrCache = () => {
@@ -177,7 +198,7 @@ const JobDetails = () => {
     currentUser &&
     job.posterId !== currentUser.uid &&
     job.status === 'active' &&
-    (!job.maxApplicants || actualApplicantCount < (job.maxApplicants || 0)) &&
+    (!job.maxApplicants || applicantCount < (job.maxApplicants || 0)) &&
     !myApplication
   );
 
@@ -185,7 +206,8 @@ const JobDetails = () => {
   const canSubmitProofs = Boolean(
     currentUser &&
     job.status === 'active' &&
-    (canApply || !!myApplication)
+    (canApply || !!myApplication) &&
+    (!myApplication || (myApplication.status !== 'submitted' && myApplication.status !== 'approved'))
   );
 
   const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
@@ -280,6 +302,16 @@ const JobDetails = () => {
       } else {
         // Primeiro, criar a aplicação
         applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+        try {
+          const refreshed = await JobService.getJobById(job.id);
+          if (refreshed) {
+            setJob({
+              ...refreshed,
+              detailedInstructions: refreshed.detailedInstructions || [],
+              proofRequirements: refreshed.proofRequirements || [],
+            } as any);
+          }
+        } catch {}
       }
       
       // Preparar provas para envio com upload ao Cloudinary (screenshots/arquivos)
@@ -326,8 +358,14 @@ const JobDetails = () => {
         title: t("proofs_submitted_success"),
         description: t("proofs_submitted_description"),
       });
-      
-      navigate('/task-history');
+      setShowSubmittedBanner(true);
+      try {
+        const applications = await ApplicationService.getApplicationsForJob(job.id);
+        if (currentUser) {
+          const mine = applications.find(app => app.testerId === currentUser.uid) || null;
+          setMyApplication(mine);
+        }
+      } catch {}
     } catch (error) {
       console.error('Error submitting application:', error);
       toast({
@@ -389,6 +427,7 @@ const JobDetails = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Aviso: modo contratante não permite fazer tarefas */}
@@ -464,19 +503,19 @@ const JobDetails = () => {
 
             {/* Applicants Progress */}
             {typeof job.maxApplicants === 'number' && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t("applicants_count", { count: actualApplicantCount })}</span>
-                  <span>{t("max_applicants")}: {job.maxApplicants}</span>
-                </div>
-                <Progress
-                  value={Math.min(100, Math.round(((actualApplicantCount || 0) / job.maxApplicants) * 100))}
-                  className="h-2"
-                />
-                {actualApplicantCount >= job.maxApplicants && (
-                  <p className="text-sm text-destructive">{t("applications_full")}</p>
-                )}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{t("applicants_count", { count: applicantCount })}</span>
+                <span>{t("max_applicants")}: {job.maxApplicants}</span>
               </div>
+              <Progress
+                value={Math.min(100, Math.round(((applicantCount || 0) / job.maxApplicants) * 100))}
+                className="h-2"
+              />
+              {applicantCount >= job.maxApplicants && (
+                <p className="text-sm text-destructive">{t("applications_full")}</p>
+              )}
+            </div>
             )}
 
             {/* Detailed Instructions */}
@@ -689,6 +728,20 @@ const JobDetails = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       {t("contractor_requested_proofs")}
                     </p>
+                    {(showSubmittedBanner || myApplication?.status === 'submitted') && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
+                        <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    {myApplication?.status === 'approved' && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('approved')}</AlertTitle>
+                        <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                      </Alert>
+                    )}
                     {job.proofRequirements.map((proofReq) => (
                       <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
                         <div className="flex items-center space-x-2 mb-2">
@@ -793,6 +846,13 @@ const JobDetails = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+      {isApplying && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-md space-y-2 p-4 bg-card border border-border rounded-lg shadow-md z-50">
+          <p className="text-sm text-muted-foreground">Enviando suas provas... aguarde</p>
+          <Progress value={overallProgress} />
+        </div>
+      )}
+    </>
   );
 };
 

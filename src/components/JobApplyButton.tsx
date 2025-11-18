@@ -56,7 +56,7 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
         toast({
           title: t("already_applied"),
           description: t("already_applied_description"),
-          variant: "destructive",
+          variant: "default",
         });
         return;
       }

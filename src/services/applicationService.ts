@@ -195,30 +195,26 @@ export class ApplicationService {
 
         await runTransaction(db, async (transaction) => {
           const testerDoc = await transaction.get(testerRef);
+          const posterDoc = await transaction.get(posterRef);
           if (!testerDoc.exists()) {
             throw new Error('Tester user not found');
           }
           const testerData = testerDoc.data() as any;
           const currentPending = testerData.testerWallet?.pendingBalance || 0;
+          const posterPending = posterDoc.exists() ? ((posterDoc.data() as any)?.posterWallet?.pendingBalance || 0) : undefined;
 
-          // 1) Adicionar saldo pendente ao freelancer
           transaction.update(testerRef, {
             'testerWallet.pendingBalance': currentPending + bounty,
             updatedAt: Timestamp.now(),
           });
 
-          // 2) Reservar saldo pendente do contratante (se existir carteira do contratante)
-          const posterDoc = await transaction.get(posterRef);
-          if (posterDoc.exists()) {
-            const posterData = posterDoc.data() as any;
-            const posterPending = posterData.posterWallet?.pendingBalance || 0;
+          if (posterPending !== undefined) {
             transaction.update(posterRef, {
               'posterWallet.pendingBalance': posterPending + bounty,
               updatedAt: Timestamp.now(),
             });
           }
 
-          // 3) Criar transação de escrow pendente para rastreio do valor
           const transactionRef = doc(collection(db, 'transactions'));
           transaction.set(transactionRef, {
             userId: appData.testerId,

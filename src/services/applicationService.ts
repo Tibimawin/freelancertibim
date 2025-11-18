@@ -20,6 +20,45 @@ import { NotificationService } from './notificationService';
 import { TransactionService, JobService } from './firebase'; // Import JobService
 
 export class ApplicationService {
+  private static normalizeApplicationData(data: any, id: string): Application {
+    const toDate = (v: any): Date => {
+      if (!v) return new Date();
+      if (typeof v?.toDate === 'function') return v.toDate();
+      return new Date(v);
+    };
+    const app: Application = {
+      id,
+      jobId: data.jobId,
+      testerId: data.testerId,
+      testerName: data.testerName,
+      status: data.status,
+      appliedAt: toDate(data.appliedAt),
+      ...(data.proofSubmission && {
+        proofSubmission: {
+          proofs: data.proofSubmission.proofs || [],
+          submittedAt: toDate(data.proofSubmission.submittedAt),
+        },
+      }),
+      ...(data.feedback && {
+        feedback: {
+          rating: data.feedback.rating,
+          comment: data.feedback.comment,
+          providedAt: toDate(data.feedback.providedAt),
+        },
+      }),
+      ...(data.contractorFeedback && {
+        contractorFeedback: {
+          rating: data.contractorFeedback.rating,
+          comment: data.contractorFeedback.comment,
+          providedAt: toDate(data.contractorFeedback.providedAt),
+        },
+      }),
+      ...(data.reviewedAt && { reviewedAt: toDate(data.reviewedAt) }),
+      ...(data.reviewedBy && { reviewedBy: data.reviewedBy }),
+      ...(data.rejectionReason && { rejectionReason: data.rejectionReason }),
+    } as Application;
+    return app;
+  }
   static async hasUserApplied(jobId: string, userId: string): Promise<boolean> {
     try {
       const q = query(
@@ -480,9 +519,8 @@ export class ApplicationService {
 
       const querySnapshot = await getDocs(q);
       const applications: Application[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        applications.push({ id: doc.id, ...doc.data() } as Application);
+      querySnapshot.forEach((d) => {
+        applications.push(ApplicationService.normalizeApplicationData(d.data(), d.id));
       });
 
       return applications;
@@ -502,12 +540,9 @@ export class ApplicationService {
 
       const querySnapshot = await getDocs(q);
       const applications: Application[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const app = { id: doc.id, ...doc.data() } as Application;
-        if (!statusFilter || app.status === statusFilter) {
-          applications.push(app);
-        }
+      querySnapshot.forEach((d) => {
+        const app = ApplicationService.normalizeApplicationData(d.data(), d.id);
+        if (!statusFilter || app.status === statusFilter) applications.push(app);
       });
 
       return applications;

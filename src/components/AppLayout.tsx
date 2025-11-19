@@ -19,16 +19,25 @@ export default function AppLayout() {
       window.removeEventListener('orientationchange', update);
     };
   }, []);
+  if (scale < 1) {
+    return (
+      <div style={{ height: '100vh', width: '100%', overflowX: 'hidden', overflowY: 'auto' }}>
+        <div
+          style={{
+            width: 1280,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
+        >
+          <Header />
+          <Outlet />
+          <Footer />
+        </div>
+      </div>
+    );
+  }
   return (
-    <div
-      style={{
-        transform: scale < 1 ? `scale(${scale})` : 'none',
-        transformOrigin: 'top left',
-        width: scale < 1 ? 1280 : '100%',
-        margin: scale < 1 ? 0 : '0 auto',
-        overflowX: 'hidden',
-      }}
-    >
+    <div style={{ width: '100%', margin: '0 auto', overflowX: 'hidden' }}>
       <Header />
       <Outlet />
       <Footer />

@@ -8,145 +8,107 @@
 
 @layer base {
   :root {
-    /* Core Colors - Light Mode (Soft Nebula) */
-    --background: 220 14% 98%; /* Light gray-blue */
-    --foreground: 222.2 84% 4.9%; /* Dark text */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary - Gold */
-    --primary: 42 85% 50%;
-    --primary-foreground: 0 0% 98%;
-    --primary-hover: 42 85% 43%;
+    --primary: 226 70% 55%;
+    --primary-foreground: 210 40% 98%;
+    --primary-hover: 226 70% 50%;
 
-    /* Secondary - Light Blue-Gray */
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 8.9% 46.1%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 220 9% 46%;
 
-    /* Success - Green */
-    --success: 142 76% 36%;
+    --success: 142 72% 35%;
     --success-foreground: 0 0% 98%;
-    --success-hover: 142 76% 26%;
+    --success-hover: 142 72% 28%;
 
-    /* Warning - Orange */
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 0 0% 98%;
 
-    /* Muted colors */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8.9% 46.1%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 8.9% 46.1%;
+    --accent: 42 85% 55%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 42 85% 50%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 226 70% 55%;
 
     --radius: 0.75rem;
 
-    /* Custom Gradients - Light Mode */
-    --gradient-primary: linear-gradient(135deg, hsl(42 85% 50%), hsl(212 65% 20%));
-    --gradient-secondary: linear-gradient(135deg, hsl(210 20% 98%), hsl(220 14% 96%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(158 64% 52%));
-    
-    /* Deep Nebula Specific Colors (Light Mode - subtle versions) */
-    --nebula-bg: 220 14% 98%;
-    --nebula-fg: 222.2 84% 4.9%;
-    --electric-purple: 42 85% 50%; /* Reutilizado como ouro da marca */
-    --cosmic-blue: 212 65% 20%; /* Azul escuro (navy) da marca */
-    --star-glow: 42 100% 70%; /* Brilho amarelo dourado */
-
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
-    /* Transitions */
-    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --gradient-primary: linear-gradient(135deg, hsl(226 70% 55%), hsl(42 85% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 30% 96%), hsl(210 20% 98%));
+    --gradient-success: linear-gradient(135deg, hsl(142 72% 35%), hsl(158 64% 52%));
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 226 70% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 214 20% 88%;
+    --sidebar-ring: 226 70% 55%;
   }
 
   .dark {
-    /* Core Colors - Dark Mode (Deep Nebula) */
-    --background: 220 20% 8%; /* Very dark blue-purple */
-    --foreground: 210 40% 98%; /* Bright white */
+    --background: 222 22% 12%;
+    --foreground: 210 40% 98%;
 
-    --card: 220 18% 12%; /* Slightly lighter dark card */
+    --card: 223 18% 16%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 18% 12%;
+    --popover: 223 18% 16%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Gold (Dark) */
-    --primary: 42 85% 55%;
-    --primary-foreground: 0 0% 98%;
-    --primary-hover: 42 85% 45%;
+    --primary: 226 70% 60%;
+    --primary-foreground: 210 40% 98%;
+    --primary-hover: 226 70% 55%;
 
-    /* Secondary - Navy */
-    --secondary: 212 65% 20%;
+    --secondary: 223 18% 20%;
     --secondary-foreground: 212 65% 85%;
 
-    /* Success - Glowing Green */
-    --success: 140 70% 45%;
+    --success: 142 60% 45%;
     --success-foreground: 0 0% 98%;
-    --success-hover: 140 70% 35%;
+    --success-hover: 142 60% 38%;
 
-    /* Warning - Vibrant Orange */
-    --warning: 35 90% 60%;
+    --warning: 38 90% 60%;
     --warning-foreground: 0 0% 98%;
 
-    /* Muted colors */
-    --muted: 220 15% 15%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 222 15% 18%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 220 15% 15%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 42 85% 60%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 15% 20%; /* Subtle glowing border */
-    --input: 220 15% 15%;
-    --ring: 42 85% 55%;
+    --border: 223 12% 22%;
+    --input: 223 12% 20%;
+    --ring: 226 70% 60%;
 
-    /* Custom Gradients - Dark Mode */
-    --gradient-primary: linear-gradient(135deg, hsl(42 85% 55%), hsl(212 65% 20%)); /* Gold to Navy */
-    --gradient-secondary: linear-gradient(135deg, hsl(220 18% 12%), hsl(220 15% 15%));
-    --gradient-success: linear-gradient(135deg, hsl(140 70% 45%), hsl(160 60% 50%));
-    
-    /* Deep Nebula Specific Colors (Dark Mode) */
-    --nebula-bg: 220 20% 8%;
-    --nebula-fg: 210 40% 98%;
-    --electric-purple: 42 85% 55%; /* Ouro na versão escura */
-    --cosmic-blue: 212 65% 20%; /* Navy constante */
-    --star-glow: 42 100% 70%; /* Brilho dourado */
+    --gradient-primary: linear-gradient(135deg, hsl(226 70% 60%), hsl(42 85% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(223 18% 16%), hsl(222 15% 18%));
+    --gradient-success: linear-gradient(135deg, hsl(142 60% 45%), hsl(160 60% 50%));
 
-    --sidebar-background: 220 18% 12%;
+    --sidebar-background: 223 18% 16%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 270 80% 60%;
+    --sidebar-primary: 226 70% 60%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent: 222 15% 18%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 270 80% 60%;
+    --sidebar-border: 223 12% 22%;
+    --sidebar-ring: 226 70% 60%;
   }
 }
 
@@ -156,8 +118,16 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter antialiased;
+    @apply bg-background text-foreground font-inter antialiased transition-colors duration-300;
   }
+
+@layer base {
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+}
 }
 
 @layer components {

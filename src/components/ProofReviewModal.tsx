@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, XCircle, Eye, FileText } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Application, Job, ProofSubmission } from "@/types/firebase";
 import { ApplicationService } from "@/services/applicationService";
 import { toast } from "sonner"; // Importando toast do sonner
@@ -108,42 +109,47 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
     }
   };
 
+  const getFileUrl = (p: any) => (p as any)?.fileUrl || (p as any)?.content || '';
+  const isImageUrl = (url: string) => /\.(png|jpg|jpeg|webp|gif|bmp|svg)(\?.*)?$/i.test(url);
+  const formatUrlLabel = (url: string) => {
+    try {
+      const u = new URL(url);
+      const path = u.pathname.length > 40 ? `${u.pathname.slice(0, 40)}…` : u.pathname;
+      return `${u.hostname}${path}`;
+    } catch {
+      return url.length > 60 ? `${url.slice(0, 60)}…` : url;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent aria-describedby="proof-review-description" className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[90vw] max-w-[1000px] h-[85vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Revisar Provas - {application.job?.title}</DialogTitle>
-          <DialogDescription id="proof-review-description">
-            Analise as provas submetidas e aprove ou rejeite a tarefa. Ao aprovar, o pagamento é processado e notificações são enviadas.
-          </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Job Info */}
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Informações da Tarefa</h3>
-            <p className="text-sm text-muted-foreground mb-2">{application.job?.description}</p>
-            <div className="flex items-center space-x-4 text-sm">
-              <span>Freelancer: <strong>{application.testerName}</strong></span>
-        <span>Valor: <strong>{application.job?.bounty.toFixed(2)} Kz</strong></span>
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-4 pb-28 space-y-6">
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2">Informações da Tarefa</h3>
+              <p className="text-sm text-muted-foreground mb-2">{application.job?.description}</p>
+              <div className="flex items-center space-x-4 text-sm">
+                <span>Freelancer: <strong>{application.testerName}</strong></span>
+                <span>Valor: <strong>{application.job?.bounty.toFixed(2)} Kz</strong></span>
+              </div>
             </div>
-          </div>
 
-          {/* Proofs */}
-          {application.proofSubmission?.proofs && application.proofSubmission.proofs.length > 0 ? (
-            <div>
-              <h3 className="font-semibold mb-4">Provas Submetidas</h3>
-              <div className="space-y-4">
-                {application.proofSubmission.proofs.map((proof, index) => {
-                  // Find the requirement for this proof
-                  const requirement = application.job?.proofRequirements?.find(
-                    req => req.id === proof.requirementId
-                  );
-                  
-                  return (
-                    <div key={index} className="border border-border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
+            {application.proofSubmission?.proofs && application.proofSubmission.proofs.length > 0 ? (
+              <div>
+                <h3 className="font-semibold mb-4">Provas Submetidas</h3>
+                <div className="space-y-4">
+                  {application.proofSubmission.proofs.map((proof, index) => {
+                    const requirement = application.job?.proofRequirements?.find(
+                      req => req.id === proof.requirementId
+                    );
+                    const url = getFileUrl(proof);
+                    return (
+                      <div key={index} className="border border-border rounded-lg p-4">
+                        <div className="mb-3">
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline">{getProofTypeLabel(proof.type)}</Badge>
                             {requirement?.isRequired && (
@@ -155,95 +161,118 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
                             <p className="text-sm text-muted-foreground">{requirement.description}</p>
                           )}
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="md:col-span-2 space-y-3">
+                            {proof.type === 'text' && (
+                              <div className="bg-background border border-border rounded p-3">
+                                <p className="text-sm break-words">{proof.content}</p>
+                              </div>
+                            )}
+
+                            {proof.type === 'url' && (
+                              <div className="bg-background border border-border rounded p-3 flex items-center justify-between">
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate max-w-[70%]">{formatUrlLabel(url)}</a>
+                                <Button variant="ghost" size="sm" onClick={() => url && window.open(url, '_blank')}>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Visualizar
+                                </Button>
+                              </div>
+                            )}
+
+                            {(proof.type === 'screenshot' || isImageUrl(url)) && (
+                              <div>
+                                <AspectRatio ratio={16/9} className="bg-background border border-border rounded overflow-hidden">
+                                  {url ? (
+                                    <img src={url} alt="Prova" className="h-full w-full object-contain" />
+                                  ) : (
+                                    <div className="h-full w-full" />
+                                  )}
+                                </AspectRatio>
+                                <div className="flex justify-end mt-2">
+                                  <Button variant="ghost" size="sm" onClick={() => url && window.open(url, '_blank')}>
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Abrir imagem
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {proof.type !== 'text' && proof.type !== 'url' && !isImageUrl(url) && (
+                              <div className="bg-background border border-border rounded p-3">
+                                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                  <FileText className="h-4 w-4" />
+                                  <span className="truncate max-w-[60%]">{formatUrlLabel(url)}</span>
+                                  <Button variant="ghost" size="sm" onClick={() => url && window.open(url, '_blank')}>
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Visualizar
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-3">
+                            {proof.comment && (
+                              <div className="bg-muted/30 border border-border rounded p-3">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Comentário</p>
+                                <p className="text-sm break-words">{proof.comment}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="space-y-3">
-                        {proof.type === 'text' || proof.type === 'url' ? (
-                          <div className="bg-background border border-border rounded p-3">
-                            <p className="text-sm">{proof.content}</p>
-                          </div>
-                        ) : (
-                          <div className="bg-background border border-border rounded p-3">
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                              <span>Arquivo: {proof.content}</span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  const url = (proof as any).fileUrl || proof.content;
-                                  if (url) window.open(url, '_blank');
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Visualizar
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        {proof.comment && (
-                          <div className="bg-muted/30 border border-border rounded p-3">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Comentário:</p>
-                            <p className="text-sm">{proof.comment}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Nenhuma prova foi submetida ainda.</p>
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Action Buttons */}
-          {!showRejectionForm ? (
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowRejectionForm(true)}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Rejeitar
-              </Button>
-              <Button
-                onClick={handleApprove}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {isLoading ? "Aprovando..." : "Aprovar"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Motivo da rejeição
-                </label>
-                <Textarea
-                  placeholder="Explique por que as provas foram rejeitadas..."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  className="min-h-[100px]"
-                />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhuma prova foi submetida ainda.</p>
               </div>
-              
-              <div className="flex space-x-3">
+            )}
+
+            {showRejectionForm && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Motivo da rejeição</label>
+                  <Textarea
+                    placeholder="Explique por que as provas foram rejeitadas..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="min-h-[120px]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-border p-4 flex space-x-3 bg-card">
+            {!showRejectionForm ? (
+              <>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowRejectionForm(false);
-                    setRejectionReason('');
-                  }}
+                  onClick={() => setShowRejectionForm(true)}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Rejeitar
+                </Button>
+                <Button
+                  onClick={handleApprove}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isLoading ? "Aprovando..." : "Aprovar"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => { setShowRejectionForm(false); setRejectionReason(''); }}
                   disabled={isLoading}
                   className="flex-1"
                 >
@@ -257,9 +286,9 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
                 >
                   {isLoading ? "Rejeitando..." : "Confirmar Rejeição"}
                 </Button>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

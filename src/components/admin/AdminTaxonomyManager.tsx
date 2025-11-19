@@ -129,6 +129,21 @@ const AdminTaxonomyManager = () => {
     }
   };
 
+  const seedSocial = async () => {
+    try {
+      const catId = await TaxonomyService.ensureCategory('Social');
+      const names = [
+        'YouTube','X (Twitter)','Snapchat','Reddit','Twitch','Discord','TikTok','Facebook','Instagram','Telegram','WhatsApp','Pinterest','Threads','LinkedIn','Kwai','Likee'
+      ];
+      await TaxonomyService.ensureSubcategories('Social', names);
+      toast.success('Subcategorias famosas de Social cadastradas');
+      await loadAll();
+    } catch (e) {
+      console.error(e);
+      toast.error('Falha ao cadastrar subcategorias de Social');
+    }
+  };
+
   const addLocation = async () => {
     const name = newLocation.trim();
     if (!name) return;
@@ -266,6 +281,9 @@ const AdminTaxonomyManager = () => {
                 </SelectContent>
               </Select>
               <Button onClick={addSubcat}>Adicionar</Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={seedSocial}>Cadastrar redes sociais famosas</Button>
             </div>
             <div className="space-y-2">
               {Object.entries(groupedSubcategories).map(([catName, items]) => (

@@ -79,28 +79,35 @@ const CreateJob = () => {
     switch (cat) {
       case "Mobile":
         return [
-          { id: "App", name: "App", category: "Mobile" },
-          { id: "Play Store", name: "Play Store", category: "Mobile" },
-          { id: "App Store", name: "App Store", category: "Mobile" },
+          { id: "mobile-app", name: "App", category: "Mobile" },
+          { id: "mobile-play-store", name: "Play Store", category: "Mobile" },
+          { id: "mobile-app-store", name: "App Store", category: "Mobile" },
         ];
       case "Web":
         return [
-          { id: "Website", name: "Website", category: "Web" },
-          { id: "Visitar site", name: "Visitar site", category: "Web" },
-          { id: "Ver video no Youtube", name: "Ver video no Youtube", category: "Web" },
+          { id: "web-website", name: "Website", category: "Web" },
+          { id: "web-visit-site", name: "Visitar site", category: "Web" },
+          { id: "web-youtube", name: "Ver vídeo no YouTube", category: "Web" },
         ];
       case "Social":
         return [
-          { id: "Facebook", name: "Facebook", category: "Social" },
-          { id: "Instagram", name: "Instagram", category: "Social" },
-          { id: "Tiktok", name: "Tiktok", category: "Social" },
-          { id: "Youtube", name: "Youtube", category: "Social" },
-          { id: "Telegram", name: "Telegram", category: "Social" },
-          { id: "WhatsApp", name: "WhatsApp", category: "Social" },
-          { id: "Pinterest", name: "Pinterest", category: "Social" },
-          { id: "Threads", name: "Threads", category: "Social" },
-          { id: "LinkedIn", name: "LinkedIn", category: "Social" },
-          { id: "Outras redes sociais", name: "Outras redes sociais", category: "Social" },
+          { id: "social-facebook", name: "Facebook", category: "Social" },
+          { id: "social-instagram", name: "Instagram", category: "Social" },
+          { id: "social-tiktok", name: "TikTok", category: "Social" },
+          { id: "social-youtube", name: "YouTube", category: "Social" },
+          { id: "social-x", name: "X (Twitter)", category: "Social" },
+          { id: "social-snapchat", name: "Snapchat", category: "Social" },
+          { id: "social-reddit", name: "Reddit", category: "Social" },
+          { id: "social-twitch", name: "Twitch", category: "Social" },
+          { id: "social-discord", name: "Discord", category: "Social" },
+          { id: "social-telegram", name: "Telegram", category: "Social" },
+          { id: "social-whatsapp", name: "WhatsApp", category: "Social" },
+          { id: "social-pinterest", name: "Pinterest", category: "Social" },
+          { id: "social-threads", name: "Threads", category: "Social" },
+          { id: "social-linkedin", name: "LinkedIn", category: "Social" },
+          { id: "social-kwai", name: "Kwai", category: "Social" },
+          { id: "social-likee", name: "Likee", category: "Social" },
+          { id: "social-others", name: "Outras redes sociais", category: "Social" },
         ];
       default:
         return [];
@@ -136,7 +143,18 @@ const CreateJob = () => {
       }
       try {
         const subs = await TaxonomyService.getSubcategories(cat);
-        setSubcategoryOptions(subs);
+        const famous = fallbackSubcategoriesFor(cat);
+        const names = new Set<string>();
+        const merged: SubcategoryItem[] = [];
+        for (const s of subs) {
+          const key = (s.name || '').toLowerCase();
+          if (key && !names.has(key)) { names.add(key); merged.push(s); }
+        }
+        for (const f of famous) {
+          const key = (f.name || '').toLowerCase();
+          if (key && !names.has(key)) { names.add(key); merged.push(f); }
+        }
+        setSubcategoryOptions(merged);
       } catch (e) {
         setSubcategoryOptions(fallbackSubcategoriesFor(cat));
       }

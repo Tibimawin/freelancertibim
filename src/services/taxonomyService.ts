@@ -68,6 +68,27 @@ export class TaxonomyService {
     await deleteDoc(doc(db, 'subcategories', id));
   }
 
+  // Ensure helpers
+  static async ensureCategory(name: string): Promise<string> {
+    const snap = await getDocs(query(collection(db, 'categories'), where('name', '==', name)));
+    if (!snap.empty) return snap.docs[0].id;
+    const ref = await addDoc(collection(db, 'categories'), { name });
+    return ref.id;
+  }
+
+  static async ensureSubcategories(category: string, names: string[]): Promise<string[]> {
+    const base = collection(db, 'subcategories');
+    const existingSnap = await getDocs(query(base, where('category', '==', category)));
+    const existingNames = new Set(existingSnap.docs.map((d) => ((d.data() as any).name || '').toLowerCase()));
+    const created: string[] = [];
+    for (const name of names) {
+      if (existingNames.has(name.toLowerCase())) continue;
+      const ref = await addDoc(base, { name, category });
+      created.push(ref.id);
+    }
+    return created;
+  }
+
   // Payment ranges (for filtering by bounty)
   static async getPaymentRanges(): Promise<PaymentRangeItem[]> {
     const snap = await getDocs(query(collection(db, 'payment_ranges'), orderBy('min')));

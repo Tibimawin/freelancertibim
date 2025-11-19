@@ -123,12 +123,12 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] max-w-[1000px] h-[85vh] overflow-hidden p-0">
+      <DialogContent className="w-[90vw] max-w-[1000px] h-[85vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Revisar Provas - {application.job?.title}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-4 pb-28 space-y-6">
+        <div className="flex flex-col">
+          <div className="px-6 py-4 pb-32 space-y-6">
             <div className="bg-muted/30 p-4 rounded-lg">
               <h3 className="font-semibold mb-2">Informações da Tarefa</h3>
               <p className="text-sm text-muted-foreground mb-2">{application.job?.description}</p>
@@ -247,7 +247,7 @@ const ProofReviewModal = ({ isOpen, onClose, application, onReviewed }: ProofRev
             )}
           </div>
 
-          <div className="border-t border-border p-4 flex space-x-3 bg-card">
+          <div className="border-t border-border p-4 flex space-x-3 bg-card sticky bottom-0">
             {!showRejectionForm ? (
               <>
                 <Button

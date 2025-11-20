@@ -66,6 +66,22 @@ const CreateJob = () => {
       guarantee: 'none' as 'none' | 'basic' | 'premium',
       extras: { requireLogin: false, avoidRepeat: true, openInIframe: true },
     },
+    tiktok: {
+      actionType: 'follow' as 'watch' | 'follow',
+      videoTitle: '',
+      videoUrl: '',
+      viewTimeSeconds: 30,
+      dailyMaxViews: 500,
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
+    },
+    vk: {
+      actionType: 'join' as 'join' | 'like',
+      targetTitle: '',
+      targetUrl: '',
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { requireLogin: false, avoidRepeat: true },
+    },
   });
 
   // Dynamic taxonomy options
@@ -104,6 +120,7 @@ const CreateJob = () => {
           { id: "social-facebook", name: "Facebook", category: "Social" },
           { id: "social-instagram", name: "Instagram", category: "Social" },
           { id: "social-tiktok", name: "TikTok", category: "Social" },
+          { id: "social-vk", name: "VK", category: "Social" },
           { id: "social-youtube", name: "YouTube", category: "Social" },
           { id: "social-x", name: "X (Twitter)", category: "Social" },
           { id: "social-snapchat", name: "Snapchat", category: "Social" },
@@ -443,6 +460,30 @@ const CreateJob = () => {
                         }))}
                       >
                         <Monitor className="h-4 w-4 mr-2" /> Website
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('tiktok') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Social',
+                          subcategory: 'TikTok',
+                        }))}
+                      >
+                        <Clock className="h-4 w-4 mr-2" /> TikTok
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('vk') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Social',
+                          subcategory: 'VK',
+                        }))}
+                      >
+                        <Users className="h-4 w-4 mr-2" /> VK
                       </Button>
                     </div>
                   </CardContent>

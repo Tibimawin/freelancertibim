@@ -803,12 +803,12 @@ const JobDetails = () => {
 
       {/* Proof Requirements Section */}
       <Card className="bg-card border-border shadow-md">
-        <CardHeader>
+          <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="h-5 w-5 text-star-glow" />
-              <span>{t("proof_requirements")}</span>
+              <span>{t(isYouTubeJob ? 'youtube_auto_verification' : 'proof_requirements')}</span>
             </CardTitle>
-        </CardHeader>
+          </CardHeader>
         
         <CardContent className="space-y-6">
             {isYouTubeJob ? (
@@ -868,18 +868,11 @@ const JobDetails = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(showSubmittedBanner || myApplication?.status === 'submitted') && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
-                        <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
-                      </Alert>
-                    )}
-                    {myApplication?.status === 'approved' && (
+                    {(showSubmittedBanner || myApplication?.status === 'approved') && (
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>{t('approved')}</AlertTitle>
-                        <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>

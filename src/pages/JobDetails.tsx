@@ -398,7 +398,7 @@ const JobDetails = () => {
         setIsApplying(false);
       }
     } else if (isTikTokJob) {
-      if (!tkCanSubmit) {
+      if (!tkCanSubmit || !userData?.settings?.socialAccounts?.tiktok) {
         toast({ title: t('error'), description: (job?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch'), variant: 'destructive' });
         return;
       }
@@ -424,7 +424,7 @@ const JobDetails = () => {
         setIsApplying(false);
       }
     } else if (isVKJob) {
-      if (!vkJoinConfirmed) {
+      if (!vkJoinConfirmed || !userData?.settings?.socialAccounts?.vk) {
         toast({ title: t('error'), description: (job?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like'), variant: 'destructive' });
         return;
       }
@@ -909,9 +909,13 @@ const JobDetails = () => {
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
                       <div className="text-sm text-muted-foreground">
-                        <span>{t('tiktok_verification_info')}</span>
+                        {userData?.settings?.socialAccounts?.tiktok ? (
+                          <span>{userData.settings.socialAccounts.tiktok}</span>
+                        ) : (
+                          <span>{t('link_tiktok_profile_to_apply')}</span>
+                        )}
                       </div>
-                      <Button onClick={handleSubmitProofs} disabled={!tkCanSubmit || isApplying} className="glow-effect">
+                      <Button onClick={handleSubmitProofs} disabled={!tkCanSubmit || isApplying || !userData?.settings?.socialAccounts?.tiktok} className="glow-effect">
                         {isApplying ? t('submitting') : t('confirm_task')}
                       </Button>
                     </div>
@@ -961,9 +965,13 @@ const JobDetails = () => {
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
                       <div className="text-sm text-muted-foreground">
-                        <span>{t('vk_verification_info')}</span>
+                        {userData?.settings?.socialAccounts?.vk ? (
+                          <span>{userData.settings.socialAccounts.vk}</span>
+                        ) : (
+                          <span>{t('link_vk_profile_to_apply')}</span>
+                        )}
                       </div>
-                    <Button onClick={handleSubmitProofs} disabled={!vkJoinConfirmed || isApplying} className="glow-effect">
+                      <Button onClick={handleSubmitProofs} disabled={!vkJoinConfirmed || isApplying || !userData?.settings?.socialAccounts?.vk} className="glow-effect">
                         {isApplying ? t('submitting') : t('confirm_task')}
                       </Button>
                     </div>

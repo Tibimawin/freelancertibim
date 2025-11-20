@@ -51,13 +51,27 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       setIsApplying(true);
       const job = await JobService.getJobById(jobId);
       const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
-      const requiresChannel = Boolean(job?.youtube && job.youtube.actionType === 'subscribe');
-      if (isYouTubeJob && requiresChannel && !userData?.settings?.socialAccounts?.youtube) {
+      const isTikTokJob = Boolean(job?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
+      const isVKJob = Boolean(job?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
+      const requiresYoutubeChannel = Boolean(job?.youtube && job.youtube.actionType === 'subscribe');
+      const requiresTiktokProfile = Boolean(job?.tiktok && job.tiktok.actionType === 'follow');
+      const requiresVKProfile = Boolean(job?.vk);
+      if (isYouTubeJob && requiresYoutubeChannel && !userData?.settings?.socialAccounts?.youtube) {
         toast({
           title: t('youtube_channel_required'),
           description: t('link_youtube_channel_to_apply'),
           variant: 'destructive',
         });
+        navigate('/profile?tab=settings');
+        return;
+      }
+      if (isTikTokJob && requiresTiktokProfile && !userData?.settings?.socialAccounts?.tiktok) {
+        toast({ title: t('tiktok_profile_required'), description: t('link_tiktok_profile_to_apply'), variant: 'destructive' });
+        navigate('/profile?tab=settings');
+        return;
+      }
+      if (isVKJob && requiresVKProfile && !userData?.settings?.socialAccounts?.vk) {
+        toast({ title: t('vk_profile_required'), description: t('link_vk_profile_to_apply'), variant: 'destructive' });
         navigate('/profile?tab=settings');
         return;
       }

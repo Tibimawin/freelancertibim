@@ -21,8 +21,13 @@ export default function AppLayout() {
   }, []);
 
   useEffect(() => {
-    const h = footerRef.current?.offsetHeight || 0;
-    setPadBottom(h * scale);
+    const updatePad = () => {
+      const h = footerRef.current?.getBoundingClientRect().height || 0;
+      setPadBottom(h);
+    };
+    updatePad();
+    window.addEventListener('resize', updatePad);
+    return () => window.removeEventListener('resize', updatePad);
   }, [scale]);
 
   return (

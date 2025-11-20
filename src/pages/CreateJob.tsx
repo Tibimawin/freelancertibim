@@ -56,6 +56,15 @@ const CreateJob = () => {
     requirements: [] as string[],
     detailedInstructions: [] as TaskInstruction[],
     proofRequirements: [] as ProofRequirement[],
+    youtube: {
+      actionType: 'watch' as 'watch' | 'subscribe',
+      videoTitle: '',
+      videoUrl: '',
+      viewTimeSeconds: 30,
+      dailyMaxViews: 500,
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { requireLogin: false, avoidRepeat: true, openInIframe: true },
+    },
   });
 
   // Dynamic taxonomy options
@@ -269,10 +278,11 @@ const CreateJob = () => {
     }
 
     // Validações básicas
-    if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty) {
+    const isYouTube = (formData.subcategory || '').toLowerCase().includes('youtube') || (formData.subcategory || '').toLowerCase().includes('ver vídeo');
+    if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty || (isYouTube && !formData.youtube.videoUrl)) {
       toast({
         title: t("error"),
-        description: t("fill_all_required_fields"), // Assuming this translation exists
+        description: isYouTube ? 'Preencha todos os campos obrigatórios do YouTube (incluindo link do vídeo).' : t("fill_all_required_fields"),
         variant: "destructive",
       });
       return;
@@ -330,6 +340,7 @@ const CreateJob = () => {
         posterApprovalRate: typeof userData.approvalRate === 'number' ? userData.approvalRate : undefined,
         posterRating: typeof userData.rating === 'number' ? userData.rating : undefined,
         posterRatingCount: typeof userData.ratingCount === 'number' ? userData.ratingCount : undefined,
+        youtube: isYouTube ? formData.youtube : undefined,
       };
 
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
@@ -502,6 +513,94 @@ const CreateJob = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* YouTube: formulário específico */}
+                {((formData.subcategory || '').toLowerCase().includes('youtube') || (formData.subcategory || '').toLowerCase().includes('ver vídeo')) && (
+                  <Card className="bg-card border-border shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Globe className="h-5 w-5 text-cosmic-blue" />
+                        <span>Visualização de vídeos do YouTube</span>
+                      </CardTitle>
+                      <CardDescription>Configure os detalhes do anúncio de YouTube.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button type="button" variant={formData.youtube.actionType === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, actionType: 'watch' } }))}>Assista ao vídeo</Button>
+                        <Button type="button" variant={formData.youtube.actionType === 'subscribe' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, actionType: 'subscribe' } }))}>Inscreva-se no canal</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="yt-title">Título do vídeo</Label>
+                          <Input id="yt-title" placeholder="Ex.: Tutorial de configuração" value={formData.youtube.videoTitle} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, videoTitle: e.target.value } }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="yt-url">Link para o vídeo</Label>
+                          <Input id="yt-url" placeholder="https://www.youtube.com/watch?v=..." value={formData.youtube.videoUrl} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, videoUrl: e.target.value } }))} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label>Tempo de visualização</Label>
+                          <Select value={String(formData.youtube.viewTimeSeconds)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, viewTimeSeconds: parseInt(v) || 30 } }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                            <SelectContent>
+                              {[10, 30, 60, 90, 120, 150, 180].map(s => (
+                                <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Velocidade de execução</Label>
+                          <Select value={String(formData.youtube.dailyMaxViews)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, dailyMaxViews: parseInt(v) || 500 } }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">Lento - 100/dia</SelectItem>
+                              <SelectItem value="250">Moderado - 250/dia</SelectItem>
+                              <SelectItem value="500">Padrão - 500/dia</SelectItem>
+                              <SelectItem value="1000">Rápido - 1000/dia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Garantia</Label>
+                          <Select value={formData.youtube.guarantee} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, guarantee: v } }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem garantia</SelectItem>
+                              <SelectItem value="basic">Garantia básica</SelectItem>
+                              <SelectItem value="premium">Garantia premium</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="yt-login" checked={!!formData.youtube.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <Label htmlFor="yt-login">Exigir login no YouTube</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="yt-repeat" checked={!!formData.youtube.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <Label htmlFor="yt-repeat">Evitar repetição do mesmo usuário</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="yt-iframe" checked={!!formData.youtube.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <Label htmlFor="yt-iframe">Abrir em iframe</Label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="yt-bounty">Custo por visualização (Kz)</Label>
+                        <Input id="yt-bounty" type="number" step="0.01" min="5" max="50" value={formData.bounty} onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))} />
+                        <p className="text-xs text-muted-foreground mt-2">Este valor será utilizado como preço por visualização.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Instruções Detalhadas */}
                 <Card className="bg-card border-border shadow-md">

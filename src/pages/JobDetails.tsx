@@ -403,8 +403,8 @@ const JobDetails = () => {
           await ApplicationService.submitProofs(myApplication.id, proofsToSubmit as any);
           await ApplicationService.reviewApplication(myApplication.id, 'approved', job.posterId);
           toast({
-            title: t("proofs_submitted_success"),
-            description: t('task_auto_approved'),
+            title: t('payout_credited_success'),
+            description: t('payout_credited_description'),
           });
           setShowSubmittedBanner(true);
         }

@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { Job, Application } from "@/types/firebase";
+import { Job, Application, Transaction } from "@/types/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import { JobService } from "@/services/firebase";
+import { JobService, TransactionService } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { ApplicationService } from "@/services/applicationService";
 import { useTranslation } from 'react-i18next';
@@ -51,6 +51,7 @@ const JobDetails = () => {
   const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
   const [ytIsPlaying, setYtIsPlaying] = useState(false);
   const ytPlayerRef = useRef<any>(null);
+  const [latestTransaction, setLatestTransaction] = useState<Transaction | null>(null);
   const applicantCount = useMemo(() => {
     return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;
   }, [job?.applicantCount, actualApplicantCount]);
@@ -107,6 +108,21 @@ const JobDetails = () => {
     }
     return () => { if (timer) clearInterval(timer); };
   }, [isYouTubeJob, job?.youtube?.actionType, ytIsPlaying, ytRequiredSeconds]);
+
+  useEffect(() => {
+    const fetchLatestTransaction = async () => {
+      if (!currentUser || !isYouTubeJob) return;
+      if (!(showSubmittedBanner || myApplication?.status === 'approved')) return;
+      try {
+        const txs = await TransactionService.getUserTransactions(currentUser.uid, 10);
+        const byApp = txs.find((tx) => tx.type === 'payout' && tx.metadata?.applicationId === myApplication?.id);
+        const byJob = txs.find((tx) => tx.type === 'payout' && tx.metadata?.jobId === job?.id);
+        const anyPayout = txs.find((tx) => tx.type === 'payout');
+        setLatestTransaction(byApp || byJob || anyPayout || txs[0] || null);
+      } catch {}
+    };
+    fetchLatestTransaction();
+  }, [currentUser, isYouTubeJob, showSubmittedBanner, myApplication?.status, myApplication?.id, job?.id]);
 
   useEffect(() => {
     if (!isYouTubeJob || !ytEmbedOpen || job?.youtube?.actionType !== 'watch' || !ytVideoId) return;
@@ -874,6 +890,13 @@ const JobDetails = () => {
                         <AlertTitle>{t('payout_credited_success')}</AlertTitle>
                         <AlertDescription>{t('payout_credited_description')}</AlertDescription>
                       </Alert>
+                    )}
+                    {latestTransaction && (
+                      <div className="p-3 border rounded-md bg-muted/30">
+                        <p className="text-sm font-medium">{t('transaction_receipt')}</p>
+                        <p className="text-xs text-muted-foreground">{t('transaction_id')}: {latestTransaction.id}</p>
+                        <p className="text-xs text-muted-foreground">{t('transaction_amount')}: {(latestTransaction.amount || 0).toFixed(2)} Kz</p>
+                      </div>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
                   </div>

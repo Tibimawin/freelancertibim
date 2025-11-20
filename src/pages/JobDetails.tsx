@@ -645,110 +645,32 @@ const JobDetails = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {job.proofRequirements && job.proofRequirements.length > 0 ? (
+            {isYouTubeJob ? (
               <>
                 {canSubmitProofs ? (
-                  <>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {t("submit_your_proofs")}
-                    </p>
-                    {job.proofRequirements.map((proofReq) => (
-                      <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                            <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
-                            {proofReq.isRequired && (
-                              <Badge variant="destructive" className="text-xs">
-                                {t("required")}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                        </div>
-
-                        <div className="space-y-3 ml-6">
-                          {(proofReq.type === 'text' || proofReq.type === 'url') && (
-                            <div>
-                              <label className="text-sm font-medium text-foreground mb-2 block">
-                                {proofReq.type === 'url' ? t('link_url') : t('text_response')}
-                              </label>
-                              <Textarea
-                                placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                value={proofs[proofReq.id]?.text || ''}
-                                onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                className="min-h-[80px]"
-                              />
-                            </div>
-                          )}
-
-                          {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium text-foreground block">
-                                {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
-                              </label>
-                              <Input
-                                type="file"
-                                accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] || null;
-                                  if (!file) { handleFileChange(proofReq.id, null); return; }
-                                  const ok = validateFile(proofReq.id, proofReq.type, file);
-                                  if (!ok) { return; }
-                                  handleFileChange(proofReq.id, file);
-                                }}
-                                className="cursor-pointer"
-                              />
-                              <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
-                              {proofs[proofReq.id]?.file && (
-                                <p className="text-sm text-muted-foreground">
-                                  {t("file_selected")}: {proofs[proofReq.id].file?.name}
-                                </p>
-                              )}
-                              {uploadProgress[proofReq.id] !== undefined && (
-                                <div className="space-y-2">
-                                  <Progress value={uploadProgress[proofReq.id]} className="w-full" />
-                                  <p className="text-xs text-muted-foreground">
-                                    {t('uploading')} {uploadProgress[proofReq.id]}%
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="text-sm font-medium text-foreground mb-2 block">
-                              {t("optional_comment")}
-                            </label>
-                            <Textarea
-                              placeholder={t("optional_comment_placeholder")}
-                              value={proofs[proofReq.id]?.comment || ''}
-                              onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
-                              className="min-h-[60px]"
-                            />
-                          </div>
-                        </div>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground">
+                        {userData?.settings?.socialAccounts?.youtube ? (
+                          <span>{userData.settings.socialAccounts.youtube}</span>
+                        ) : (
+                          <span>{t('link_youtube_channel_to_apply')}</span>
+                        )}
                       </div>
-                    ))}
-
-                    <div className="flex justify-end space-x-3 pt-4">
-                      <Button variant="outline" onClick={handleCancel}>
-                        {t("cancel_button").toUpperCase()}
-                      </Button>
-                      <Button 
-                        onClick={handleSubmitProofs} 
-                        disabled={isApplying}
-                        className="min-w-[140px] glow-effect"
-                      >
-                        {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
-                      </Button>
+                      {userData?.settings?.socialAccounts?.youtube ? (
+                        <Button onClick={handleSubmitProofs} disabled={isApplying} className="glow-effect">
+                          {isApplying ? t('submitting') : t('submit_channel_link')}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" onClick={() => navigate('/profile?tab=settings')}>
+                          {t('link_youtube_channel')}
+                        </Button>
+                      )}
                     </div>
-                  </>
+                  </div>
                 ) : (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {t("contractor_requested_proofs")}
-                    </p>
                     {(showSubmittedBanner || myApplication?.status === 'submitted') && (
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
@@ -763,36 +685,162 @@ const JobDetails = () => {
                         <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
                       </Alert>
                     )}
-                    {job.proofRequirements.map((proofReq) => (
-                      <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
-                        <div className="flex items-center space-x-2 mb-2">
-                          {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                          <span className="font-medium text-foreground">{proofReq.label}</span>
-                          {proofReq.isRequired && (
-                            <Badge variant="destructive" className="text-xs">
-                              {t("required")}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                        <p className="text-xs text-muted-foreground ml-6 mt-1">
-                          {t("type")}: <span className="font-medium">{
-                            proofReq.type === 'screenshot' ? t('screenshot') :
-                            proofReq.type === 'file' ? t('file') :
-                            proofReq.type === 'url' ? t('link_url') : t('text_response')
-                          }</span>
-                        </p>
-                      </div>
-                    ))}
+                    <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
                   </div>
                 )}
               </>
             ) : (
-              <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
-                <p className="text-sm text-muted-foreground italic">
-                  {t("no_proof_requirements")}
-                </p>
-              </div>
+              <>
+                {job.proofRequirements && job.proofRequirements.length > 0 ? (
+                  <>
+                    {canSubmitProofs ? (
+                      <>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t("submit_your_proofs")}
+                        </p>
+                        {job.proofRequirements.map((proofReq) => (
+                          <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                                <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
+                                {proofReq.isRequired && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    {t("required")}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
+                            </div>
+
+                            <div className="space-y-3 ml-6">
+                              {(proofReq.type === 'text' || proofReq.type === 'url') && (
+                                <div>
+                                  <label className="text-sm font-medium text-foreground mb-2 block">
+                                    {proofReq.type === 'url' ? t('link_url') : t('text_response')}
+                                  </label>
+                                  <Textarea
+                                    placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
+                                    value={proofs[proofReq.id]?.text || ''}
+                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
+                                    className="min-h-[80px]"
+                                  />
+                                </div>
+                              )}
+
+                              {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-foreground block">
+                                    {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
+                                  </label>
+                                  <Input
+                                    type="file"
+                                    accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0] || null;
+                                      if (!file) { handleFileChange(proofReq.id, null); return; }
+                                      const ok = validateFile(proofReq.id, proofReq.type, file);
+                                      if (!ok) { return; }
+                                      handleFileChange(proofReq.id, file);
+                                    }}
+                                    className="cursor-pointer"
+                                  />
+                                  <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
+                                  {proofs[proofReq.id]?.file && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("file_selected")}: {proofs[proofReq.id].file?.name}
+                                    </p>
+                                  )}
+                                  {uploadProgress[proofReq.id] !== undefined && (
+                                    <div className="space-y-2">
+                                      <Progress value={uploadProgress[proofReq.id]} className="w-full" />
+                                      <p className="text-xs text-muted-foreground">
+                                        {t('uploading')} {uploadProgress[proofReq.id]}%
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <div>
+                                <label className="text-sm font-medium text-foreground mb-2 block">
+                                  {t("optional_comment")}
+                                </label>
+                                <Textarea
+                                  placeholder={t("optional_comment_placeholder")}
+                                  value={proofs[proofReq.id]?.comment || ''}
+                                  onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
+                                  className="min-h-[60px]"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex justify-end space-x-3 pt-4">
+                          <Button variant="outline" onClick={handleCancel}>
+                            {t("cancel_button").toUpperCase()}
+                          </Button>
+                          <Button 
+                            onClick={handleSubmitProofs} 
+                            disabled={isApplying}
+                            className="min-w-[140px] glow-effect"
+                          >
+                            {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t("contractor_requested_proofs")}
+                        </p>
+                        {(showSubmittedBanner || myApplication?.status === 'submitted') && (
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
+                            <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
+                          </Alert>
+                        )}
+                        {myApplication?.status === 'approved' && (
+                          <Alert>
+                            <CheckCircle className="h-4 w-4" />
+                            <AlertTitle>{t('approved')}</AlertTitle>
+                            <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                          </Alert>
+                        )}
+                        {job.proofRequirements.map((proofReq) => (
+                          <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                            <div className="flex items-center space-x-2 mb-2">
+                              {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                              <span className="font-medium text-foreground">{proofReq.label}</span>
+                              {proofReq.isRequired && (
+                                <Badge variant="destructive" className="text-xs">
+                                  {t("required")}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
+                            <p className="text-xs text-muted-foreground ml-6 mt-1">
+                              {t("type")}: <span className="font-medium">{
+                                proofReq.type === 'screenshot' ? t('screenshot') :
+                                proofReq.type === 'file' ? t('file') :
+                                proofReq.type === 'url' ? t('link_url') : t('text_response')
+                              }</span>
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                    <p className="text-sm text-muted-foreground italic">
+                      {t("no_proof_requirements")}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

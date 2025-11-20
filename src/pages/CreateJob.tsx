@@ -19,6 +19,7 @@ import {
   Smartphone,
   Monitor,
   Globe,
+  Youtube,
   DollarSign,
   Clock,
   Users,
@@ -396,6 +397,56 @@ const CreateJob = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Formulário Principal */}
               <div className="lg:col-span-2 space-y-6">
+                {/* Tipo de Anúncio */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Globe className="h-5 w-5 text-cosmic-blue" />
+                      <span>{t("ad_type") || "Tipo de anúncio"}</span>
+                    </CardTitle>
+                    <CardDescription>{t("choose_ad_type") || "Escolha o tipo de anúncio para começar"}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <Button
+                        type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('youtube') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Social',
+                          subcategory: 'YouTube',
+                        }))}
+                      >
+                        <Youtube className="h-4 w-4 mr-2" /> YouTube
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('ver vídeo') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Web',
+                          subcategory: 'Ver vídeo no YouTube',
+                        }))}
+                      >
+                        <Globe className="h-4 w-4 mr-2" /> Ver vídeo no YouTube
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={(formData.category || '').toLowerCase() === 'web' && (formData.subcategory || '').toLowerCase() === 'website' ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Web',
+                          subcategory: 'Website',
+                        }))}
+                      >
+                        <Monitor className="h-4 w-4 mr-2" /> Website
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
                 {/* Informações Básicas */}
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>

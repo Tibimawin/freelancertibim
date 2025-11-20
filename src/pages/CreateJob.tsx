@@ -67,7 +67,7 @@ const CreateJob = () => {
       extras: { requireLogin: false, avoidRepeat: true, openInIframe: true },
     },
     tiktok: {
-      actionType: 'follow' as 'watch' | 'follow',
+      actionType: 'watch' as 'watch' | 'follow',
       videoTitle: '',
       videoUrl: '',
       viewTimeSeconds: 30,
@@ -94,7 +94,7 @@ const CreateJob = () => {
     extras: { requireLogin: false, avoidRepeat: true, openInIframe: true },
   };
   const defaultTikTok = {
-    actionType: 'follow' as 'watch' | 'follow',
+    actionType: 'watch' as 'watch' | 'follow',
     videoTitle: '',
     videoUrl: '',
     viewTimeSeconds: 30,
@@ -762,25 +762,26 @@ const CreateJob = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <Label>Tempo de visualização</Label>
-                            <Select value={String(formData.tiktok?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), viewTimeSeconds: parseInt(v) || 30 } }))}>
-                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                              <SelectContent>
-                                {[10, 30, 60, 90, 120].map(s => (
+                          <Select value={String(formData.tiktok?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), viewTimeSeconds: parseInt(v) || 30 } }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                            <SelectContent>
+                                {[10, 30, 60, 90, 120, 150, 180].map(s => (
                                   <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
                                 ))}
-                              </SelectContent>
-                            </Select>
+                            </SelectContent>
+                          </Select>
                           </div>
                           <div>
                             <Label>Velocidade de execução</Label>
                             <Select value={String(formData.tiktok?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), dailyMaxViews: parseInt(v) || 500 } }))}>
                               <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="100">Lento - 100/dia</SelectItem>
-                                <SelectItem value="250">Moderado - 250/dia</SelectItem>
-                                <SelectItem value="500">Padrão - 500/dia</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <SelectContent>
+                              <SelectItem value="100">Lento - 100/dia</SelectItem>
+                              <SelectItem value="250">Moderado - 250/dia</SelectItem>
+                              <SelectItem value="500">Padrão - 500/dia</SelectItem>
+                              <SelectItem value="1000">Rápido - 1000/dia</SelectItem>
+                            </SelectContent>
+                          </Select>
                           </div>
                           <div>
                             <Label>Garantia</Label>

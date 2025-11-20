@@ -326,16 +326,17 @@ const CreateJob = () => {
     }
 
     // Validações básicas
-    const isYouTube = (formData.subcategory || '').toLowerCase().includes('youtube') || (formData.subcategory || '').toLowerCase().includes('ver vídeo');
-    const isTikTok = (formData.subcategory || '').toLowerCase().includes('tiktok');
-    const isVK = (formData.subcategory || '').toLowerCase().includes('vk');
+    const sub = (formData.subcategory || '').toLowerCase();
+    const isVideoAd = sub.includes('youtube') || sub.includes('ver vídeo') || sub.includes('instagram') || sub.includes('facebook');
+    const isTikTok = sub.includes('tiktok');
+    const isVK = sub.includes('vk');
     if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty ||
-        (isYouTube && !formData.youtube.videoUrl) ||
+        (isVideoAd && !formData.youtube?.videoUrl) ||
         (isTikTok && !formData.tiktok.videoUrl) ||
         (isVK && !formData.vk.targetUrl)) {
       toast({
         title: t("error"),
-        description: isYouTube ? 'Preencha os campos obrigatórios do YouTube.' : isTikTok ? 'Preencha os campos obrigatórios do TikTok.' : isVK ? 'Preencha os campos obrigatórios do VK.' : t("fill_all_required_fields"),
+        description: isVideoAd ? 'Preencha os campos obrigatórios do vídeo.' : isTikTok ? 'Preencha os campos obrigatórios do TikTok.' : isVK ? 'Preencha os campos obrigatórios do VK.' : t("fill_all_required_fields"),
         variant: "destructive",
       });
       return;
@@ -375,7 +376,7 @@ const CreateJob = () => {
 
     setIsLoading(true);
     try {
-      const jobData = {
+      const jobData: any = {
         title: formData.title,
         description: formData.description,
         posterId: currentUser.uid,
@@ -397,10 +398,20 @@ const CreateJob = () => {
         posterApprovalRate: typeof userData.approvalRate === 'number' ? userData.approvalRate : undefined,
         posterRating: typeof userData.rating === 'number' ? userData.rating : undefined,
         posterRatingCount: typeof userData.ratingCount === 'number' ? userData.ratingCount : undefined,
-        youtube: isYouTube ? formData.youtube : undefined,
-        tiktok: isTikTok ? formData.tiktok : undefined,
-        vk: isVK ? formData.vk : undefined,
       };
+
+      // Remover campos undefined e adicionar somente se aplicável
+      if (!jobData.category) delete jobData.category;
+      if (!jobData.subcategory) delete jobData.subcategory;
+      if (!jobData.maxApplicants) delete jobData.maxApplicants;
+      if (!jobData.dueDate) delete jobData.dueDate;
+      if (!jobData.posterApprovalRate) delete jobData.posterApprovalRate;
+      if (!jobData.posterRating) delete jobData.posterRating;
+      if (!jobData.posterRatingCount) delete jobData.posterRatingCount;
+
+      if (isVideoAd && formData.youtube) jobData.youtube = formData.youtube;
+      if (isTikTok && formData.tiktok) jobData.tiktok = formData.tiktok;
+      if (isVK && formData.vk) jobData.vk = formData.vk;
 
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
       

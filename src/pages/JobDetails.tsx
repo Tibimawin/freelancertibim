@@ -73,8 +73,8 @@ const JobDetails = () => {
   }, [job, uploadProgress, proofs]);
 
   const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
-  const isTikTokJob = Boolean((job as any)?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
-  const isVKJob = Boolean((job as any)?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
+  const isTikTokJob = Boolean(job?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
+  const isVKJob = Boolean(job?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
   const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
   const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
   const extractYouTubeId = (url: string) => {
@@ -399,7 +399,7 @@ const JobDetails = () => {
       }
     } else if (isTikTokJob) {
       if (!tkCanSubmit) {
-        toast({ title: t('error'), description: ((job as any)?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch'), variant: 'destructive' });
+        toast({ title: t('error'), description: (job?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch'), variant: 'destructive' });
         return;
       }
       try {
@@ -407,9 +407,9 @@ const JobDetails = () => {
         if (myApplication) {
           const proofsToSubmit = [
             {
-              requirementId: ((job as any)?.tiktok?.actionType) === 'follow' ? 'tiktok_follow' : 'tiktok_watch',
+              requirementId: (job?.tiktok?.actionType) === 'follow' ? 'tiktok_follow' : 'tiktok_watch',
               type: 'text',
-              content: ((job as any)?.tiktok?.actionType) === 'follow' ? 'Follow confirmed' : `Watched ${tkRequiredSeconds}s`,
+              content: (job?.tiktok?.actionType) === 'follow' ? 'Follow confirmed' : `Watched ${tkRequiredSeconds}s`,
               comment: 'Auto-confirmed TikTok task',
             },
           ];
@@ -425,7 +425,7 @@ const JobDetails = () => {
       }
     } else if (isVKJob) {
       if (!vkJoinConfirmed) {
-        toast({ title: t('error'), description: ((job as any)?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like'), variant: 'destructive' });
+        toast({ title: t('error'), description: (job?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like'), variant: 'destructive' });
         return;
       }
       try {
@@ -433,9 +433,9 @@ const JobDetails = () => {
         if (myApplication) {
           const proofsToSubmit = [
             {
-              requirementId: ((job as any)?.vk?.actionType) === 'join' ? 'vk_join' : 'vk_like',
+              requirementId: (job?.vk?.actionType) === 'join' ? 'vk_join' : 'vk_like',
               type: 'text',
-              content: ((job as any)?.vk?.actionType) === 'join' ? 'Join confirmed' : 'Like confirmed',
+              content: (job?.vk?.actionType) === 'join' ? 'Join confirmed' : 'Like confirmed',
               comment: 'Auto-confirmed VK task',
             },
           ];
@@ -890,17 +890,17 @@ const JobDetails = () => {
               <>
                 {canSubmitProofs ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">{((job as any)?.tiktok?.actionType) === 'follow' ? t('tiktok_section_title_follow') : t('tiktok_section_title_watch')}</p>
+                    <p className="text-sm text-muted-foreground">{(job?.tiktok?.actionType) === 'follow' ? t('tiktok_section_title_follow') : t('tiktok_section_title_watch')}</p>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <Button variant="outline" onClick={() => window.open(((job as any)?.tiktok?.videoUrl) || '', '_blank')}>{t('open_video')}</Button>
-                        {((job as any)?.tiktok?.actionType) === 'follow' && (
+                        <Button variant="outline" onClick={() => window.open((job?.tiktok?.videoUrl) || '', '_blank')}>{t('open_video')}</Button>
+                        {(job?.tiktok?.actionType) === 'follow' && (
                           <Button variant={tkFollowConfirmed ? 'default' : 'secondary'} onClick={() => setTkFollowConfirmed(!tkFollowConfirmed)}>
                             {t('confirm_follow')}
                           </Button>
                         )}
                       </div>
-                      {((job as any)?.tiktok?.actionType) === 'watch' && (
+                      {(job?.tiktok?.actionType) === 'watch' && (
                         <div className="space-y-2">
                           <Progress value={Math.min(100, Math.round((ytWatchElapsed / tkRequiredSeconds) * 100))} />
                           <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: ytWatchElapsed, required: tkRequiredSeconds })}</p>
@@ -917,7 +917,7 @@ const JobDetails = () => {
                     </div>
                     {!tkCanSubmit && (
                       <p className="text-xs text-muted-foreground">
-                        {((job as any)?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch')}
+                        {(job?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch')}
                       </p>
                     )}
                   </div>
@@ -945,15 +945,15 @@ const JobDetails = () => {
               <>
                 {canSubmitProofs ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">{((job as any)?.vk?.actionType) === 'join' ? t('vk_section_title_join') : t('vk_section_title_like')}</p>
+                    <p className="text-sm text-muted-foreground">{(job?.vk?.actionType) === 'join' ? t('vk_section_title_join') : t('vk_section_title_like')}</p>
                     <div className="flex items-center gap-3">
-                      <Button variant="outline" onClick={() => window.open(((job as any)?.vk?.targetUrl) || '', '_blank')}>{t('open_profile')}</Button>
-                      {((job as any)?.vk?.actionType) === 'join' && (
+                      <Button variant="outline" onClick={() => window.open((job?.vk?.targetUrl) || '', '_blank')}>{t('open_profile')}</Button>
+                      {(job?.vk?.actionType) === 'join' && (
                         <Button variant={vkJoinConfirmed ? 'default' : 'secondary'} onClick={() => setVkJoinConfirmed(!vkJoinConfirmed)}>
                           {t('confirm_join')}
                         </Button>
                       )}
-                      {((job as any)?.vk?.actionType) === 'like' && (
+                      {(job?.vk?.actionType) === 'like' && (
                         <Button variant={vkJoinConfirmed ? 'default' : 'secondary'} onClick={() => setVkJoinConfirmed(!vkJoinConfirmed)}>
                           {t('confirm_like')}
                         </Button>
@@ -963,13 +963,13 @@ const JobDetails = () => {
                       <div className="text-sm text-muted-foreground">
                         <span>{t('vk_verification_info')}</span>
                       </div>
-                      <Button onClick={handleSubmitProofs} disabled={!vkJoinConfirmed || isApplying} className="glow-effect">
+                    <Button onClick={handleSubmitProofs} disabled={!vkJoinConfirmed || isApplying} className="glow-effect">
                         {isApplying ? t('submitting') : t('confirm_task')}
                       </Button>
                     </div>
                     {!vkJoinConfirmed && (
                       <p className="text-xs text-muted-foreground">
-                        {((job as any)?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like')}
+                        {(job?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like')}
                       </p>
                     )}
                   </div>
@@ -1232,5 +1232,5 @@ const JobDetails = () => {
 export default JobDetails;
   const [tkFollowConfirmed, setTkFollowConfirmed] = useState(false);
   const [vkJoinConfirmed, setVkJoinConfirmed] = useState(false);
-  const tkRequiredSeconds = ((job as any)?.tiktok?.viewTimeSeconds) || 30;
-  const tkCanSubmit = isTikTokJob && (((job as any)?.tiktok?.actionType) === 'follow' ? tkFollowConfirmed : ytWatchElapsed >= tkRequiredSeconds);
+  const tkRequiredSeconds = (job?.tiktok?.viewTimeSeconds) || 30;
+  const tkCanSubmit = isTikTokJob && ((job?.tiktok?.actionType) === 'follow' ? tkFollowConfirmed : ytWatchElapsed >= tkRequiredSeconds);

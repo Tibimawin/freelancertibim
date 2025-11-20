@@ -127,8 +127,8 @@
     text-size-adjust: 100%;
     overflow-x: hidden;
     height: 100%;
-    overscroll-behavior-y: none;
-    overscroll-behavior: none;
+    overscroll-behavior-y: auto;
+    overscroll-behavior: auto;
   }
 }
 }

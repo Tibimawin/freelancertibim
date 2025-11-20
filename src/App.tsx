@@ -45,13 +45,18 @@ import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; message?: string }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, message: undefined };
   }
   static getDerivedStateFromError() {
     return { hasError: true };
+  }
+  componentDidCatch(error: any) {
+    const msg = typeof error === 'object' && error && error.message ? String(error.message) : String(error);
+    this.setState({ message: msg });
+    try { console.error('App crashed:', error); } catch {}
   }
   render() {
     if (this.state.hasError) {
@@ -60,6 +65,9 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
           <div className="p-6 rounded-lg border bg-card">
             <div className="text-lg font-semibold">Ocorreu um erro</div>
             <div className="mt-2 text-sm text-muted-foreground">Tente recarregar a página.</div>
+            {this.state.message && (
+              <div className="mt-2 text-xs text-muted-foreground">{this.state.message}</div>
+            )}
             <button className="mt-4 inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground" onClick={() => location.reload()}>Recarregar</button>
           </div>
         </div>

@@ -19,18 +19,19 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="bg-background min-h-screen">
-      <div
-        style={{
-          width: 1280,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-          minHeight: `calc(100vh / ${scale})`,
-        }}
-      >
-        <Header />
-        <Outlet />
-        <Footer />
+    <div className="bg-background h-screen overflow-hidden">
+      <div className="h-full overflow-auto">
+        <div
+          style={{
+            width: 1280,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
+        >
+          <Header />
+          <Outlet />
+          <Footer />
+        </div>
       </div>
     </div>
   );

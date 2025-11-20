@@ -111,6 +111,8 @@ export interface Job {
   posterRating?: number;
   posterRatingCount?: number;
   youtube?: JobYouTubeSettings;
+  tiktok?: JobTikTokSettings;
+  vk?: JobVKSettings;
 }
 
 // Instruções detalhadas da tarefa
@@ -503,5 +505,30 @@ export interface JobYouTubeSettings {
     requireLogin?: boolean;
     avoidRepeat?: boolean;
     openInIframe?: boolean;
+  };
+}
+
+export interface JobTikTokSettings {
+  actionType: 'watch' | 'follow';
+  videoTitle?: string;
+  videoUrl: string;
+  viewTimeSeconds?: number;
+  dailyMaxViews?: number;
+  guarantee?: 'none' | 'basic' | 'premium';
+  extras?: {
+    requireLogin?: boolean;
+    avoidRepeat?: boolean;
+    openInIframe?: boolean;
+  };
+}
+
+export interface JobVKSettings {
+  actionType: 'join' | 'like';
+  targetTitle?: string;
+  targetUrl: string;
+  guarantee?: 'none' | 'basic' | 'premium';
+  extras?: {
+    requireLogin?: boolean;
+    avoidRepeat?: boolean;
   };
 }

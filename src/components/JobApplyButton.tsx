@@ -51,7 +51,8 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
       setIsApplying(true);
       const job = await JobService.getJobById(jobId);
       const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
-      if (isYouTubeJob && !userData?.settings?.socialAccounts?.youtube) {
+      const requiresChannel = Boolean(job?.youtube && job.youtube.actionType === 'subscribe');
+      if (isYouTubeJob && requiresChannel && !userData?.settings?.socialAccounts?.youtube) {
         toast({
           title: t('youtube_channel_required'),
           description: t('link_youtube_channel_to_apply'),

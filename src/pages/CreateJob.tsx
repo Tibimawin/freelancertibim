@@ -146,7 +146,9 @@ const CreateJob = () => {
       case "Social":
         return [
           { id: "social-facebook", name: "Facebook", category: "Social" },
+          { id: "social-facebook-video", name: "Vídeo Facebook", category: "Social" },
           { id: "social-instagram", name: "Instagram", category: "Social" },
+          { id: "social-instagram-video", name: "Vídeo Instagram", category: "Social" },
           { id: "social-tiktok", name: "TikTok", category: "Social" },
           { id: "social-vk", name: "VK", category: "Social" },
           { id: "social-youtube", name: "YouTube", category: "Social" },

@@ -687,6 +687,21 @@ const SettingsManager = () => {
               })}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>VK</span>
+            </Label>
+            <Input
+              placeholder="vk.com/seu_perfil"
+              value={localSettings.socialAccounts?.vk || ''}
+              onChange={(e) => setLocalSettings({
+                ...localSettings,
+                socialAccounts: { ...localSettings.socialAccounts, vk: e.target.value }
+              })}
+            />
+          </div>
         </CardContent>
       </Card>
 

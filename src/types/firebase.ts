@@ -109,6 +109,7 @@ export interface Job {
   posterApprovalRate?: number;
   posterRating?: number;
   posterRatingCount?: number;
+  youtube?: JobYouTubeSettings;
 }
 
 // Instruções detalhadas da tarefa
@@ -489,4 +490,17 @@ export interface MarketDownloadToken {
   expiresAt: Date; // será persistido como Firestore Timestamp
   consumed?: boolean; // se já foi usado
   createdAt: Date;
+}
+export interface JobYouTubeSettings {
+  actionType: 'watch' | 'subscribe';
+  videoTitle: string;
+  videoUrl: string;
+  viewTimeSeconds: number;
+  dailyMaxViews: number;
+  guarantee: 'none' | 'basic' | 'premium';
+  extras?: {
+    requireLogin?: boolean;
+    avoidRepeat?: boolean;
+    openInIframe?: boolean;
+  };
 }

@@ -84,6 +84,32 @@ const CreateJob = () => {
     },
   });
 
+  const defaultYouTube = {
+    actionType: 'watch' as 'watch' | 'subscribe',
+    videoTitle: '',
+    videoUrl: '',
+    viewTimeSeconds: 30,
+    dailyMaxViews: 500,
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { requireLogin: false, avoidRepeat: true, openInIframe: true },
+  };
+  const defaultTikTok = {
+    actionType: 'follow' as 'watch' | 'follow',
+    videoTitle: '',
+    videoUrl: '',
+    viewTimeSeconds: 30,
+    dailyMaxViews: 500,
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
+  };
+  const defaultVK = {
+    actionType: 'join' as 'join' | 'like',
+    targetTitle: '',
+    targetUrl: '',
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { requireLogin: false, avoidRepeat: true },
+  };
+
   // Dynamic taxonomy options
   const [workLevels, setWorkLevels] = useState<NamedItem[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<NamedItem[]>([]);
@@ -440,6 +466,7 @@ const CreateJob = () => {
                           ...prev,
                           category: 'Social',
                           subcategory: 'YouTube',
+                          youtube: prev.youtube || defaultYouTube,
                         }))}
                       >
                         <Youtube className="h-4 w-4 mr-2" /> YouTube
@@ -452,6 +479,7 @@ const CreateJob = () => {
                           ...prev,
                           category: 'Web',
                           subcategory: 'Ver vídeo no YouTube',
+                          youtube: prev.youtube || defaultYouTube,
                         }))}
                       >
                         <Globe className="h-4 w-4 mr-2" /> Ver vídeo no YouTube
@@ -476,6 +504,7 @@ const CreateJob = () => {
                           ...prev,
                           category: 'Social',
                           subcategory: 'TikTok',
+                          tiktok: prev.tiktok || defaultTikTok,
                         }))}
                       >
                         <Clock className="h-4 w-4 mr-2" /> TikTok
@@ -488,6 +517,7 @@ const CreateJob = () => {
                           ...prev,
                           category: 'Social',
                           subcategory: 'VK',
+                          vk: prev.vk || defaultVK,
                         }))}
                       >
                         <Users className="h-4 w-4 mr-2" /> VK
@@ -625,25 +655,25 @@ const CreateJob = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
-                        <Button type="button" variant={formData.youtube.actionType === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, actionType: 'watch' } }))}>Assista ao vídeo</Button>
-                        <Button type="button" variant={formData.youtube.actionType === 'subscribe' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, actionType: 'subscribe' } }))}>Inscreva-se no canal</Button>
+                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'watch' } }))}>Assista ao vídeo</Button>
+                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'subscribe' } }))}>Inscreva-se no canal</Button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="yt-title">Título do vídeo</Label>
-                          <Input id="yt-title" placeholder="Ex.: Tutorial de configuração" value={formData.youtube.videoTitle} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, videoTitle: e.target.value } }))} />
+                          <Input id="yt-title" placeholder="Ex.: Tutorial de configuração" value={formData.youtube?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoTitle: e.target.value } }))} />
                         </div>
                         <div>
                           <Label htmlFor="yt-url">Link para o vídeo</Label>
-                          <Input id="yt-url" placeholder="https://www.youtube.com/watch?v=..." value={formData.youtube.videoUrl} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, videoUrl: e.target.value } }))} />
+                          <Input id="yt-url" placeholder="https://www.youtube.com/watch?v=..." value={formData.youtube?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoUrl: e.target.value } }))} />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <Label>Tempo de visualização</Label>
-                          <Select value={String(formData.youtube.viewTimeSeconds)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, viewTimeSeconds: parseInt(v) || 30 } }))}>
+                          <Select value={String(formData.youtube?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), viewTimeSeconds: parseInt(v) || 30 } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               {[10, 30, 60, 90, 120, 150, 180].map(s => (
@@ -654,7 +684,7 @@ const CreateJob = () => {
                         </div>
                         <div>
                           <Label>Velocidade de execução</Label>
-                          <Select value={String(formData.youtube.dailyMaxViews)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, dailyMaxViews: parseInt(v) || 500 } }))}>
+                          <Select value={String(formData.youtube?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), dailyMaxViews: parseInt(v) || 500 } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="100">Lento - 100/dia</SelectItem>
@@ -666,7 +696,7 @@ const CreateJob = () => {
                         </div>
                         <div>
                           <Label>Garantia</Label>
-                          <Select value={formData.youtube.guarantee} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, guarantee: v } }))}>
+                          <Select value={formData.youtube?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), guarantee: v } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Sem garantia</SelectItem>
@@ -679,15 +709,15 @@ const CreateJob = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="yt-login" checked={!!formData.youtube.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <input type="checkbox" id="yt-login" checked={!!formData.youtube?.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), extras: { ...(prev.youtube?.extras || {}), requireLogin: e.target.checked } } }))} />
                           <Label htmlFor="yt-login">Exigir login no YouTube</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="yt-repeat" checked={!!formData.youtube.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <input type="checkbox" id="yt-repeat" checked={!!formData.youtube?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), extras: { ...(prev.youtube?.extras || {}), avoidRepeat: e.target.checked } } }))} />
                           <Label htmlFor="yt-repeat">Evitar repetição do mesmo usuário</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="yt-iframe" checked={!!formData.youtube.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...prev.youtube, extras: { ...(prev.youtube.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <input type="checkbox" id="yt-iframe" checked={!!formData.youtube?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), extras: { ...(prev.youtube?.extras || {}), openInIframe: e.target.checked } } }))} />
                           <Label htmlFor="yt-iframe">Abrir em iframe</Label>
                         </div>
                       </div>
@@ -713,18 +743,18 @@ const CreateJob = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
-                        <Button type="button" variant={formData.tiktok.actionType === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, actionType: 'watch' } }))}>Assistir vídeo</Button>
-                        <Button type="button" variant={formData.tiktok.actionType === 'follow' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, actionType: 'follow' } }))}>Seguir perfil</Button>
+                        <Button type="button" variant={(formData.tiktok?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), actionType: 'watch' } }))}>Assistir vídeo</Button>
+                        <Button type="button" variant={(formData.tiktok?.actionType || 'follow') === 'follow' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), actionType: 'follow' } }))}>Seguir perfil</Button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="tk-title">Título</Label>
-                          <Input id="tk-title" placeholder="Ex.: Vídeo promocional" value={formData.tiktok.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, videoTitle: e.target.value } }))} />
+                          <Input id="tk-title" placeholder="Ex.: Vídeo promocional" value={formData.tiktok?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), videoTitle: e.target.value } }))} />
                         </div>
                         <div>
                           <Label htmlFor="tk-url">Link do TikTok</Label>
-                          <Input id="tk-url" placeholder="https://www.tiktok.com/..." value={formData.tiktok.videoUrl} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, videoUrl: e.target.value } }))} />
+                          <Input id="tk-url" placeholder="https://www.tiktok.com/..." value={formData.tiktok?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), videoUrl: e.target.value } }))} />
                         </div>
                       </div>
 
@@ -732,7 +762,7 @@ const CreateJob = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <Label>Tempo de visualização</Label>
-                            <Select value={String(formData.tiktok.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, viewTimeSeconds: parseInt(v) || 30 } }))}>
+                            <Select value={String(formData.tiktok?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), viewTimeSeconds: parseInt(v) || 30 } }))}>
                               <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                               <SelectContent>
                                 {[10, 30, 60, 90, 120].map(s => (
@@ -743,7 +773,7 @@ const CreateJob = () => {
                           </div>
                           <div>
                             <Label>Velocidade de execução</Label>
-                            <Select value={String(formData.tiktok.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, dailyMaxViews: parseInt(v) || 500 } }))}>
+                            <Select value={String(formData.tiktok?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), dailyMaxViews: parseInt(v) || 500 } }))}>
                               <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="100">Lento - 100/dia</SelectItem>
@@ -754,7 +784,7 @@ const CreateJob = () => {
                           </div>
                           <div>
                             <Label>Garantia</Label>
-                            <Select value={formData.tiktok.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, guarantee: v } }))}>
+                            <Select value={formData.tiktok?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), guarantee: v } }))}>
                               <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="none">Sem garantia</SelectItem>
@@ -768,15 +798,15 @@ const CreateJob = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="tk-login" checked={!!formData.tiktok.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, extras: { ...(prev.tiktok.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <input type="checkbox" id="tk-login" checked={!!formData.tiktok?.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), extras: { ...(prev.tiktok?.extras || {}), requireLogin: e.target.checked } } }))} />
                           <Label htmlFor="tk-login">Exigir login</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="tk-repeat" checked={!!formData.tiktok.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, extras: { ...(prev.tiktok.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <input type="checkbox" id="tk-repeat" checked={!!formData.tiktok?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), extras: { ...(prev.tiktok?.extras || {}), avoidRepeat: e.target.checked } } }))} />
                           <Label htmlFor="tk-repeat">Evitar repetição</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="tk-iframe" checked={!!formData.tiktok.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...prev.tiktok, extras: { ...(prev.tiktok.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <input type="checkbox" id="tk-iframe" checked={!!formData.tiktok?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, tiktok: { ...(prev.tiktok || defaultTikTok), extras: { ...(prev.tiktok?.extras || {}), openInIframe: e.target.checked } } }))} />
                           <Label htmlFor="tk-iframe">Abrir em iframe</Label>
                         </div>
                       </div>
@@ -796,23 +826,23 @@ const CreateJob = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
-                        <Button type="button" variant={formData.vk.actionType === 'join' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, vk: { ...prev.vk, actionType: 'join' } }))}>Entrar no grupo</Button>
-                        <Button type="button" variant={formData.vk.actionType === 'like' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, vk: { ...prev.vk, actionType: 'like' } }))}>Curtir publicação</Button>
+                        <Button type="button" variant={(formData.vk?.actionType || 'join') === 'join' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), actionType: 'join' } }))}>Entrar no grupo</Button>
+                        <Button type="button" variant={(formData.vk?.actionType || 'join') === 'like' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), actionType: 'like' } }))}>Curtir publicação</Button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="vk-title">Título</Label>
-                          <Input id="vk-title" placeholder="Ex.: Comunidade oficial" value={formData.vk.targetTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...prev.vk, targetTitle: e.target.value } }))} />
+                          <Input id="vk-title" placeholder="Ex.: Comunidade oficial" value={formData.vk?.targetTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), targetTitle: e.target.value } }))} />
                         </div>
                         <div>
                           <Label htmlFor="vk-url">Link do VK</Label>
-                          <Input id="vk-url" placeholder="https://vk.com/..." value={formData.vk.targetUrl} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...prev.vk, targetUrl: e.target.value } }))} />
+                          <Input id="vk-url" placeholder="https://vk.com/..." value={formData.vk?.targetUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), targetUrl: e.target.value } }))} />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <Label>Garantia</Label>
-                          <Select value={formData.vk.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, vk: { ...prev.vk, guarantee: v } }))}>
+                          <Select value={formData.vk?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), guarantee: v } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Sem garantia</SelectItem>
@@ -822,11 +852,11 @@ const CreateJob = () => {
                           </Select>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="vk-login" checked={!!formData.vk.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...prev.vk, extras: { ...(prev.vk.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <input type="checkbox" id="vk-login" checked={!!formData.vk?.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), extras: { ...(prev.vk?.extras || {}), requireLogin: e.target.checked } } }))} />
                           <Label htmlFor="vk-login">Exigir login</Label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" id="vk-repeat" checked={!!formData.vk.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...prev.vk, extras: { ...(prev.vk.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <input type="checkbox" id="vk-repeat" checked={!!formData.vk?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, vk: { ...(prev.vk || defaultVK), extras: { ...(prev.vk?.extras || {}), avoidRepeat: e.target.checked } } }))} />
                           <Label htmlFor="vk-repeat">Evitar repetição</Label>
                         </div>
                       </div>

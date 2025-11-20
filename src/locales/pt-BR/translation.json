@@ -829,6 +829,8 @@
   "submit_disabled_until_watch": "Assista o vídeo para habilitar o envio",
   "submit_disabled_until_subscribe": "Confirme a inscrição para habilitar o envio",
   "complete_to_submit": "Conclua a ação solicitada antes de enviar",
+  "confirm_task": "Confirmar tarefa",
+  "task_auto_approved": "Tarefa confirmada e aprovada automaticamente",
   "restore_defaults": "Restaurar Padrões",
   "save_settings": "Salvar Configurações",
   "saving": "Salvando...",

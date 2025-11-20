@@ -259,6 +259,8 @@
   "submit_disabled_until_watch": "Watch the video to enable submission",
   "submit_disabled_until_subscribe": "Confirm subscription to enable submission",
   "complete_to_submit": "Complete the action before submitting",
+  "confirm_task": "Confirm task",
+  "task_auto_approved": "Task confirmed and auto-approved",
   "contractor_requested_proofs": "The contractor requested the following proofs for this task:",
   "no_proof_requirements": "No proof requirements specified by the contractor.",
   "your_own_job": "This is your own task. You cannot apply for it.",

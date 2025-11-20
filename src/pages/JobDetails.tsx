@@ -837,7 +837,7 @@ const JobDetails = () => {
                           )}
                         </div>
                       )}
-                      {(!embedUrl || job?.youtube?.actionType === 'subscribe') && (
+                      {(!ytVideoId || job?.youtube?.actionType === 'subscribe') && (
                         <div className="flex items-center gap-3">
                           <Button variant="outline" onClick={() => window.open(job?.youtube?.videoUrl || '', '_blank')}>{t('open_video')}</Button>
                           {job?.youtube?.actionType === 'subscribe' && (

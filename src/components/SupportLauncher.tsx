@@ -40,7 +40,7 @@ const SupportLauncher = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end">
+      <div className="fixed z-50 flex flex-col gap-2 items-end right-3 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:right-6 md:bottom-6">
         <Button
           onClick={() => {
             if (!currentUser) {
@@ -49,7 +49,7 @@ const SupportLauncher = () => {
               setOpen(true);
             }
           }}
-          className={`relative rounded-full shadow-lg px-4 py-6 ${currentUser && userUnread > 0 ? 'ring-2 ring-destructive animate-pulse' : ''}`}
+          className={`relative rounded-full shadow-lg px-3 py-3 md:px-4 md:py-6 ${currentUser && userUnread > 0 ? 'ring-2 ring-destructive animate-pulse' : ''}`}
           aria-label={t('talk_to_us_now')}
         >
           <MessageSquare className={`h-5 w-5 mr-2 ${currentUser && userUnread > 0 ? 'text-destructive' : ''}`} />
@@ -60,7 +60,7 @@ const SupportLauncher = () => {
             </span>
           )}
         </Button>
-        <Button asChild variant="secondary" className="rounded-full shadow px-4 py-6">
+        <Button asChild variant="secondary" className="rounded-full shadow px-3 py-3 md:px-4 md:py-6">
           <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" aria-label="Suporte via WhatsApp">
             <MessageCircle className="h-5 w-5 mr-2 text-green-600" />
             <span className="hidden md:inline">WhatsApp</span>

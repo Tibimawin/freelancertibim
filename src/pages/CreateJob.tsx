@@ -20,6 +20,8 @@ import {
   Monitor,
   Globe,
   Youtube,
+  Instagram,
+  Facebook,
   DollarSign,
   Clock,
   Users,
@@ -473,6 +475,32 @@ const CreateJob = () => {
                       </Button>
                       <Button
                         type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('instagram') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Social',
+                          subcategory: 'Vídeo Instagram',
+                          youtube: prev.youtube || defaultYouTube,
+                        }))}
+                      >
+                        <Instagram className="h-4 w-4 mr-2" /> Vídeo Instagram
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={(formData.subcategory || '').toLowerCase().includes('facebook') ? 'default' : 'outline'}
+                        className="justify-start"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          category: 'Social',
+                          subcategory: 'Vídeo Facebook',
+                          youtube: prev.youtube || defaultYouTube,
+                        }))}
+                      >
+                        <Facebook className="h-4 w-4 mr-2" /> Vídeo Facebook
+                      </Button>
+                      <Button
+                        type="button"
                         variant={(formData.subcategory || '').toLowerCase().includes('ver vídeo') ? 'default' : 'outline'}
                         className="justify-start"
                         onClick={() => setFormData(prev => ({
@@ -643,15 +671,20 @@ const CreateJob = () => {
                   </CardContent>
                 </Card>
 
-                {/* YouTube: formulário específico */}
-                {((formData.subcategory || '').toLowerCase().includes('youtube') || (formData.subcategory || '').toLowerCase().includes('ver vídeo')) && (
+                {/* Formulário de visualização de vídeo (YouTube/Instagram/Facebook/Sites) */}
+                {(() => {
+                  const sub = (formData.subcategory || '').toLowerCase();
+                  const isVideo = sub.includes('youtube') || sub.includes('ver vídeo') || sub.includes('instagram') || sub.includes('facebook');
+                  if (!isVideo) return null;
+                  const platform = sub.includes('instagram') ? 'Instagram' : sub.includes('facebook') ? 'Facebook' : sub.includes('ver vídeo') ? 'Sites' : 'YouTube';
+                  return (
                   <Card className="bg-card border-border shadow-md">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Globe className="h-5 w-5 text-cosmic-blue" />
-                        <span>Visualização de vídeos do YouTube</span>
+                        <span>{`Visualização de vídeos no ${platform}`}</span>
                       </CardTitle>
-                      <CardDescription>Configure os detalhes do anúncio de YouTube.</CardDescription>
+                      <CardDescription>{`Configure os detalhes do anúncio de ${platform === 'Sites' ? 'Sites' : platform}.`}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
@@ -729,7 +762,8 @@ const CreateJob = () => {
                       </div>
                     </CardContent>
                   </Card>
-                )}
+                  );
+                })()}
 
                 {/* TikTok: formulário específico */}
                 {(formData.subcategory || '').toLowerCase().includes('tiktok') && (

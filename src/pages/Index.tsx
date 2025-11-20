@@ -142,7 +142,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {/* Aviso: modo contratante não permite fazer tarefas */}
         {userData?.currentMode === 'poster' && (
           <div className="mb-6">
@@ -161,7 +161,7 @@ const Index = () => {
           </div>
         )}
         {/* Ajuste do grid: lg:grid-cols-4 para desktop, grid-cols-1 para mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
           
           {/* Sidebar (Mover para o topo em mobile: order-1) */}
           <div className="lg:col-span-1 space-y-6 order-1 lg:order-2">
@@ -321,7 +321,7 @@ const Index = () => {
 
             {/* Linha de filtros (apenas Micro Empregos) */}
             {activeSection === 'micro' && (
-            <div className="mb-8 rounded-md bg-muted/30 border border-border p-3">
+            <div className="mb-4 md:mb-8 rounded-md bg-muted/30 border border-border p-3">
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Nível de trabalho</Label>
@@ -440,13 +440,13 @@ const Index = () => {
             {activeSection === 'micro' ? (
               <div className={
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'
                   : viewMode === 'panels'
-                  ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
-                  : 'space-y-6'
+                  ? 'grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6'
+                  : 'space-y-4 lg:space-y-6'
               }>
                 {jobsLoading ? (
-                  <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center justify-center py-8 lg:py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : filteredJobs.length > 0 ? (
@@ -476,8 +476,8 @@ const Index = () => {
             )}
 
             {activeSection === 'micro' && (
-              <div className="text-center mt-8">
-                <Button variant="outline" size="lg" className="border-primary/50 text-primary hover:bg-primary/10">
+              <div className="text-center mt-4 md:mt-6">
+                <Button variant="outline" size="sm" className="border-primary/50 text-primary hover:bg-primary/10">
                   {t("load_more_tasks")}
                 </Button>
               </div>

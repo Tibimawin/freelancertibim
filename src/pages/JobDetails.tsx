@@ -76,36 +76,76 @@ const JobDetails = () => {
   const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
   const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
   const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
-  const getYouTubeEmbedUrl = (url: string) => {
+  const extractYouTubeId = (url: string) => {
     try {
       const u = new URL(url);
       const host = u.hostname;
       if (host.includes('youtu.be')) {
         const id = u.pathname.split('/')[1];
-        return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : '';
+        return id || '';
       }
       if (host.includes('youtube.com')) {
         const v = u.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}?autoplay=1`;
+        if (v) return v;
         const m = u.pathname.match(/\/shorts\/([^/]+)/);
-        if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
+        if (m) return m[1];
       }
       return '';
     } catch {
       return '';
     }
   };
-  const embedUrl = job?.youtube?.videoUrl ? getYouTubeEmbedUrl(job.youtube.videoUrl) : '';
+  const ytVideoId = job?.youtube?.videoUrl ? extractYouTubeId(job.youtube.videoUrl) : '';
 
   useEffect(() => {
     let timer: any;
-    if (isYouTubeJob && ytEmbedOpen && job?.youtube?.actionType === 'watch') {
+    if (isYouTubeJob && job?.youtube?.actionType === 'watch' && ytIsPlaying) {
       timer = setInterval(() => {
         setYtWatchElapsed((prev) => Math.min(prev + 1, ytRequiredSeconds));
       }, 1000);
     }
     return () => { if (timer) clearInterval(timer); };
-  }, [isYouTubeJob, ytEmbedOpen, job?.youtube?.actionType, ytRequiredSeconds]);
+  }, [isYouTubeJob, job?.youtube?.actionType, ytIsPlaying, ytRequiredSeconds]);
+
+  useEffect(() => {
+    if (!isYouTubeJob || !ytEmbedOpen || job?.youtube?.actionType !== 'watch' || !ytVideoId) return;
+    const loadApi = () => {
+      if ((window as any).YT && (window as any).YT.Player) {
+        initPlayer();
+      } else {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.body.appendChild(tag);
+        (window as any).onYouTubeIframeAPIReady = () => initPlayer();
+      }
+    };
+    const initPlayer = () => {
+      try {
+        ytPlayerRef.current = new (window as any).YT.Player('yt-player', {
+          videoId: ytVideoId,
+          playerVars: { autoplay: 1, controls: 1, rel: 0 },
+          events: {
+            onStateChange: (e: any) => {
+              const code = e?.data;
+              setYtIsPlaying(code === 1);
+              if (code === 0) {
+                setYtWatchElapsed(ytRequiredSeconds);
+              }
+            },
+          },
+        });
+      } catch {}
+    };
+    loadApi();
+    return () => {
+      try {
+        if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
+          ytPlayerRef.current.destroy();
+          ytPlayerRef.current = null;
+        }
+      } catch {}
+    };
+  }, [isYouTubeJob, ytEmbedOpen, job?.youtube?.actionType, ytVideoId, ytRequiredSeconds]);
 
   const toISODate = (v: any) => {
     try {
@@ -708,7 +748,7 @@ const JobDetails = () => {
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">{job?.youtube?.actionType === 'watch' ? t('youtube_section_title_watch') : t('youtube_section_title_subscribe')}</p>
                     <div className="space-y-3">
-                      {embedUrl && (
+                      {ytVideoId && (
                         <div className="space-y-2">
                           {!ytEmbedOpen && (
                             <Button onClick={() => setYtEmbedOpen(true)} variant="default" className="glow-effect">
@@ -717,7 +757,7 @@ const JobDetails = () => {
                           )}
                           {ytEmbedOpen && (
                             <div className="space-y-2">
-                              <iframe src={embedUrl} width="100%" height="360" className="rounded-md border" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                              <div id="yt-player" className="w-full h-[360px] rounded-md border" />
                               {job?.youtube?.actionType === 'watch' && (
                                 <div className="space-y-2">
                                   <Progress value={Math.min(100, Math.round((ytWatchElapsed / ytRequiredSeconds) * 100))} />
@@ -747,15 +787,9 @@ const JobDetails = () => {
                           <span>{t('link_youtube_channel_to_apply')}</span>
                         )}
                       </div>
-                      {userData?.settings?.socialAccounts?.youtube ? (
-                        <Button onClick={handleSubmitProofs} disabled={!ytCanSubmit || isApplying} className="glow-effect">
-                          {isApplying ? t('submitting') : t('submit_channel_link')}
-                        </Button>
-                      ) : (
-                        <Button variant="outline" onClick={() => navigate('/profile?tab=settings')}>
-                          {t('link_youtube_channel')}
-                        </Button>
-                      )}
+                      <Button onClick={handleSubmitProofs} disabled={!ytCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
                     </div>
                     {!ytCanSubmit && (
                       <p className="text-xs text-muted-foreground">

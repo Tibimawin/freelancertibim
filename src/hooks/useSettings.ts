@@ -43,6 +43,7 @@ export interface UserSettings {
     twitter?: string;
     tiktok?: string;
     linkedin?: string;
+    youtube?: string;
   };
   messageTemplates?: {
     directMessageInitial?: string;

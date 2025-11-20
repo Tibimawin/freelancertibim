@@ -32,7 +32,8 @@ import {
   Instagram,
   Facebook,
   Twitter,
-  Linkedin
+  Linkedin,
+  Youtube
 } from "lucide-react";
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { AuthService } from '@/services/auth';
@@ -611,12 +612,12 @@ const SettingsManager = () => {
             {t("connect_social_media_profile")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="flex items-center space-x-2">
-              <Instagram className="h-4 w-4" />
-              <span>Instagram</span>
-            </Label>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="flex items-center space-x-2">
+                <Instagram className="h-4 w-4" />
+                <span>Instagram</span>
+              </Label>
             <Input
               placeholder="@seu_usuario"
               value={localSettings.socialAccounts?.instagram || ''}
@@ -668,6 +669,21 @@ const SettingsManager = () => {
               onChange={(e) => setLocalSettings({
                 ...localSettings,
                 socialAccounts: { ...localSettings.socialAccounts, linkedin: e.target.value }
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-2">
+              <Youtube className="h-4 w-4" />
+              <span>YouTube</span>
+            </Label>
+            <Input
+              placeholder="youtube.com/@seucanal"
+              value={localSettings.socialAccounts?.youtube || ''}
+              onChange={(e) => setLocalSettings({
+                ...localSettings,
+                socialAccounts: { ...localSettings.socialAccounts, youtube: e.target.value }
               })}
             />
           </div>

@@ -352,7 +352,7 @@ const Header = () => {
           </div>
 
           {/* Área central (antiga barra de pesquisa) agora com ícone de Mercado */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-8 items-center">
+          <div className="flex flex-1 max-w-md mx-8 items-center">
             <div className="mx-auto flex items-center gap-4">
               <Link to="/market" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
                 <Store className="h-7 w-7" />
@@ -376,7 +376,7 @@ const Header = () => {
             {currentUser && userData ? (
               <>
                 {userData.currentMode === 'poster' && (
-                  <Button variant="outline" size="sm" asChild className="hidden lg:flex border-primary/50 text-primary hover:bg-primary/10">
+                  <Button variant="outline" size="sm" asChild className="flex border-primary/50 text-primary hover:bg-primary/10">
                     <Link to="/create-job">
                       <Plus className="h-4 w-4 mr-2" />
                       {t("create_job")}
@@ -385,7 +385,7 @@ const Header = () => {
                 )}
                 
                 {/* Mode Toggle (Desktop Only) */}
-                <div className="hidden lg:block">
+                <div className="block">
                   <ModeToggle />
                 </div>
                  

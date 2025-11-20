@@ -284,13 +284,13 @@ export default function MarketDetailsPage() {
         ...(affiliateId ? { affiliateId } : {}),
       });
 
-      // Determinar uso de bônus (respeitando expiração e KYC)
-      const isVerified = userData.verificationStatus === 'approved';
-      const bonusExpiresRaw = userData.posterWallet?.bonusExpiresAt as any;
-      const bonusExpiresDate = bonusExpiresRaw?.toDate ? bonusExpiresRaw.toDate() : (bonusExpiresRaw ? new Date(bonusExpiresRaw) : null);
+      // Determinar uso de bônus (respeitando expiração)
+      const bonusExpiresRaw = userData.posterWallet?.bonusExpiresAt;
+      const bonusObj = bonusExpiresRaw as { toDate?: () => Date } | undefined;
+      const bonusExpiresDate = bonusObj && typeof bonusObj.toDate === 'function' ? bonusObj.toDate!() : (bonusExpiresRaw ? new Date(bonusExpiresRaw as Date | string | number) : null);
       const bonusValid = !bonusExpiresDate || bonusExpiresDate > new Date();
       const currentBonus = userData.posterWallet?.bonusBalance ?? 0;
-      const useBonusPre = bonusValid && isVerified ? Math.min(currentBonus, listing.price) : 0;
+      const useBonusPre = bonusValid ? Math.min(currentBonus, listing.price) : 0;
 
       // Registrar transação de escrow vinculada ao pedido/anúncio
       await TransactionService.createTransaction({
@@ -309,19 +309,10 @@ export default function MarketDetailsPage() {
       const totalDeposits = userData.posterWallet?.totalDeposits ?? 0;
       const currentBalance = userData.posterWallet?.balance ?? 0;
       const currentBonus2 = userData.posterWallet?.bonusBalance ?? 0;
-      const useBonus = bonusValid && isVerified ? Math.min(currentBonus2, listing.price) : 0;
+      const useBonus = bonusValid ? Math.min(currentBonus2, listing.price) : 0;
       const useCash = listing.price - useBonus;
 
-      // Bloquear se não verificado e saldo em dinheiro insuficiente (sem bônus)
-      if (!isVerified && currentBalance < listing.price) {
-        toast({
-          title: 'Verificação necessária',
-          description: 'Para usar seu bônus de 500 Kz na compra, verifique sua identidade em Identidade/KYC.',
-          variant: 'destructive'
-        });
-        setSubmitting(false);
-        return;
-      }
+      
 
       await switchUserMode('poster');
       await updateUserData({

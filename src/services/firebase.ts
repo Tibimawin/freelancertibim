@@ -65,14 +65,13 @@ export class JobService {
         const expiresAtDate = expiresAtRaw?.toDate ? expiresAtRaw.toDate() : (expiresAtRaw ? new Date(expiresAtRaw) : null);
         const now = new Date();
         const bonusValid = !expiresAtDate || expiresAtDate > now;
-        // Bônus só pode ser usado se KYC aprovado
-        const useBonus = bonusValid && isVerified ? Math.min(currentBonus, totalCost) : 0;
+        const useBonus = bonusValid ? Math.min(currentBonus, totalCost) : 0;
         const remaining = totalCost - useBonus;
         const newBonus = currentBonus - useBonus;
         const newBalance = currentBalance - remaining;
 
         if (newBalance < 0) {
-          throw new Error('Saldo insuficiente. Verifique sua identidade (KYC) para poder usar o bônus.');
+          throw new Error('Saldo insuficiente.');
         }
 
         await updateDoc(posterRef, {

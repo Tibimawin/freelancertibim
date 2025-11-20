@@ -174,11 +174,7 @@ const WalletCard = () => {
             <p className="text-xs text-muted-foreground">
               {t("bonus_usage_hint", { defaultValue: "Usável para criar anúncios e comprar no Mercado." })}
             </p>
-            {!isVerified && (
-              <p className="text-xs mt-1 text-warning">
-                {t("kyc_required_for_bonus", { defaultValue: "Requer verificação de identidade (KYC) para usar o bônus." })}
-              </p>
-            )}
+            
           </div>
         )}
         

@@ -56,7 +56,6 @@ export class AuthService {
         rating: 0,
         ratingCount: 0,
         testerWallet: { availableBalance: 0, pendingBalance: 0, totalEarnings: 0 },
-        // Bônus só será liberado após KYC aprovado
         posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0, bonusBalance: 0 },
         completedTests: 0,
         approvalRate: 0,
@@ -85,13 +84,13 @@ export class AuthService {
       // Não sair automaticamente após cadastro: manter sessão para reconhecer o usuário imediatamente
       // A UI pode restringir funcionalidades até a verificação de e-mail
 
-      // Notificação de bônus pendente (apenas informativa; crédito será liberado após KYC)
+      // Notificação de boas-vindas com instrução de verificação de e-mail para bônus
       try {
         await NotificationService.createNotification({
           userId: firebaseUser.uid,
-          type: 'welcome_bonus_pending',
-          title: 'Bônus de boas-vindas',
-          message: 'Você ganhou 500 Kz de bônus na conta de contratante. Para usar na criação de empregos ou comprar no Mercado, finalize a verificação de identidade (KYC). Este bônus não é sacável na conta freelancer.',
+          type: 'welcome_bonus_info',
+          title: 'Bem-vindo! Bônus de 500 Kz',
+          message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
           read: false,
         });
       } catch (e) {
@@ -298,7 +297,7 @@ export class AuthService {
           lastLoginAt: Timestamp.now(),
           updatedAt: new Date(),
         }, { merge: true });
-        // Detectar primeiro login e orientar sobre KYC/bônus
+        // Detectar primeiro login e orientar sobre bônus por e-mail verificado
         try {
           const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
           const userData = userSnap.exists() ? (userSnap.data() as any) : null;
@@ -311,21 +310,67 @@ export class AuthService {
               userId: firebaseUser.uid,
               type: 'first_login_bonus_info',
               title: 'Bem-vindo! Bônus de 500 Kz',
-              message: 'Você tem um bônus de 500 Kz reservado na sua conta de contratante. Para poder usar na criação de empregos ou compras no Mercado, conclua a verificação de identidade (KYC). Este bônus não é sacável na conta freelancer.',
+              message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
               read: false,
             });
           }
         } catch (e) {
           console.warn('Falha ao registrar primeiro login/emitir notificação de bônus:', e);
         }
-      } catch (e) {
-        console.warn('Falha ao registrar atividade/IP de login:', e);
-      }
+        } catch (e) {
+          console.warn('Falha ao registrar atividade/IP de login:', e);
+        }
+
+        try {
+          await AuthService.ensureWelcomeBonusAfterEmailVerification(firebaseUser);
+        } catch {}
 
       return firebaseUser;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
+    }
+  }
+
+  static async ensureWelcomeBonusAfterEmailVerification(user: FirebaseUser): Promise<void> {
+    try {
+      try { await reload(user); } catch {}
+      if (!user.emailVerified) return;
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      const data = snap.exists() ? (snap.data() as any) : null;
+      const alreadyGranted = !!data?.welcomeBonusGrantedAt;
+      const currentTesterAvail = data?.testerWallet?.availableBalance ?? 0;
+      if (alreadyGranted) return;
+      await updateDoc(userRef, {
+        'testerWallet.availableBalance': currentTesterAvail + 500,
+        welcomeBonusGrantedAt: Timestamp.now(),
+        updatedAt: new Date(),
+      });
+      try {
+        await NotificationService.createNotification({
+          userId: user.uid,
+          type: 'welcome_bonus_granted',
+          title: 'Bônus creditado',
+          message: '500 Kz foram creditados na sua carteira de freelancer após confirmar seu e-mail.',
+          read: false,
+        });
+      } catch {}
+      try {
+        await addDoc(collection(db, 'transactions'), {
+          userId: user.uid,
+          type: 'deposit',
+          amount: 500,
+          currency: 'KZ',
+          status: 'completed',
+          description: 'Bônus de boas-vindas (e-mail verificado)',
+          provider: 'system',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+      } catch {}
+    } catch (e) {
+      console.warn('Falha ao garantir bônus após verificação de e-mail', e);
     }
   }
 

@@ -41,6 +41,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const data = await AuthService.getUserData(user.uid);
           setUserData(data);
+          if (user.emailVerified) {
+            try { await AuthService.ensureWelcomeBonusAfterEmailVerification(user as any); } catch {}
+            try { const refreshed = await AuthService.getUserData(user.uid); setUserData(refreshed); } catch {}
+          }
         } catch (error) {
           console.error('Error fetching user data:', error);
           // Initialize with default values if user data doesn't exist

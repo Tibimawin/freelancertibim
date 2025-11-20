@@ -469,15 +469,7 @@ const Header = () => {
                   {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
 
-                {/* Mercado e Minhas Compras (Mobile) */}
-                <Button variant="ghost" size="icon" className="lg:hidden text-muted-foreground hover:text-foreground" asChild>
-                  <Link to="/market">
-                    <Store className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" className="lg:hidden text-muted-foreground hover:text-foreground" asChild>
-                  <Link to="/market/compras">Compras</Link>
-                </Button>
+                
 
                 {/* Ícone de Chat (Mensagens Diretas) */}
                 <Button 

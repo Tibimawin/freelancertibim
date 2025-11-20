@@ -73,6 +73,8 @@ const JobDetails = () => {
   }, [job, uploadProgress, proofs]);
 
   const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
+  const isTikTokJob = Boolean((job as any)?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
+  const isVKJob = Boolean((job as any)?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
   const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
   const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
   const extractYouTubeId = (url: string) => {
@@ -1069,3 +1071,7 @@ const JobDetails = () => {
 };
 
 export default JobDetails;
+  const [tkFollowConfirmed, setTkFollowConfirmed] = useState(false);
+  const [vkJoinConfirmed, setVkJoinConfirmed] = useState(false);
+  const tkRequiredSeconds = ((job as any)?.tiktok?.viewTimeSeconds) || 30;
+  const tkCanSubmit = isTikTokJob && (((job as any)?.tiktok?.actionType) === 'follow' ? tkFollowConfirmed : ytWatchElapsed >= tkRequiredSeconds);

@@ -1230,7 +1230,3 @@ const JobDetails = () => {
 };
 
 export default JobDetails;
-  const [tkFollowConfirmed, setTkFollowConfirmed] = useState(false);
-  const [vkJoinConfirmed, setVkJoinConfirmed] = useState(false);
-  const tkRequiredSeconds = (job?.tiktok?.viewTimeSeconds) || 30;
-  const tkCanSubmit = isTikTokJob && ((job?.tiktok?.actionType) === 'follow' ? tkFollowConfirmed : ytWatchElapsed >= tkRequiredSeconds);

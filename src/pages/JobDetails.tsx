@@ -70,6 +70,50 @@ const JobDetails = () => {
     return Math.min(100, Math.round(sum / reqs.length));
   }, [job, uploadProgress, proofs]);
 
+  const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
+  const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
+  const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
+  const getYouTubeEmbedUrl = (url: string) => {
+    try {
+      const u = new URL(url);
+      const host = u.hostname;
+      if (host.includes('youtu.be')) {
+        const id = u.pathname.split('/')[1];
+        return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : '';
+      }
+      if (host.includes('youtube.com')) {
+        const v = u.searchParams.get('v');
+        if (v) return `https://www.youtube.com/embed/${v}?autoplay=1`;
+        const m = u.pathname.match(/\/shorts\/([^/]+)/);
+        if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  };
+  const embedUrl = job?.youtube?.videoUrl ? getYouTubeEmbedUrl(job.youtube.videoUrl) : '';
+
+  useEffect(() => {
+    let timer: any;
+    if (isYouTubeJob && ytEmbedOpen && job?.youtube?.actionType === 'watch') {
+      timer = setInterval(() => {
+        setYtWatchElapsed((prev) => Math.min(prev + 1, ytRequiredSeconds));
+      }, 1000);
+    }
+    return () => { if (timer) clearInterval(timer); };
+  }, [isYouTubeJob, ytEmbedOpen, job?.youtube?.actionType, ytRequiredSeconds]);
+
+  const toISODate = (v: any) => {
+    try {
+      const d = typeof v?.toDate === 'function' ? v.toDate() : new Date(v);
+      if (!d || isNaN(d.getTime())) return '';
+      return d.toISOString().slice(0, 10);
+    } catch {
+      return '';
+    }
+  };
+
   useEffect(() => {
     const primeFromStateOrCache = () => {
       if (stateJob) {
@@ -86,7 +130,7 @@ const JobDetails = () => {
         setEditTitle(normalizedJob.title || '');
         setEditDescription(normalizedJob.description || '');
         setEditLocation(normalizedJob.location || '');
-        setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
+        setEditDueDate(normalizedJob.dueDate ? toISODate(normalizedJob.dueDate) : '');
       } else if (id) {
         try {
           const raw = sessionStorage.getItem(`job_preview_${id}`);
@@ -105,7 +149,7 @@ const JobDetails = () => {
             setEditTitle(normalizedJob.title || '');
             setEditDescription(normalizedJob.description || '');
             setEditLocation(normalizedJob.location || '');
-            setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
+            setEditDueDate(normalizedJob.dueDate ? toISODate(normalizedJob.dueDate) : '');
           }
         } catch {}
       }
@@ -125,7 +169,7 @@ const JobDetails = () => {
           setEditTitle(normalizedJob.title || '');
           setEditDescription(normalizedJob.description || '');
           setEditLocation(normalizedJob.location || '');
-          setEditDueDate(normalizedJob.dueDate ? (new Date(normalizedJob.dueDate as any).toISOString().slice(0,10)) : '');
+          setEditDueDate(normalizedJob.dueDate ? toISODate(normalizedJob.dueDate) : '');
 
           const applications = await ApplicationService.getApplicationsForJob(id);
           setActualApplicantCount(applications.length);
@@ -213,39 +257,6 @@ const JobDetails = () => {
     (!myApplication || (myApplication.status !== 'submitted' && myApplication.status !== 'approved'))
   );
 
-  const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
-  const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
-  const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
-  const getYouTubeEmbedUrl = (url: string) => {
-    try {
-      const u = new URL(url);
-      const host = u.hostname;
-      if (host.includes('youtu.be')) {
-        const id = u.pathname.split('/')[1];
-        return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : '';
-      }
-      if (host.includes('youtube.com')) {
-        const v = u.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}?autoplay=1`;
-        const m = u.pathname.match(/\/shorts\/([^/]+)/);
-        if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
-      }
-      return '';
-    } catch {
-      return '';
-    }
-  };
-  const embedUrl = job?.youtube?.videoUrl ? getYouTubeEmbedUrl(job.youtube.videoUrl) : '';
-
-  useEffect(() => {
-    let timer: any;
-    if (isYouTubeJob && ytEmbedOpen && job?.youtube?.actionType === 'watch') {
-      timer = setInterval(() => {
-        setYtWatchElapsed((prev) => Math.min(prev + 1, ytRequiredSeconds));
-      }, 1000);
-    }
-    return () => { if (timer) clearInterval(timer); };
-  }, [isYouTubeJob, ytEmbedOpen, job?.youtube?.actionType, ytRequiredSeconds]);
 
   const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
     setProofs(prev => ({

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,9 @@ const JobDetails = () => {
   const [showSubmittedBanner, setShowSubmittedBanner] = useState(false);
   const [ytEmbedOpen, setYtEmbedOpen] = useState(false);
   const [ytWatchElapsed, setYtWatchElapsed] = useState(0);
+  const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
+  const [ytIsPlaying, setYtIsPlaying] = useState(false);
+  const ytPlayerRef = useRef<any>(null);
   const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
   const applicantCount = useMemo(() => {
     return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;

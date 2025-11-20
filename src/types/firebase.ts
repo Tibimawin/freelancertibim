@@ -71,6 +71,7 @@ export interface UserSettings {
     tiktok?: string;
     linkedin?: string;
     youtube?: string;
+    vk?: string;
   };
   messageTemplates?: {
     directMessageInitial?: string;

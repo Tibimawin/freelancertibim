@@ -51,7 +51,6 @@ const JobDetails = () => {
   const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
   const [ytIsPlaying, setYtIsPlaying] = useState(false);
   const ytPlayerRef = useRef<any>(null);
-  const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
   const applicantCount = useMemo(() => {
     return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;
   }, [job?.applicantCount, actualApplicantCount]);

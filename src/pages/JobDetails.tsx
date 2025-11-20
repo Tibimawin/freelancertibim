@@ -210,6 +210,8 @@ const JobDetails = () => {
     (!myApplication || (myApplication.status !== 'submitted' && myApplication.status !== 'approved'))
   );
 
+  const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
+
   const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
     setProofs(prev => ({
       ...prev,
@@ -270,19 +272,32 @@ const JobDetails = () => {
       return;
     }
 
-    const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
-    const missingProofs = requiredProofs.filter(req => {
-      const proof = proofs[req.id];
-      return !proof || (!proof.text && !proof.file);
-    });
-
-    if (missingProofs.length > 0) {
-      toast({
-        title: t("missing_required_proofs"),
-        description: t("missing_required_proofs_description"),
-        variant: "destructive",
+    if (isYouTubeJob) {
+      const channelLink = userData?.settings?.socialAccounts?.youtube;
+      if (!channelLink) {
+        toast({
+          title: t('youtube_channel_required'),
+          description: t('link_youtube_channel_to_apply'),
+          variant: 'destructive',
+        });
+        navigate('/profile?tab=settings');
+        return;
+      }
+    } else {
+      const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
+      const missingProofs = requiredProofs.filter(req => {
+        const proof = proofs[req.id];
+        return !proof || (!proof.text && !proof.file);
       });
-      return;
+
+      if (missingProofs.length > 0) {
+        toast({
+          title: t("missing_required_proofs"),
+          description: t("missing_required_proofs_description"),
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsApplying(true);
@@ -316,40 +331,46 @@ const JobDetails = () => {
       
       // Preparar provas para envio com upload ao Cloudinary (screenshots/arquivos)
       const folder = `proofs/${currentUser.uid}/${job.id}`;
-      const proofsToSubmit: any[] = await Promise.all((job.proofRequirements || []).map(async (req) => {
-        const proof = proofs[req.id];
-        if (!proof) {
-          return { requirementId: req.id, type: req.type, content: '', comment: '' };
-        }
+      const proofsToSubmit: any[] = isYouTubeJob
+        ? [
+            {
+              requirementId: 'youtube_channel',
+              type: 'url',
+              content: userData?.settings?.socialAccounts?.youtube || '',
+              comment: 'Canal do YouTube vinculado',
+            },
+          ]
+        : await Promise.all((job.proofRequirements || []).map(async (req) => {
+            const proof = proofs[req.id];
+            if (!proof) {
+              return { requirementId: req.id, type: req.type, content: '', comment: '' };
+            }
 
-        // Se for screenshot/arquivo e há arquivo, faz upload e usa a URL
-        if ((req.type === 'screenshot' || req.type === 'file') && proof.file) {
-          // Validação de tamanho e tipo
-          if (!validateFile(req.id, req.type, proof.file)) {
-            return { requirementId: req.id, type: req.type, content: '', comment: proof.comment || '' };
-          }
-          setUploadProgress(prev => ({ ...prev, [req.id]: 0 }));
-          const result = await CloudinaryService.uploadFile(proof.file, folder, (p) => {
-            setUploadProgress(prev => ({ ...prev, [req.id]: p }));
-          });
-          return {
-            requirementId: req.id,
-            type: req.type,
-            content: result.url, // usar URL como conteúdo principal
-            fileUrl: result.url,
-            filePublicId: result.public_id,
-            comment: proof.comment || ''
-          };
-        }
+            if ((req.type === 'screenshot' || req.type === 'file') && proof.file) {
+              if (!validateFile(req.id, req.type, proof.file)) {
+                return { requirementId: req.id, type: req.type, content: '', comment: proof.comment || '' };
+              }
+              setUploadProgress(prev => ({ ...prev, [req.id]: 0 }));
+              const result = await CloudinaryService.uploadFile(proof.file, folder, (p) => {
+                setUploadProgress(prev => ({ ...prev, [req.id]: p }));
+              });
+              return {
+                requirementId: req.id,
+                type: req.type,
+                content: result.url,
+                fileUrl: result.url,
+                filePublicId: result.public_id,
+                comment: proof.comment || ''
+              };
+            }
 
-        // Para texto/URL ou se não houver arquivo, enviar o texto/URL
-        return {
-          requirementId: req.id,
-          type: req.type,
-          content: proof.text || '',
-          comment: proof.comment || ''
-        };
-      }));
+            return {
+              requirementId: req.id,
+              type: req.type,
+              content: proof.text || '',
+              comment: proof.comment || ''
+            };
+          }));
 
       // Enviar provas
       await ApplicationService.submitProofs(applicationId, proofsToSubmit);

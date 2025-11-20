@@ -358,12 +358,16 @@ const CreateJob = () => {
     const totalCost = jobBounty * maxApplicants;
     const currentBalance = userData.posterWallet?.balance || 0;
     const bonusBalance = userData.posterWallet?.bonusBalance || 0;
-    const combined = currentBalance + bonusBalance;
-    
-    if (combined < totalCost) {
+    const isVerified = userData.verificationStatus === 'approved';
+    const availableFunds = isVerified ? (currentBalance + bonusBalance) : currentBalance;
+
+    if (availableFunds < totalCost) {
+      const desc = isVerified
+        ? t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: availableFunds.toFixed(2) })
+        : `${t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) })}  | Bônus disponível: ${bonusBalance.toFixed(2)} Kz (requer KYC aprovado).`;
       toast({
-        title: t("insufficient_balance"), 
-              description: t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: combined.toFixed(2) }),
+        title: t("insufficient_balance"),
+        description: desc,
         variant: "destructive",
       });
       return;

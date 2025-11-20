@@ -114,6 +114,9 @@ export interface Job {
   youtube?: JobYouTubeSettings;
   tiktok?: JobTikTokSettings;
   vk?: JobVKSettings;
+  instagram?: JobInstagramSettings;
+  facebook?: JobFacebookSettings;
+  website?: JobWebsiteSettings;
 }
 
 // Instruções detalhadas da tarefa
@@ -496,7 +499,7 @@ export interface MarketDownloadToken {
   createdAt: Date;
 }
 export interface JobYouTubeSettings {
-  actionType: 'watch' | 'subscribe';
+  actionType: 'watch' | 'subscribe' | 'like';
   videoTitle: string;
   videoUrl: string;
   viewTimeSeconds: number;
@@ -506,6 +509,7 @@ export interface JobYouTubeSettings {
     requireLogin?: boolean;
     avoidRepeat?: boolean;
     openInIframe?: boolean;
+    unlimitedAds?: boolean;
   };
 }
 
@@ -531,5 +535,49 @@ export interface JobVKSettings {
   extras?: {
     requireLogin?: boolean;
     avoidRepeat?: boolean;
+  };
+}
+
+export interface JobInstagramSettings {
+  actionType: 'watch' | 'follow' | 'like' | 'comment';
+  videoTitle?: string;
+  videoUrl: string;
+  viewTimeSeconds?: number;
+  dailyMaxViews?: number;
+  guarantee?: 'none' | 'basic' | 'premium';
+  extras?: {
+    requireLogin?: boolean;
+    avoidRepeat?: boolean;
+    openInIframe?: boolean;
+  };
+}
+
+export interface JobFacebookSettings {
+  actionType: 'watch' | 'follow' | 'like' | 'comment';
+  videoTitle?: string;
+  videoUrl: string;
+  viewTimeSeconds?: number;
+  dailyMaxViews?: number;
+  guarantee?: 'none' | 'basic' | 'premium';
+  extras?: {
+    requireLogin?: boolean;
+    avoidRepeat?: boolean;
+    openInIframe?: boolean;
+  };
+}
+
+export interface JobWebsiteSettings {
+  actionType: 'visit' | 'visit_scroll';
+  pageTitle?: string;
+  pageUrl: string;
+  viewTimeSeconds?: number;
+  dailyMaxVisits?: number;
+  guarantee?: 'none' | 'basic' | 'premium';
+  extras?: {
+    avoidRepeat?: boolean;
+    openInIframe?: boolean;
+    blockCopy?: boolean;
+    blockRefresh?: boolean;
+    blockMultipleTabs?: boolean;
   };
 }

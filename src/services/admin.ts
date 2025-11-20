@@ -621,6 +621,33 @@ export class AdminService {
     await setDoc(ref, { maintenance: !!status.maintenance, message: status.message || '', updatedAt: Timestamp.now() }, { merge: true });
   }
 
+  static async getFeatureToggles(): Promise<{ marketEnabled: boolean; servicesEnabled: boolean }> {
+    try {
+      const ref = doc(db, 'admin_settings', 'siteStatus');
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? (snap.data() as any) : {};
+      return {
+        marketEnabled: data.marketEnabled !== false,
+        servicesEnabled: data.servicesEnabled !== false,
+      };
+    } catch {
+      return { marketEnabled: true, servicesEnabled: true };
+    }
+  }
+
+  static async updateFeatureToggles(toggles: Partial<{ marketEnabled: boolean; servicesEnabled: boolean }>): Promise<void> {
+    const ref = doc(db, 'admin_settings', 'siteStatus');
+    await setDoc(
+      ref,
+      {
+        ...(toggles.marketEnabled !== undefined ? { marketEnabled: !!toggles.marketEnabled } : {}),
+        ...(toggles.servicesEnabled !== undefined ? { servicesEnabled: !!toggles.servicesEnabled } : {}),
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
+  }
+
   static async getSecurityConfig(): Promise<{ recaptchaSiteKey?: string }> {
     try {
       const ref = doc(db, 'admin_settings', 'security');

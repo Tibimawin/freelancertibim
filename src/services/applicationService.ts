@@ -283,6 +283,16 @@ export class ApplicationService {
             applicationId: applicationId,
           },
         });
+
+        if (
+          (job.youtube && job.youtube.actionType === 'watch') ||
+          (job.instagram && job.instagram.actionType === 'watch') ||
+          (job.facebook && job.facebook.actionType === 'watch') ||
+          (job.tiktok && job.tiktok.actionType === 'watch') ||
+          (job.website && (job.website.actionType === 'visit' || job.website.actionType === 'visit_scroll'))
+        ) {
+          await ApplicationService.reviewApplication(applicationId, 'approved', job.posterId);
+        }
       }
 
     } catch (error) {

@@ -11,6 +11,7 @@ import { ServiceOrder, ServiceListing } from '@/types/firebase';
 import ServiceOrderService from '@/services/serviceOrderService';
 import { ServicesService } from '@/services/servicesService';
 import { Image as ImageIcon } from 'lucide-react';
+import { AdminService } from '@/services/admin';
 
 function formatDate(d?: Date | string) {
   if (!d) return '';
@@ -35,6 +36,13 @@ export default function SellerServiceOrdersPage() {
   useEffect(() => {
     (async () => {
       try {
+        try {
+          const ft = await AdminService.getFeatureToggles();
+          if (!ft.servicesEnabled) {
+            navigate('/');
+            return;
+          }
+        } catch { void 0; }
         if (!currentUser?.uid) return;
         const os = await ServiceOrderService.listOrdersForSeller(currentUser.uid);
         setOrders(os);

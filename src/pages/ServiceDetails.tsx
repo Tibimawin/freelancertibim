@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TransactionService } from '@/services/firebase';
 import { NotificationService } from '@/services/notificationService';
 import ServiceOrderService from '@/services/serviceOrderService';
+import { AdminService } from '@/services/admin';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
@@ -56,6 +57,13 @@ export default function ServiceDetailsPage() {
     (async () => {
       if (!id) return;
       try {
+        try {
+          const ft = await AdminService.getFeatureToggles();
+          if (!ft.servicesEnabled) {
+            navigate('/');
+            return;
+          }
+        } catch { void 0; }
         const item = await ServicesService.get(id);
         setListing(item);
         if (item?.sellerId) {

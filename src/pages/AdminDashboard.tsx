@@ -26,7 +26,6 @@ import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
-import AdminVerifications from '@/components/admin/AdminVerifications';
 import AdminBalances from '@/components/admin/AdminBalances';
 import AdminBanking from '@/components/admin/AdminBanking';
 import AdminReports from '@/components/admin/AdminReports'; 
@@ -49,7 +48,7 @@ const AdminDashboard = () => {
   const { statistics, loading: statsLoading, refetch } = useAdminStatistics();
   const { reports, fetchReports } = useAdminReports(); 
   const { t } = useTranslation();
-  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'verifications'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'|'taxonomies'|'footerLinks'|'maintenance'>('overview');
+  const [active, setActive] = useState<'overview'|'users'|'jobs'|'withdrawals'|'balances'|'banking'|'reports'|'support'|'referrals'|'market'|'devices'|'avatars'|'taxonomies'|'footerLinks'|'maintenance'>('overview');
 
   useEffect(() => {
     // Refresh stats every 30 seconds
@@ -190,9 +189,7 @@ const AdminDashboard = () => {
                 <button onClick={() => setActive('withdrawals')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='withdrawals' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <CreditCard className="h-4 w-4" /> {t("withdrawals_tab")}
                 </button>
-                <button onClick={() => setActive('verifications')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='verifications' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
-                  <FileCheck className="h-4 w-4" /> {t("verifications_tab")}
-                </button>
+                
                 <button onClick={() => setActive('balances')} className={`w-full text-left px-3 py-2 rounded-md flex items-center gap-2 ${active==='balances' ? 'bg-accent text-foreground' : 'hover:bg-muted text-muted-foreground'}`}>
                   <DollarSign className="h-4 w-4" /> {t("balances_tab")}
                 </button>
@@ -244,7 +241,7 @@ const AdminDashboard = () => {
           {active === 'users' && (<AdminUsers />)}
           {active === 'jobs' && (<AdminJobManager />)}
           {active === 'withdrawals' && (<AdminWithdrawals />)}
-          {active === 'verifications' && (<AdminVerifications />)}
+          
           {active === 'balances' && (<AdminBalances />)}
           {active === 'banking' && (<AdminBanking />)}
           {active === 'reports' && (<AdminReports />)}

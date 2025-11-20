@@ -60,7 +60,7 @@ const CreateJob = () => {
     detailedInstructions: [] as TaskInstruction[],
     proofRequirements: [] as ProofRequirement[],
     youtube: {
-      actionType: 'watch' as 'watch' | 'subscribe',
+      actionType: 'watch' as 'watch' | 'subscribe' | 'like',
       videoTitle: '',
       videoUrl: '',
       viewTimeSeconds: 30,
@@ -84,10 +84,37 @@ const CreateJob = () => {
       guarantee: 'none' as 'none' | 'basic' | 'premium',
       extras: { requireLogin: false, avoidRepeat: true },
     },
+    website: {
+      actionType: 'visit' as 'visit' | 'visit_scroll',
+      pageTitle: '',
+      pageUrl: '',
+      viewTimeSeconds: 10,
+      dailyMaxVisits: 500,
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { avoidRepeat: true, openInIframe: true, blockCopy: true, blockRefresh: true, blockMultipleTabs: true },
+    },
+    instagram: {
+      actionType: 'watch' as 'watch' | 'follow' | 'like' | 'comment',
+      videoTitle: '',
+      videoUrl: '',
+      viewTimeSeconds: 30,
+      dailyMaxViews: 500,
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
+    },
+    facebook: {
+      actionType: 'watch' as 'watch' | 'follow' | 'like' | 'comment',
+      videoTitle: '',
+      videoUrl: '',
+      viewTimeSeconds: 30,
+      dailyMaxViews: 500,
+      guarantee: 'none' as 'none' | 'basic' | 'premium',
+      extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
+    },
   });
 
   const defaultYouTube = {
-    actionType: 'watch' as 'watch' | 'subscribe',
+    actionType: 'watch' as 'watch' | 'subscribe' | 'like',
     videoTitle: '',
     videoUrl: '',
     viewTimeSeconds: 30,
@@ -110,6 +137,33 @@ const CreateJob = () => {
     targetUrl: '',
     guarantee: 'none' as 'none' | 'basic' | 'premium',
     extras: { requireLogin: false, avoidRepeat: true },
+  };
+  const defaultWebsite = {
+    actionType: 'visit' as 'visit' | 'visit_scroll',
+    pageTitle: '',
+    pageUrl: '',
+    viewTimeSeconds: 10,
+    dailyMaxVisits: 500,
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { avoidRepeat: true, openInIframe: true, blockCopy: true, blockRefresh: true, blockMultipleTabs: true },
+  };
+  const defaultInstagram = {
+    actionType: 'watch' as 'watch' | 'follow' | 'like' | 'comment',
+    videoTitle: '',
+    videoUrl: '',
+    viewTimeSeconds: 30,
+    dailyMaxViews: 500,
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
+  };
+  const defaultFacebook = {
+    actionType: 'watch' as 'watch' | 'follow' | 'like' | 'comment',
+    videoTitle: '',
+    videoUrl: '',
+    viewTimeSeconds: 30,
+    dailyMaxViews: 500,
+    guarantee: 'none' as 'none' | 'basic' | 'premium',
+    extras: { requireLogin: false, avoidRepeat: true, openInIframe: false },
   };
 
   // Dynamic taxonomy options
@@ -327,16 +381,23 @@ const CreateJob = () => {
 
     // Validações básicas
     const sub = (formData.subcategory || '').toLowerCase();
-    const isVideoAd = sub.includes('youtube') || sub.includes('ver vídeo') || sub.includes('instagram') || sub.includes('facebook');
+    const isYouTube = sub.includes('youtube');
+    const isInstagram = sub.includes('instagram');
+    const isFacebook = sub.includes('facebook');
     const isTikTok = sub.includes('tiktok');
     const isVK = sub.includes('vk');
-    if (!formData.title || !formData.description || !formData.bounty || !formData.platform || !formData.difficulty ||
-        (isVideoAd && !formData.youtube?.videoUrl) ||
+    const isWebsite = (formData.category || '').toLowerCase() === 'web' && sub === 'Website'.toLowerCase();
+    const isVideoAd = (isYouTube && (formData.youtube?.actionType || 'watch') === 'watch') || (isInstagram && (formData.instagram?.actionType || 'watch') === 'watch') || (isFacebook && (formData.facebook?.actionType || 'watch') === 'watch') || sub.includes('ver vídeo');
+    if (!formData.title || !formData.description || !formData.bounty ||
+        (isYouTube && !formData.youtube?.videoUrl) ||
+        (isInstagram && !formData.instagram?.videoUrl) ||
+        (isFacebook && !formData.facebook?.videoUrl) ||
         (isTikTok && !formData.tiktok.videoUrl) ||
-        (isVK && !formData.vk.targetUrl)) {
+        (isVK && !formData.vk.targetUrl) ||
+        (isWebsite && !formData.website?.pageUrl)) {
       toast({
         title: t("error"),
-        description: isVideoAd ? 'Preencha os campos obrigatórios do vídeo.' : isTikTok ? 'Preencha os campos obrigatórios do TikTok.' : isVK ? 'Preencha os campos obrigatórios do VK.' : t("fill_all_required_fields"),
+        description: isVideoAd ? 'Preencha os campos obrigatórios do vídeo.' : isTikTok ? 'Preencha os campos obrigatórios do TikTok.' : isVK ? 'Preencha os campos obrigatórios do VK.' : (isInstagram ? 'Preencha os campos obrigatórios do Instagram.' : (isFacebook ? 'Preencha os campos obrigatórios do Facebook.' : (isWebsite ? 'Preencha os campos obrigatórios do Website.' : t("fill_all_required_fields")))),
         variant: "destructive",
       });
       return;
@@ -359,13 +420,10 @@ const CreateJob = () => {
     const totalCost = jobBounty * maxApplicants;
     const currentBalance = userData.posterWallet?.balance || 0;
     const bonusBalance = userData.posterWallet?.bonusBalance || 0;
-    const isVerified = userData.verificationStatus === 'approved';
-    const availableFunds = isVerified ? (currentBalance + bonusBalance) : currentBalance;
+    const availableFunds = currentBalance + bonusBalance;
 
     if (availableFunds < totalCost) {
-      const desc = isVerified
-        ? t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: availableFunds.toFixed(2) })
-        : `${t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: currentBalance.toFixed(2) })}  | Bônus disponível: ${bonusBalance.toFixed(2)} Kz (requer KYC aprovado).`;
+      const desc = t("insufficient_balance_description", { cost: totalCost.toFixed(2), bounty: jobBounty, applicants: maxApplicants, currentBalance: availableFunds.toFixed(2) });
       toast({
         title: t("insufficient_balance"),
         description: desc,
@@ -382,15 +440,15 @@ const CreateJob = () => {
         posterId: currentUser.uid,
         posterName: userData.name,
         bounty: parseFloat(formData.bounty),
-        platform: formData.platform as 'iOS' | 'Android' | 'Web', // Explicit cast
-        difficulty: formData.difficulty as 'Fácil' | 'Médio' | 'Difícil', // Explicit cast
+        platform: (formData.platform || 'Web') as 'iOS' | 'Android' | 'Web',
+        difficulty: (formData.difficulty || 'Fácil') as 'Fácil' | 'Médio' | 'Difícil',
         category: formData.category ? (formData.category as 'Mobile' | 'Web' | 'Social') : undefined,
         subcategory: formData.subcategory || undefined,
         requirements: formData.requirements,
         attachments: [],
         status: 'active' as const,
         timeEstimate: formData.timeEstimate || "1-2 horas",
-        location: formData.location,
+        location: formData.location || undefined,
         maxApplicants: formData.maxApplicants ? parseInt(formData.maxApplicants) : undefined,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         detailedInstructions: formData.detailedInstructions,
@@ -408,10 +466,210 @@ const CreateJob = () => {
       if (!jobData.posterApprovalRate) delete jobData.posterApprovalRate;
       if (!jobData.posterRating) delete jobData.posterRating;
       if (!jobData.posterRatingCount) delete jobData.posterRatingCount;
+      if (!jobData.location) delete jobData.location;
 
-      if (isVideoAd && formData.youtube) jobData.youtube = formData.youtube;
+      if (isYouTube && formData.youtube) jobData.youtube = formData.youtube;
+      if (isInstagram && formData.instagram) jobData.instagram = formData.instagram;
+      if (isFacebook && formData.facebook) jobData.facebook = formData.facebook;
       if (isTikTok && formData.tiktok) jobData.tiktok = formData.tiktok;
       if (isVK && formData.vk) jobData.vk = formData.vk;
+      if (isWebsite && formData.website) jobData.website = formData.website;
+
+      if ((formData.subcategory || '').toLowerCase().includes('youtube') && formData.youtube?.actionType === 'subscribe') {
+        const existing = Array.isArray(jobData.proofRequirements) ? jobData.proofRequirements : [];
+        const hasScreenshot = existing.some((p: any) => p.id === 'youtube_subscribe_screenshot');
+        const hasLink = existing.some((p: any) => p.id === 'youtube_channel_link');
+        const defaults = [
+          !hasScreenshot && {
+            id: 'youtube_subscribe_screenshot',
+            type: 'screenshot',
+            label: 'Comprovativo de inscrição (captura de ecrã)',
+            description: 'Envie uma captura de ecrã mostrando que você se inscreveu no canal.',
+            isRequired: true,
+            placeholder: t('proof_placeholder_screenshot'),
+          },
+          !hasLink && {
+            id: 'youtube_channel_link',
+            type: 'url',
+            label: 'Link do canal',
+            description: 'Cole o link do canal que você se inscreveu.',
+            isRequired: true,
+            placeholder: t('proof_placeholder_url'),
+          },
+        ].filter(Boolean);
+        jobData.proofRequirements = [...existing, ...defaults];
+      }
+
+      if ((formData.subcategory || '').toLowerCase().includes('youtube') && formData.youtube?.actionType === 'like') {
+        const existing = Array.isArray(jobData.proofRequirements) ? jobData.proofRequirements : [];
+        const hasScreenshot = existing.some((p: any) => p.id === 'youtube_like_screenshot');
+        const hasLink = existing.some((p: any) => p.id === 'youtube_video_link');
+        const defaults = [
+          !hasScreenshot && {
+            id: 'youtube_like_screenshot',
+            type: 'screenshot',
+            label: 'Comprovativo de curtida (captura de ecrã)',
+            description: 'Envie uma captura de ecrã mostrando que você curtiu o vídeo.',
+            isRequired: true,
+            placeholder: t('proof_placeholder_screenshot'),
+          },
+          !hasLink && {
+            id: 'youtube_video_link',
+            type: 'url',
+            label: 'Link do vídeo',
+            description: 'Cole o link do vídeo que você curtiu.',
+            isRequired: true,
+            placeholder: t('proof_placeholder_url'),
+          },
+        ].filter(Boolean);
+        jobData.proofRequirements = [...existing, ...defaults];
+      }
+
+      if ((formData.subcategory || '').toLowerCase().includes('instagram')) {
+        const existing = Array.isArray(jobData.proofRequirements) ? jobData.proofRequirements : [];
+        if ((formData.instagram?.actionType || 'watch') === 'follow') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'instagram_follow_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'instagram_profile_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'instagram_follow_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de seguir (captura de ecrã)',
+              description: 'Envie uma captura de ecrã mostrando que você seguiu o perfil.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'instagram_profile_link',
+              type: 'url',
+              label: 'Link do perfil',
+              description: 'Cole o link do perfil que você seguiu.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+        if ((formData.instagram?.actionType || 'watch') === 'like') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'instagram_like_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'instagram_post_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'instagram_like_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de curtida (captura de ecrã)',
+              description: 'Envie uma captura de ecrã mostrando que você curtiu a publicação.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'instagram_post_link',
+              type: 'url',
+              label: 'Link da publicação',
+              description: 'Cole o link da publicação que você curtiu.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+        if ((formData.instagram?.actionType || 'watch') === 'comment') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'instagram_comment_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'instagram_post_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'instagram_comment_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de comentário (captura de ecrã)',
+              description: 'Envie uma captura de ecrã do seu comentário.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'instagram_post_link',
+              type: 'url',
+              label: 'Link da publicação',
+              description: 'Cole o link da publicação onde você comentou.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+      }
+
+      if ((formData.subcategory || '').toLowerCase().includes('facebook')) {
+        const existing = Array.isArray(jobData.proofRequirements) ? jobData.proofRequirements : [];
+        if ((formData.facebook?.actionType || 'watch') === 'follow') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'facebook_follow_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'facebook_page_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'facebook_follow_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de seguir página (captura de ecrã)',
+              description: 'Envie uma captura de ecrã mostrando que você segue a página.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'facebook_page_link',
+              type: 'url',
+              label: 'Link da página',
+              description: 'Cole o link da página que você seguiu.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+        if ((formData.facebook?.actionType || 'watch') === 'like') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'facebook_like_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'facebook_post_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'facebook_like_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de curtida (captura de ecrã)',
+              description: 'Envie uma captura de ecrã mostrando que você curtiu a publicação.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'facebook_post_link',
+              type: 'url',
+              label: 'Link da publicação',
+              description: 'Cole o link da publicação que você curtiu.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+        if ((formData.facebook?.actionType || 'watch') === 'comment') {
+          const hasScreenshot = existing.some((p: any) => p.id === 'facebook_comment_screenshot');
+          const hasLink = existing.some((p: any) => p.id === 'facebook_post_link');
+          const defaults = [
+            !hasScreenshot && {
+              id: 'facebook_comment_screenshot',
+              type: 'screenshot',
+              label: 'Comprovativo de comentário (captura de ecrã)',
+              description: 'Envie uma captura de ecrã do seu comentário.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_screenshot'),
+            },
+            !hasLink && {
+              id: 'facebook_post_link',
+              type: 'url',
+              label: 'Link da publicação',
+              description: 'Cole o link da publicação onde você comentou.',
+              isRequired: true,
+              placeholder: t('proof_placeholder_url'),
+            },
+          ].filter(Boolean);
+          jobData.proofRequirements = [...existing, ...defaults];
+        }
+      }
 
       await JobService.createJobWithPayment(jobData, currentUser.uid, totalCost);
       
@@ -490,6 +748,7 @@ const CreateJob = () => {
                       >
                         <Youtube className="h-4 w-4 mr-2" /> YouTube
                       </Button>
+                      
                       <Button
                         type="button"
                         variant={(formData.subcategory || '').toLowerCase().includes('instagram') ? 'default' : 'outline'}
@@ -497,11 +756,11 @@ const CreateJob = () => {
                         onClick={() => setFormData(prev => ({
                           ...prev,
                           category: 'Social',
-                          subcategory: 'Vídeo Instagram',
-                          youtube: prev.youtube || defaultYouTube,
+                          subcategory: 'Instagram',
+                          instagram: prev.instagram || defaultInstagram,
                         }))}
                       >
-                        <Instagram className="h-4 w-4 mr-2" /> Vídeo Instagram
+                        <Instagram className="h-4 w-4 mr-2" /> Instagram
                       </Button>
                       <Button
                         type="button"
@@ -510,37 +769,26 @@ const CreateJob = () => {
                         onClick={() => setFormData(prev => ({
                           ...prev,
                           category: 'Social',
-                          subcategory: 'Vídeo Facebook',
-                          youtube: prev.youtube || defaultYouTube,
+                          subcategory: 'Facebook',
+                          facebook: prev.facebook || defaultFacebook,
                         }))}
                       >
-                        <Facebook className="h-4 w-4 mr-2" /> Vídeo Facebook
+                        <Facebook className="h-4 w-4 mr-2" /> Facebook
                       </Button>
-                      <Button
-                        type="button"
-                        variant={(formData.subcategory || '').toLowerCase().includes('ver vídeo') ? 'default' : 'outline'}
-                        className="justify-start"
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          category: 'Web',
-                          subcategory: 'Ver vídeo no YouTube',
-                          youtube: prev.youtube || defaultYouTube,
-                        }))}
-                      >
-                        <Globe className="h-4 w-4 mr-2" /> Ver vídeo no YouTube
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={(formData.category || '').toLowerCase() === 'web' && (formData.subcategory || '').toLowerCase() === 'website' ? 'default' : 'outline'}
-                        className="justify-start"
-                        onClick={() => setFormData(prev => ({
-                          ...prev,
-                          category: 'Web',
-                          subcategory: 'Website',
-                        }))}
-                      >
-                        <Monitor className="h-4 w-4 mr-2" /> Website
-                      </Button>
+                      
+                <Button
+                  type="button"
+                  variant={(formData.category || '').toLowerCase() === 'web' && (formData.subcategory || '').toLowerCase() === 'website' ? 'default' : 'outline'}
+                  className="justify-start"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    category: 'Web',
+                    subcategory: 'Website',
+                    website: prev.website || defaultWebsite,
+                  }))}
+                >
+                  <Monitor className="h-4 w-4 mr-2" /> Website
+                </Button>
                       <Button
                         type="button"
                         variant={(formData.subcategory || '').toLowerCase().includes('tiktok') ? 'default' : 'outline'}
@@ -603,130 +851,41 @@ const CreateJob = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="platform">{t("platform")} *</Label>
-                        <Select value={formData.platform} onValueChange={(value) => setFormData(prev => ({ ...prev, platform: value }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("select_platform")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="iOS">
-                              <div className="flex items-center space-x-2">
-                                <Smartphone className="h-4 w-4 text-muted-foreground" />
-                                <span>iOS</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Android">
-                              <div className="flex items-center space-x-2">
-                                <Smartphone className="h-4 w-4 text-muted-foreground" />
-                                <span>Android</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Web">
-                              <div className="flex items-center space-x-2">
-                                <Globe className="h-4 w-4 text-muted-foreground" />
-                                <span>Web</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="difficulty">{t("difficulty_level")} *</Label>
-                        <Select value={formData.difficulty} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("select_difficulty")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(workLevels.length ? workLevels : fallbackLevels).map((lvl) => (
-                              <SelectItem key={lvl.id} value={lvl.name}>{lvl.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Categoria e Subcategoria */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="category">Categoria</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) =>
-                            setFormData(prev => ({ ...prev, category: value, subcategory: '' }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecionar" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(categoryOptions.length ? categoryOptions : fallbackCategories).map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="subcategory">Subcategoria</Label>
-                        <Select
-                          value={formData.subcategory}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecionar" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(subcategoryOptions.length ? subcategoryOptions : fallbackSubcategoriesFor(formData.category)).map((sub) => (
-                              <SelectItem key={sub.id} value={sub.name}>{sub.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                    
                   </CardContent>
                 </Card>
 
-                {/* Formulário de visualização de vídeo (YouTube/Instagram/Facebook/Sites) */}
-                {(() => {
-                  const sub = (formData.subcategory || '').toLowerCase();
-                  const isVideo = sub.includes('youtube') || sub.includes('ver vídeo') || sub.includes('instagram') || sub.includes('facebook');
-                  if (!isVideo) return null;
-                  const platform = sub.includes('instagram') ? 'Instagram' : sub.includes('facebook') ? 'Facebook' : sub.includes('ver vídeo') ? 'Sites' : 'YouTube';
-                  return (
+                {(formData.category || '').toLowerCase() === 'web' && (formData.subcategory || '').toLowerCase() === 'website' && (
                   <Card className="bg-card border-border shadow-md">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Globe className="h-5 w-5 text-cosmic-blue" />
-                        <span>{`Visualização de vídeos no ${platform}`}</span>
+                        <span>Website</span>
                       </CardTitle>
-                      <CardDescription>{`Configure os detalhes do anúncio de ${platform === 'Sites' ? 'Sites' : platform}.`}</CardDescription>
+                      <CardDescription>Configure as opções da tarefa de Website.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex gap-2">
-                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'watch' } }))}>Assista ao vídeo</Button>
-                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'subscribe' } }))}>Inscreva-se no canal</Button>
+                        <Button type="button" variant={(formData.website?.actionType || 'visit') === 'visit' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), actionType: 'visit' } }))}>Visitar Website</Button>
+                        <Button type="button" variant={(formData.website?.actionType || 'visit') === 'visit_scroll' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), actionType: 'visit_scroll' } }))}>Visitar e Rolar</Button>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="yt-title">Título do vídeo</Label>
-                          <Input id="yt-title" placeholder="Ex.: Tutorial de configuração" value={formData.youtube?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoTitle: e.target.value } }))} />
+                          <Label htmlFor="ws-title">Título/Descrição</Label>
+                          <Input id="ws-title" placeholder="Ex.: Landing page de vendas" value={formData.website?.pageTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), pageTitle: e.target.value } }))} />
                         </div>
                         <div>
-                          <Label htmlFor="yt-url">Link para o vídeo</Label>
-                          <Input id="yt-url" placeholder="https://www.youtube.com/watch?v=..." value={formData.youtube?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoUrl: e.target.value } }))} />
+                          <Label htmlFor="ws-url">Link do Website</Label>
+                          <Input id="ws-url" placeholder="https://..." value={formData.website?.pageUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), pageUrl: e.target.value } }))} />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <Label>Tempo de visualização</Label>
-                          <Select value={String(formData.youtube?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), viewTimeSeconds: parseInt(v) || 30 } }))}>
+                          <Label>Tempo mínimo</Label>
+                          <Select value={String(formData.website?.viewTimeSeconds || 10)} onValueChange={(v) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), viewTimeSeconds: parseInt(v) || 10 } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
-                              {[10, 30, 60, 90, 120, 150, 180].map(s => (
+                              {[10, 20, 30, 60, 90, 120].map(s => (
                                 <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
                               ))}
                             </SelectContent>
@@ -734,7 +893,7 @@ const CreateJob = () => {
                         </div>
                         <div>
                           <Label>Velocidade de execução</Label>
-                          <Select value={String(formData.youtube?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), dailyMaxViews: parseInt(v) || 500 } }))}>
+                          <Select value={String(formData.website?.dailyMaxVisits || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), dailyMaxVisits: parseInt(v) || 500 } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="100">Lento - 100/dia</SelectItem>
@@ -746,7 +905,7 @@ const CreateJob = () => {
                         </div>
                         <div>
                           <Label>Garantia</Label>
-                          <Select value={formData.youtube?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), guarantee: v } }))}>
+                          <Select value={formData.website?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), guarantee: v } }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">Sem garantia</SelectItem>
@@ -756,6 +915,110 @@ const CreateJob = () => {
                           </Select>
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ws-repeat" checked={!!formData.website?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), extras: { ...(prev.website?.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <Label htmlFor="ws-repeat">Evitar repetição</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ws-iframe" checked={!!formData.website?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), extras: { ...(prev.website?.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <Label htmlFor="ws-iframe">Abrir em iframe</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ws-copy" checked={!!formData.website?.extras?.blockCopy} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), extras: { ...(prev.website?.extras || {}), blockCopy: e.target.checked } } }))} />
+                          <Label htmlFor="ws-copy">Bloquear copiar/colar</Label>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ws-refresh" checked={!!formData.website?.extras?.blockRefresh} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), extras: { ...(prev.website?.extras || {}), blockRefresh: e.target.checked } } }))} />
+                          <Label htmlFor="ws-refresh">Bloquear refresh</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ws-tabs" checked={!!formData.website?.extras?.blockMultipleTabs} onChange={(e) => setFormData(prev => ({ ...prev, website: { ...(prev.website || defaultWebsite), extras: { ...(prev.website?.extras || {}), blockMultipleTabs: e.target.checked } } }))} />
+                          <Label htmlFor="ws-tabs">Bloquear múltiplas abas</Label>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="ws-bounty">Custo por visita (Kz)</Label>
+                        <Input id="ws-bounty" type="number" step="0.01" min="5" max="50" value={formData.bounty} onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))} />
+                        <p className="text-xs text-muted-foreground mt-2">Este valor será utilizado como preço por visita.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* YouTube: vídeo/inscrição/like */}
+                {(() => {
+                  const sub = (formData.subcategory || '').toLowerCase();
+                  const isYouTube = sub.includes('youtube');
+                  if (!isYouTube) return null;
+                  const platform = 'YouTube';
+                  return (
+                  <Card className="bg-card border-border shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Globe className="h-5 w-5 text-cosmic-blue" />
+                        <span>{(platform === 'YouTube' && (formData.youtube?.actionType || 'watch') === 'subscribe') ? 'Inscrições no YouTube' : (platform === 'YouTube' && (formData.youtube?.actionType || 'watch') === 'like') ? 'Curtidas do YouTube' : `Visualização de vídeos no ${platform}`}</span>
+                      </CardTitle>
+                      <CardDescription>{(platform === 'YouTube' && (formData.youtube?.actionType || 'watch') === 'subscribe') ? 'Configure os detalhes do anúncio de inscrições no YouTube.' : (platform === 'YouTube' && (formData.youtube?.actionType || 'watch') === 'like') ? 'Configure os detalhes do anúncio de curtidas no YouTube.' : `Configure os detalhes do anúncio de ${platform}.`}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'watch' } }))}>Assista ao vídeo</Button>
+                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'subscribe' } }))}>Inscreva-se no canal</Button>
+                        <Button type="button" variant={(formData.youtube?.actionType || 'watch') === 'like' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), actionType: 'like' } }))}>Curtir vídeo</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="yt-title">{(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'Nome do canal' : 'Título do vídeo'}</Label>
+                          <Input id="yt-title" placeholder={(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'Ex.: Canal Oficial' : 'Ex.: Tutorial de configuração'} value={formData.youtube?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoTitle: e.target.value } }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="yt-url">{(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'Link do canal' : 'Link para o vídeo'}</Label>
+                          <Input id="yt-url" placeholder={(formData.youtube?.actionType || 'watch') === 'subscribe' ? 'https://www.youtube.com/@nomeDoCanal' : 'https://www.youtube.com/watch?v=...'} value={formData.youtube?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), videoUrl: e.target.value } }))} />
+                        </div>
+                      </div>
+
+                      {(formData.youtube?.actionType || 'watch') === 'watch' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label>Tempo de visualização</Label>
+                            <Select value={String(formData.youtube?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), viewTimeSeconds: parseInt(v) || 30 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                {[10, 30, 60, 90, 120, 150, 180].map(s => (
+                                  <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Velocidade de execução</Label>
+                            <Select value={String(formData.youtube?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), dailyMaxViews: parseInt(v) || 500 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="100">Lento - 100/dia</SelectItem>
+                                <SelectItem value="250">Moderado - 250/dia</SelectItem>
+                                <SelectItem value="500">Padrão - 500/dia</SelectItem>
+                                <SelectItem value="1000">Rápido - 1000/dia</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Garantia</Label>
+                            <Select value={formData.youtube?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), guarantee: v } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Sem garantia</SelectItem>
+                                <SelectItem value="basic">Garantia básica</SelectItem>
+                                <SelectItem value="premium">Garantia premium</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex items-center gap-2">
@@ -770,17 +1033,205 @@ const CreateJob = () => {
                           <input type="checkbox" id="yt-iframe" checked={!!formData.youtube?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), extras: { ...(prev.youtube?.extras || {}), openInIframe: e.target.checked } } }))} />
                           <Label htmlFor="yt-iframe">Abrir em iframe</Label>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="yt-unlimited" checked={!!formData.youtube?.extras?.unlimitedAds} onChange={(e) => setFormData(prev => ({ ...prev, youtube: { ...(prev.youtube || defaultYouTube), extras: { ...(prev.youtube?.extras || {}), unlimitedAds: e.target.checked } } }))} />
+                          <Label htmlFor="yt-unlimited">Publicidade ilimitada</Label>
+                        </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="yt-bounty">Custo por visualização (Kz)</Label>
+                        <Label htmlFor="yt-bounty">{(formData.youtube?.actionType || 'watch') === 'watch' ? 'Custo por visualização (Kz)' : (formData.youtube?.actionType === 'subscribe' ? 'Custo por inscrição (Kz)' : 'Custo por curtida (Kz)')}</Label>
                         <Input id="yt-bounty" type="number" step="0.01" min="5" max="50" value={formData.bounty} onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))} />
-                        <p className="text-xs text-muted-foreground mt-2">Este valor será utilizado como preço por visualização.</p>
+                        <p className="text-xs text-muted-foreground mt-2">{(formData.youtube?.actionType || 'watch') === 'watch' ? 'Este valor será utilizado como preço por visualização.' : (formData.youtube?.actionType === 'subscribe' ? 'Este valor será utilizado como preço por inscrição.' : 'Este valor será utilizado como preço por curtida.')}</p>
                       </div>
                     </CardContent>
                   </Card>
                   );
                 })()}
+
+                {/* Instagram: vídeo/seguir/curtir/comentar */}
+                {(formData.subcategory || '').toLowerCase().includes('instagram') && (
+                  <Card className="bg-card border-border shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Globe className="h-5 w-5 text-cosmic-blue" />
+                        <span>Instagram</span>
+                      </CardTitle>
+                      <CardDescription>Configure os detalhes do anúncio de Instagram.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button type="button" variant={(formData.instagram?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), actionType: 'watch' } }))}>Assistir vídeo</Button>
+                        <Button type="button" variant={(formData.instagram?.actionType || 'watch') === 'follow' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), actionType: 'follow' } }))}>Seguir perfil</Button>
+                        <Button type="button" variant={(formData.instagram?.actionType || 'watch') === 'like' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), actionType: 'like' } }))}>Curtir publicação</Button>
+                        <Button type="button" variant={(formData.instagram?.actionType || 'watch') === 'comment' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), actionType: 'comment' } }))}>Comentar publicação</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="ig-title">{(formData.instagram?.actionType || 'watch') === 'follow' ? 'Nome do perfil' : 'Título/Descrição'}</Label>
+                          <Input id="ig-title" placeholder={(formData.instagram?.actionType || 'watch') === 'follow' ? 'Ex.: @perfil' : 'Ex.: Publicação promocional'} value={formData.instagram?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), videoTitle: e.target.value } }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="ig-url">{(formData.instagram?.actionType || 'watch') === 'follow' ? 'Link do perfil' : 'Link da publicação/vídeo'}</Label>
+                          <Input id="ig-url" placeholder={(formData.instagram?.actionType || 'watch') === 'follow' ? 'https://instagram.com/...' : 'https://instagram.com/p/...'} value={formData.instagram?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), videoUrl: e.target.value } }))} />
+                        </div>
+                      </div>
+
+                      {(formData.instagram?.actionType || 'watch') === 'watch' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label>Tempo de visualização</Label>
+                            <Select value={String(formData.instagram?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), viewTimeSeconds: parseInt(v) || 30 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                {[10, 30, 60, 90, 120, 150, 180].map(s => (
+                                  <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Velocidade de execução</Label>
+                            <Select value={String(formData.instagram?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), dailyMaxViews: parseInt(v) || 500 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="100">Lento - 100/dia</SelectItem>
+                                <SelectItem value="250">Moderado - 250/dia</SelectItem>
+                                <SelectItem value="500">Padrão - 500/dia</SelectItem>
+                                <SelectItem value="1000">Rápido - 1000/dia</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Garantia</Label>
+                            <Select value={formData.instagram?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), guarantee: v } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Sem garantia</SelectItem>
+                                <SelectItem value="basic">Garantia básica</SelectItem>
+                                <SelectItem value="premium">Garantia premium</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ig-login" checked={!!formData.instagram?.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), extras: { ...(prev.instagram?.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <Label htmlFor="ig-login">Exigir login</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ig-repeat" checked={!!formData.instagram?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), extras: { ...(prev.instagram?.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <Label htmlFor="ig-repeat">Evitar repetição</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="ig-iframe" checked={!!formData.instagram?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, instagram: { ...(prev.instagram || defaultInstagram), extras: { ...(prev.instagram?.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <Label htmlFor="ig-iframe">Abrir em iframe</Label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="ig-bounty">{(formData.instagram?.actionType || 'watch') === 'watch' ? 'Custo por visualização (Kz)' : (formData.instagram?.actionType === 'follow' ? 'Custo por seguir (Kz)' : (formData.instagram?.actionType === 'like' ? 'Custo por curtida (Kz)' : 'Custo por comentário (Kz)'))}</Label>
+                        <Input id="ig-bounty" type="number" step="0.01" min="5" max="50" value={formData.bounty} onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))} />
+                        <p className="text-xs text-muted-foreground mt-2">{(formData.instagram?.actionType || 'watch') === 'watch' ? 'Este valor será utilizado como preço por visualização.' : (formData.instagram?.actionType === 'follow' ? 'Este valor será utilizado como preço por seguir.' : (formData.instagram?.actionType === 'like' ? 'Este valor será utilizado como preço por curtida.' : 'Este valor será utilizado como preço por comentário.'))}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Facebook: vídeo/seguir/curtir/comentar */}
+                {(formData.subcategory || '').toLowerCase().includes('facebook') && (
+                  <Card className="bg-card border-border shadow-md">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Globe className="h-5 w-5 text-cosmic-blue" />
+                        <span>Facebook</span>
+                      </CardTitle>
+                      <CardDescription>Configure os detalhes do anúncio de Facebook.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button type="button" variant={(formData.facebook?.actionType || 'watch') === 'watch' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), actionType: 'watch' } }))}>Assistir vídeo</Button>
+                        <Button type="button" variant={(formData.facebook?.actionType || 'watch') === 'follow' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), actionType: 'follow' } }))}>Seguir página</Button>
+                        <Button type="button" variant={(formData.facebook?.actionType || 'watch') === 'like' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), actionType: 'like' } }))}>Curtir publicação</Button>
+                        <Button type="button" variant={(formData.facebook?.actionType || 'watch') === 'comment' ? 'default' : 'outline'} onClick={() => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), actionType: 'comment' } }))}>Comentar publicação</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="fb-title">{(formData.facebook?.actionType || 'watch') === 'follow' ? 'Nome da página' : 'Título/Descrição'}</Label>
+                          <Input id="fb-title" placeholder={(formData.facebook?.actionType || 'watch') === 'follow' ? 'Ex.: Página Oficial' : 'Ex.: Publicação promocional'} value={formData.facebook?.videoTitle || ''} onChange={(e) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), videoTitle: e.target.value } }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="fb-url">{(formData.facebook?.actionType || 'watch') === 'follow' ? 'Link da página' : 'Link da publicação/vídeo'}</Label>
+                          <Input id="fb-url" placeholder={(formData.facebook?.actionType || 'watch') === 'follow' ? 'https://facebook.com/...' : 'https://facebook.com/...'} value={formData.facebook?.videoUrl || ''} onChange={(e) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), videoUrl: e.target.value } }))} />
+                        </div>
+                      </div>
+
+                      {(formData.facebook?.actionType || 'watch') === 'watch' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label>Tempo de visualização</Label>
+                            <Select value={String(formData.facebook?.viewTimeSeconds || 30)} onValueChange={(v) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), viewTimeSeconds: parseInt(v) || 30 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                {[10, 30, 60, 90, 120, 150, 180].map(s => (
+                                  <SelectItem key={s} value={String(s)}>{s} segundos</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Velocidade de execução</Label>
+                            <Select value={String(formData.facebook?.dailyMaxViews || 500)} onValueChange={(v) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), dailyMaxViews: parseInt(v) || 500 } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="100">Lento - 100/dia</SelectItem>
+                                <SelectItem value="250">Moderado - 250/dia</SelectItem>
+                                <SelectItem value="500">Padrão - 500/dia</SelectItem>
+                                <SelectItem value="1000">Rápido - 1000/dia</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Garantia</Label>
+                            <Select value={formData.facebook?.guarantee || 'none'} onValueChange={(v: 'none' | 'basic' | 'premium') => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), guarantee: v } }))}>
+                              <SelectTrigger className="mt-1"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Sem garantia</SelectItem>
+                                <SelectItem value="basic">Garantia básica</SelectItem>
+                                <SelectItem value="premium">Garantia premium</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="fb-login" checked={!!formData.facebook?.extras?.requireLogin} onChange={(e) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), extras: { ...(prev.facebook?.extras || {}), requireLogin: e.target.checked } } }))} />
+                          <Label htmlFor="fb-login">Exigir login</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="fb-repeat" checked={!!formData.facebook?.extras?.avoidRepeat} onChange={(e) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), extras: { ...(prev.facebook?.extras || {}), avoidRepeat: e.target.checked } } }))} />
+                          <Label htmlFor="fb-repeat">Evitar repetição</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" id="fb-iframe" checked={!!formData.facebook?.extras?.openInIframe} onChange={(e) => setFormData(prev => ({ ...prev, facebook: { ...(prev.facebook || defaultFacebook), extras: { ...(prev.facebook?.extras || {}), openInIframe: e.target.checked } } }))} />
+                          <Label htmlFor="fb-iframe">Abrir em iframe</Label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="fb-bounty">{(formData.facebook?.actionType || 'watch') === 'watch' ? 'Custo por visualização (Kz)' : (formData.facebook?.actionType === 'follow' ? 'Custo por seguir página (Kz)' : (formData.facebook?.actionType === 'like' ? 'Custo por curtida (Kz)' : 'Custo por comentário (Kz)'))}</Label>
+                        <Input id="fb-bounty" type="number" step="0.01" min="5" max="50" value={formData.bounty} onChange={(e) => setFormData(prev => ({ ...prev, bounty: e.target.value }))} />
+                        <p className="text-xs text-muted-foreground mt-2">{(formData.facebook?.actionType || 'watch') === 'watch' ? 'Este valor será utilizado como preço por visualização.' : (formData.facebook?.actionType === 'follow' ? 'Este valor será utilizado como preço por seguir página.' : (formData.facebook?.actionType === 'like' ? 'Este valor será utilizado como preço por curtida.' : 'Este valor será utilizado como preço por comentário.'))}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* TikTok: formulário específico */}
                 {(formData.subcategory || '').toLowerCase().includes('tiktok') && (
@@ -916,207 +1367,7 @@ const CreateJob = () => {
                   </Card>
                 )}
 
-                {/* Instruções Detalhadas */}
-                <Card className="bg-card border-border shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <ListOrdered className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("detailed_instructions")}</span>
-                    </CardTitle>
-                    <CardDescription>
-                      {t("detailed_instructions_description")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex space-x-2">
-                      <Textarea
-                        placeholder={t("instruction_placeholder")}
-                        value={currentInstruction}
-                        onChange={(e) => setCurrentInstruction(e.target.value)}
-                        rows={2}
-                      />
-                      <Button type="button" onClick={handleAddInstruction} size="icon" className="mt-1">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {formData.detailedInstructions.length > 0 && (
-                      <div className="space-y-3">
-                        {formData.detailedInstructions.map((instruction) => (
-                          <div key={instruction.id} className="flex items-start space-x-3 p-3 border rounded-lg bg-muted/50">
-                            <div className="bg-electric-purple/10 text-electric-purple border border-electric-purple/20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                              {instruction.step}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm">{instruction.instruction}</p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveInstruction(instruction.id)}
-                              className="hover:text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
 
-                {/* Provas Necessárias */}
-                <Card className="bg-card border-border shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <ShieldCheck className="h-5 w-5 text-star-glow" />
-                      <span>{t("proof_requirements")}</span>
-                    </CardTitle>
-                    <CardDescription>
-                      {t("proof_requirements_description")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="proofType">{t("proof_type")}</Label>
-                        <Select value={currentProofType} onValueChange={(value: 'text' | 'screenshot' | 'file' | 'url') => setCurrentProofType(value)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">
-                              <div className="flex items-center space-x-2">
-                                <Type className="h-4 w-4 text-electric-purple" />
-                                <span>{t("text_response")}</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="screenshot">
-                              <div className="flex items-center space-x-2">
-                                <Image className="h-4 w-4 text-star-glow" />
-                                <span>{t("screenshot")}</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="url">
-                              <div className="flex items-center space-x-2">
-                                <Link className="h-4 w-4 text-cosmic-blue" />
-                                <span>{t("link_url")}</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="file">
-                              <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4 text-success" />
-                                <span>{t("file")}</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="proofLabel">{t("proof_name")}</Label>
-                        <Input
-                          id="proofLabel"
-                          placeholder={t("proof_name_placeholder")}
-                          value={currentProofLabel}
-                          onChange={(e) => setCurrentProofLabel(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="proofDescription">{t("proof_description")}</Label>
-                      <Textarea
-                        id="proofDescription"
-                        placeholder={t("proof_description_placeholder")}
-                        value={currentProofDescription}
-                        onChange={(e) => setCurrentProofDescription(e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-                    
-                    <Button type="button" onClick={handleAddProofRequirement} className="w-full glow-effect">
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("add_proof")}
-                    </Button>
-                    
-                    {formData.proofRequirements.length > 0 && (
-                      <div className="space-y-3">
-                        {formData.proofRequirements.map((proof) => (
-                          <div key={proof.id} className="flex items-start space-x-3 p-3 border rounded-lg bg-muted/50">
-                            <div className="mt-1">
-                              {getIconForProofType(proof.type)}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="font-medium text-sm">{proof.label}</span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {proof.type === 'text' && t('text_response')}
-                                  {proof.type === 'screenshot' && t('screenshot_short')}
-                                  {proof.type === 'url' && t('link_short')}
-                                  {proof.type === 'file' && t('file_short')}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-muted-foreground">{proof.description}</p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveProofRequirement(proof.id)}
-                              className="hover:text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Requisitos Gerais */}
-                <Card className="bg-card border-border shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Info className="h-5 w-5 text-cosmic-blue" />
-                      <span>{t("general_requirements")}</span>
-                    </CardTitle>
-                    <CardDescription>
-                      {t("general_requirements_description")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder={t("requirement_placeholder")}
-                        value={currentRequirement}
-                        onChange={(e) => setCurrentRequirement(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddRequirement())}
-                      />
-                      <Button type="button" onClick={handleAddRequirement} size="icon">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {formData.requirements.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {formData.requirements.map((req, index) => (
-                          <Badge key={index} variant="outline" className="flex items-center space-x-1 bg-muted/30 text-muted-foreground border-border">
-                            <span>{req}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRequirement(index)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
 
                 {/* Detalhes Adicionais */}
                 <Card className="bg-card border-border shadow-md">
@@ -1140,34 +1391,6 @@ const CreateJob = () => {
                           onChange={(e) => setFormData(prev => ({ ...prev, timeEstimate: e.target.value }))}
                         />
                       </div>
-
-                      <div>
-                        <Label htmlFor="location">{t("location")}</Label>
-                        <Input
-                          id="location"
-                          placeholder={t("location_placeholder")}
-                          value={formData.location}
-                          onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                        />
-                        {locationOptions.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {locationOptions.slice(0, 12).map((loc) => (
-                              <Button
-                                key={loc.id}
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setFormData(prev => ({ ...prev, location: loc.name }))}
-                              >
-                                {loc.name}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="maxApplicants">{t("max_applicants")}</Label>
                         <Input
@@ -1178,7 +1401,8 @@ const CreateJob = () => {
                           onChange={(e) => setFormData(prev => ({ ...prev, maxApplicants: e.target.value }))}
                         />
                       </div>
-
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="dueDate">{t("due_date")}</Label>
                         <Input
@@ -1189,6 +1413,7 @@ const CreateJob = () => {
                         />
                       </div>
                     </div>
+
                   </CardContent>
                 </Card>
               </div>
@@ -1235,31 +1460,13 @@ const CreateJob = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("platform")}:</span>
-                      <span className="font-medium">{formData.platform || "-"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("difficulty")}:</span>
-                      <span className="font-medium">{formData.difficulty || "-"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{t("value")}:</span>
                       <span className="font-medium">
             {formData.bounty ? `${parseFloat(formData.bounty).toFixed(2)} Kz` : "-"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("detailed_instructions")}:</span>
-                      <span className="font-medium">{formData.detailedInstructions.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("proof_requirements")}:</span>
-                      <span className="font-medium">{formData.proofRequirements.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t("general_requirements")}:</span>
-                      <span className="font-medium">{formData.requirements.length}</span>
-                    </div>
+                    
+                    
                     <Separator />
                     <div className="flex items-center justify-between text-sm font-medium">
                       <span>{t("total_project_cost")}:</span>

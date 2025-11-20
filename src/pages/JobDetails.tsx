@@ -17,7 +17,7 @@ import JobComments from '@/components/JobComments';
 import { CloudinaryService } from '@/lib/cloudinary';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useAdmin } from '@/contexts/AdminContext';
 
@@ -50,7 +50,22 @@ const JobDetails = () => {
   const [ytWatchElapsed, setYtWatchElapsed] = useState(0);
   const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
   const [ytIsPlaying, setYtIsPlaying] = useState(false);
+  const [ytChannelDialogOpen, setYtChannelDialogOpen] = useState(false);
+  const [ytSubscribeDwell, setYtSubscribeDwell] = useState(0);
+  const [tkFollowConfirmed, setTkFollowConfirmed] = useState(false);
+  const [vkJoinConfirmed, setVkJoinConfirmed] = useState(false);
+  const [igWatchElapsed, setIgWatchElapsed] = useState(0);
+  const [igIsWatching, setIgIsWatching] = useState(false);
+  const [fbWatchElapsed, setFbWatchElapsed] = useState(0);
+  const [fbIsWatching, setFbIsWatching] = useState(false);
+  const [webIsWatching, setWebIsWatching] = useState(false);
+  const [webWatchElapsed, setWebWatchElapsed] = useState(0);
+  const [webScrolledToEnd, setWebScrolledToEnd] = useState(false);
+  const [webEmbedOpen, setWebEmbedOpen] = useState(false);
+  const subscribeRequiredSeconds = 10;
   const ytPlayerRef = useRef<any>(null);
+  const dwellTimerRef = useRef<any>(null);
+  const platformLoadedRef = useRef(false);
   const [latestTransaction, setLatestTransaction] = useState<Transaction | null>(null);
   const applicantCount = useMemo(() => {
     return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;
@@ -74,10 +89,21 @@ const JobDetails = () => {
   }, [job, uploadProgress, proofs]);
 
   const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
+  const isInstagramJob = Boolean(job?.instagram) || ((job?.subcategory || '').toLowerCase().includes('instagram'));
+  const isFacebookJob = Boolean(job?.facebook) || ((job?.subcategory || '').toLowerCase().includes('facebook'));
   const isTikTokJob = Boolean(job?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
   const isVKJob = Boolean(job?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
+  const isWebsiteJob = Boolean(job?.website) || (((job?.category || '').toLowerCase() === 'web') && ((job?.subcategory || '').toLowerCase().includes('website')));
   const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
-  const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : ytSubscribedConfirmed);
+  const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : (ytSubscribedConfirmed && ytSubscribeDwell >= subscribeRequiredSeconds));
+  const tkRequiredSeconds = job?.tiktok?.viewTimeSeconds || 30;
+  const tkCanSubmit = isTikTokJob && ((job?.tiktok?.actionType) === 'watch' ? ytWatchElapsed >= tkRequiredSeconds : tkFollowConfirmed);
+  const igRequiredSeconds = job?.instagram?.viewTimeSeconds || 30;
+  const igCanSubmit = isInstagramJob && (job?.instagram?.actionType === 'watch' ? igWatchElapsed >= igRequiredSeconds : false);
+  const fbRequiredSeconds = job?.facebook?.viewTimeSeconds || 30;
+  const fbCanSubmit = isFacebookJob && (job?.facebook?.actionType === 'watch' ? fbWatchElapsed >= fbRequiredSeconds : false);
+  const webRequiredSeconds = job?.website?.viewTimeSeconds || 10;
+  const webCanSubmit = isWebsiteJob && ((job?.website?.actionType === 'visit' && webWatchElapsed >= webRequiredSeconds) || (job?.website?.actionType === 'visit_scroll' && webWatchElapsed >= webRequiredSeconds && webScrolledToEnd));
   const extractYouTubeId = (url: string) => {
     try {
       const u = new URL(url);
@@ -98,6 +124,18 @@ const JobDetails = () => {
     }
   };
   const ytVideoId = job?.youtube?.videoUrl ? extractYouTubeId(job.youtube.videoUrl) : '';
+  const extractChannelHandleOrId = (url: string) => {
+    try {
+      const u = new URL(url);
+      const p = u.pathname;
+      const m1 = p.match(/\/@([^/]+)/);
+      if (m1) return { handle: m1[1] };
+      const m2 = p.match(/\/channel\/([^/]+)/);
+      if (m2) return { channelId: m2[1] };
+      return {} as any;
+    } catch { return {} as any; }
+  };
+  const channelData = job?.youtube?.videoUrl ? extractChannelHandleOrId(job.youtube.videoUrl) : {} as any;
 
   useEffect(() => {
     let timer: any;
@@ -108,6 +146,102 @@ const JobDetails = () => {
     }
     return () => { if (timer) clearInterval(timer); };
   }, [isYouTubeJob, job?.youtube?.actionType, ytIsPlaying, ytRequiredSeconds]);
+
+  useEffect(() => {
+    let timer: any;
+    if (isInstagramJob && job?.instagram?.actionType === 'watch' && igIsWatching && document.visibilityState === 'visible') {
+      timer = setInterval(() => {
+        setIgWatchElapsed((prev) => Math.min(prev + 1, igRequiredSeconds));
+      }, 1000);
+    }
+    return () => { if (timer) clearInterval(timer); };
+  }, [isInstagramJob, job?.instagram?.actionType, igIsWatching, igRequiredSeconds]);
+
+  useEffect(() => {
+    let timer: any;
+    if (isFacebookJob && job?.facebook?.actionType === 'watch' && fbIsWatching && document.visibilityState === 'visible') {
+      timer = setInterval(() => {
+        setFbWatchElapsed((prev) => Math.min(prev + 1, fbRequiredSeconds));
+      }, 1000);
+    }
+    return () => { if (timer) clearInterval(timer); };
+  }, [isFacebookJob, job?.facebook?.actionType, fbIsWatching, fbRequiredSeconds]);
+
+  useEffect(() => {
+    let timer: any;
+    if (isWebsiteJob && webIsWatching && document.visibilityState === 'visible') {
+      timer = setInterval(() => {
+        setWebWatchElapsed((prev) => Math.min(prev + 1, webRequiredSeconds));
+      }, 1000);
+    }
+    return () => { if (timer) clearInterval(timer); };
+  }, [isWebsiteJob, webIsWatching, webRequiredSeconds]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') {
+        setWebIsWatching(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (webEmbedOpen && job?.website?.extras?.blockRefresh) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [webEmbedOpen, job?.website?.extras?.blockRefresh]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!webEmbedOpen || !job?.website?.extras?.blockCopy) return;
+      const isCopy = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'v');
+      if (isCopy) {
+        e.preventDefault();
+      }
+    };
+    const onCopy = (e: ClipboardEvent) => {
+      if (webEmbedOpen && job?.website?.extras?.blockCopy) e.preventDefault();
+    };
+    const onPaste = (e: ClipboardEvent) => {
+      if (webEmbedOpen && job?.website?.extras?.blockCopy) e.preventDefault();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('copy', onCopy);
+    window.addEventListener('paste', onPaste);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('copy', onCopy);
+      window.removeEventListener('paste', onPaste);
+    };
+  }, [webEmbedOpen, job?.website?.extras?.blockCopy]);
+
+  useEffect(() => {
+    if (job?.youtube?.actionType !== 'subscribe') return;
+    if (ytChannelDialogOpen) {
+      if (dwellTimerRef.current) clearInterval(dwellTimerRef.current);
+      setYtSubscribeDwell(0);
+      dwellTimerRef.current = setInterval(() => {
+        setYtSubscribeDwell((prev) => Math.min(prev + 1, subscribeRequiredSeconds));
+      }, 1000);
+      if (!platformLoadedRef.current) {
+        const s = document.createElement('script');
+        s.src = 'https://apis.google.com/js/platform.js';
+        s.async = true;
+        s.onload = () => { platformLoadedRef.current = true; };
+        document.body.appendChild(s);
+      }
+    } else {
+      if (dwellTimerRef.current) { clearInterval(dwellTimerRef.current); dwellTimerRef.current = null; }
+    }
+    return () => { if (dwellTimerRef.current) { clearInterval(dwellTimerRef.current); dwellTimerRef.current = null; } };
+  }, [ytChannelDialogOpen, job?.youtube?.actionType]);
 
   useEffect(() => {
     const fetchLatestTransaction = async () => {
@@ -378,7 +512,7 @@ const JobDetails = () => {
       return;
     }
 
-    if (isYouTubeJob) {
+    if (isYouTubeJob && job?.youtube?.actionType === 'watch') {
       const channelLink = userData?.settings?.socialAccounts?.youtube;
       if (!ytCanSubmit) {
         toast({
@@ -390,8 +524,11 @@ const JobDetails = () => {
       }
       try {
         setIsApplying(true);
-        if (myApplication) {
-          const folder = `jobs/${job.id}/applications/${myApplication.id}`;
+        let applicationId = myApplication?.id;
+        if (!applicationId) {
+          applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+        }
+        if (applicationId) {
           const proofsToSubmit = [
             {
               requirementId: 'youtube_watch',
@@ -400,8 +537,7 @@ const JobDetails = () => {
               comment: 'Auto-confirmed watch',
             },
           ];
-          await ApplicationService.submitProofs(myApplication.id, proofsToSubmit as any);
-          await ApplicationService.reviewApplication(myApplication.id, 'approved', job.posterId);
+          await ApplicationService.submitProofs(applicationId, proofsToSubmit as any);
           toast({
             title: t('payout_credited_success'),
             description: t('payout_credited_description'),
@@ -413,6 +549,97 @@ const JobDetails = () => {
       } finally {
         setIsApplying(false);
       }
+      return;
+    } else if (isInstagramJob && job?.instagram?.actionType === 'watch') {
+      if (!igCanSubmit) {
+        toast({ title: t('error'), description: t('submit_disabled_until_watch'), variant: 'destructive' });
+        return;
+      }
+      try {
+        setIsApplying(true);
+        let applicationId = myApplication?.id;
+        if (!applicationId) {
+          applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+        }
+        if (applicationId) {
+          const proofsToSubmit = [
+            {
+              requirementId: 'instagram_watch',
+              type: 'text',
+              content: `Watched ${igRequiredSeconds}s`,
+              comment: 'Auto-confirmed watch',
+            },
+          ];
+          await ApplicationService.submitProofs(applicationId, proofsToSubmit as any);
+          toast({ title: t('payout_credited_success'), description: t('payout_credited_description') });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
+      }
+      return;
+    } else if (isFacebookJob && job?.facebook?.actionType === 'watch') {
+      if (!fbCanSubmit) {
+        toast({ title: t('error'), description: t('submit_disabled_until_watch'), variant: 'destructive' });
+        return;
+      }
+      try {
+        setIsApplying(true);
+        let applicationId = myApplication?.id;
+        if (!applicationId) {
+          applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+        }
+        if (applicationId) {
+          const proofsToSubmit = [
+            {
+              requirementId: 'facebook_watch',
+              type: 'text',
+              content: `Watched ${fbRequiredSeconds}s`,
+              comment: 'Auto-confirmed watch',
+            },
+          ];
+          await ApplicationService.submitProofs(applicationId, proofsToSubmit as any);
+          toast({ title: t('payout_credited_success'), description: t('payout_credited_description') });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
+      }
+      return;
+    } else if (isWebsiteJob) {
+      if (!webCanSubmit) {
+        toast({ title: t('error'), description: job?.website?.actionType === 'visit_scroll' ? t('submit_disabled_until_scroll') : t('submit_disabled_until_watch'), variant: 'destructive' });
+        return;
+      }
+      try {
+        setIsApplying(true);
+        let applicationId = myApplication?.id;
+        if (!applicationId) {
+          applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
+        }
+        if (applicationId) {
+          const proofsToSubmit = [
+            {
+              requirementId: job?.website?.actionType === 'visit_scroll' ? 'website_visit_scroll' : 'website_visit',
+              type: 'text',
+              content: job?.website?.actionType === 'visit_scroll' ? `Visited ${webRequiredSeconds}s + scrolled to end` : `Visited ${webRequiredSeconds}s`,
+              comment: 'Auto-confirmed website task',
+            },
+          ];
+          await ApplicationService.submitProofs(applicationId, proofsToSubmit as any);
+          toast({ title: t('payout_credited_success'), description: t('payout_credited_description') });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
+      }
+      return;
     } else if (isTikTokJob) {
       if (!tkCanSubmit || !userData?.settings?.socialAccounts?.tiktok) {
         toast({ title: t('error'), description: (job?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch'), variant: 'destructive' });
@@ -439,6 +666,7 @@ const JobDetails = () => {
       } finally {
         setIsApplying(false);
       }
+      return;
     } else if (isVKJob) {
       if (!vkJoinConfirmed || !userData?.settings?.socialAccounts?.vk) {
         toast({ title: t('error'), description: (job?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like'), variant: 'destructive' });
@@ -465,6 +693,7 @@ const JobDetails = () => {
       } finally {
         setIsApplying(false);
       }
+      return;
     } else {
       const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
       const missingProofs = requiredProofs.filter(req => {
@@ -513,16 +742,7 @@ const JobDetails = () => {
       
       // Preparar provas para envio com upload ao Cloudinary (screenshots/arquivos)
       const folder = `proofs/${currentUser.uid}/${job.id}`;
-      const proofsToSubmit: any[] = isYouTubeJob
-        ? [
-            {
-              requirementId: 'youtube_channel',
-              type: 'url',
-              content: userData?.settings?.socialAccounts?.youtube || '',
-              comment: 'Canal do YouTube vinculado',
-            },
-          ]
-        : await Promise.all((job.proofRequirements || []).map(async (req) => {
+      const proofsToSubmit: any[] = await Promise.all((job.proofRequirements || []).map(async (req) => {
             const proof = proofs[req.id];
             if (!proof) {
               return { requirementId: req.id, type: req.type, content: '', comment: '' };
@@ -822,12 +1042,12 @@ const JobDetails = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="h-5 w-5 text-star-glow" />
-              <span>{t(isYouTubeJob ? 'youtube_auto_verification' : 'proof_requirements')}</span>
+              <span>{t(isYouTubeJob && job?.youtube?.actionType === 'watch' ? 'youtube_auto_verification' : 'proof_requirements')}</span>
             </CardTitle>
           </CardHeader>
         
         <CardContent className="space-y-6">
-            {isYouTubeJob ? (
+            {(isYouTubeJob) ? (
               <>
                 {canSubmitProofs ? (
                   <div className="space-y-4">
@@ -853,11 +1073,28 @@ const JobDetails = () => {
                           )}
                         </div>
                       )}
-                      {(!ytVideoId || job?.youtube?.actionType === 'subscribe') && (
+                      {(!ytVideoId || job?.youtube?.actionType !== 'watch') && (
                         <div className="flex items-center gap-3">
-                          <Button variant="outline" onClick={() => window.open(job?.youtube?.videoUrl || '', '_blank')}>{t('open_video')}</Button>
+                          <Button variant="outline" onClick={() => { window.open(job?.youtube?.videoUrl || '', '_blank'); if (job?.youtube?.actionType === 'subscribe') { if (dwellTimerRef.current) clearInterval(dwellTimerRef.current); setYtSubscribeDwell(0); dwellTimerRef.current = setInterval(() => { setYtSubscribeDwell((prev) => Math.min(prev + 1, subscribeRequiredSeconds)); }, 1000); } }}>{job?.youtube?.actionType === 'subscribe' ? t('open_channel') : t('open_video')}</Button>
+                          <Dialog open={ytChannelDialogOpen} onOpenChange={setYtChannelDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button variant="secondary">Abrir em iframe</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>Canal do YouTube</DialogTitle>
+                                <DialogDescription>Use o botão Inscrever. Aguarde alguns segundos.</DialogDescription>
+                              </DialogHeader>
+                              <div className="w-full">
+                                <div className="flex justify-center py-4">
+                                  <div className="g-ytsubscribe" data-layout="default" data-count="default" {...(channelData?.channelId ? { ['data-channelid']: channelData.channelId } : {})} {...(channelData?.handle ? { ['data-channel']: channelData.handle } : {})} />
+                                </div>
+                                <div className="text-center text-xs text-muted-foreground">Tempo no iframe: {ytSubscribeDwell}s / {subscribeRequiredSeconds}s</div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                           {job?.youtube?.actionType === 'subscribe' && (
-                            <Button variant={ytSubscribedConfirmed ? 'default' : 'secondary'} onClick={() => setYtSubscribedConfirmed(!ytSubscribedConfirmed)}>
+                            <Button variant={ytSubscribedConfirmed ? 'default' : 'secondary'} disabled={ytSubscribeDwell < subscribeRequiredSeconds} onClick={() => setYtSubscribedConfirmed(!ytSubscribedConfirmed)}>
                               {t('confirm_subscription')}
                             </Button>
                           )}
@@ -881,6 +1118,104 @@ const JobDetails = () => {
                         {job?.youtube?.actionType === 'watch' ? t('submit_disabled_until_watch') : t('submit_disabled_until_subscribe')}
                       </p>
                     )}
+                    {job?.youtube?.actionType !== 'watch' && job.proofRequirements && job.proofRequirements.length > 0 && (
+                      <>
+                        <p className="text-sm text-muted-foreground mt-4">
+                          {t("submit_your_proofs")}
+                        </p>
+                        {job.proofRequirements.map((proofReq) => (
+                          <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
+                                <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
+                                {proofReq.isRequired && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    {t("required")}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
+                            </div>
+
+                            <div className="space-y-3 ml-6">
+                              {(proofReq.type === 'text' || proofReq.type === 'url') && (
+                                <div>
+                                  <label className="text-sm font-medium text-foreground mb-2 block">
+                                    {proofReq.type === 'url' ? t('link_url') : t('text_response')}
+                                  </label>
+                                  <Textarea
+                                    placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
+                                    value={proofs[proofReq.id]?.text || ''}
+                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
+                                    className="min-h-[80px]"
+                                  />
+                                </div>
+                              )}
+
+                              {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-foreground block">
+                                    {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
+                                  </label>
+                                  <Input
+                                    type="file"
+                                    accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0] || null;
+                                      if (!file) { handleFileChange(proofReq.id, null); return; }
+                                      const ok = validateFile(proofReq.id, proofReq.type, file);
+                                      if (!ok) { return; }
+                                      handleFileChange(proofReq.id, file);
+                                    }}
+                                    className="cursor-pointer"
+                                  />
+                                  <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
+                                  {proofs[proofReq.id]?.file && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("file_selected")}: {proofs[proofReq.id].file?.name}
+                                    </p>
+                                  )}
+                                  {uploadProgress[proofReq.id] !== undefined && (
+                                    <div className="space-y-2">
+                                      <Progress value={uploadProgress[proofReq.id]} className="w-full" />
+                                      <p className="text-xs text-muted-foreground">
+                                        {t('uploading')} {uploadProgress[proofReq.id]}%
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <div>
+                                <label className="text-sm font-medium text-foreground mb-2 block">
+                                  {t("optional_comment")}
+                                </label>
+                                <Textarea
+                                  placeholder={t("optional_comment_placeholder")}
+                                  value={proofs[proofReq.id]?.comment || ''}
+                                  onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
+                                  className="min-h-[60px]"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex justify-end space-x-3 pt-4">
+                          <Button variant="outline" onClick={handleCancel}>
+                            {t("cancel_button").toUpperCase()}
+                          </Button>
+                          <Button 
+                            onClick={handleSubmitProofs} 
+                            disabled={isApplying}
+                            className="min-w-[140px] glow-effect"
+                          >
+                            {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -899,6 +1234,167 @@ const JobDetails = () => {
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
+                  </div>
+                )}
+              </>
+            ) : (isInstagramJob && job?.instagram?.actionType === 'watch') ? (
+              <>
+                {canSubmitProofs ? (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => { window.open((job?.instagram?.videoUrl) || '', '_blank'); setIgIsWatching(true); }}>{t('open_video')}</Button>
+                      </div>
+                      {job?.instagram?.actionType === 'watch' && (
+                        <div className="space-y-2">
+                          <Progress value={Math.min(100, Math.round((igWatchElapsed / igRequiredSeconds) * 100))} />
+                          <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: igWatchElapsed, required: igRequiredSeconds })}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground" />
+                      <Button onClick={handleSubmitProofs} disabled={!igCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!igCanSubmit && (
+                      <p className="text-xs text-muted-foreground">{t('submit_disabled_until_watch')}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(showSubmittedBanner || myApplication?.status === 'approved') && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
+                  </div>
+                )}
+              </>
+            ) : (isFacebookJob && job?.facebook?.actionType === 'watch') ? (
+              <>
+                {canSubmitProofs ? (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => { window.open((job?.facebook?.videoUrl) || '', '_blank'); setFbIsWatching(true); }}>{t('open_video')}</Button>
+                      </div>
+                      {job?.facebook?.actionType === 'watch' && (
+                        <div className="space-y-2">
+                          <Progress value={Math.min(100, Math.round((fbWatchElapsed / fbRequiredSeconds) * 100))} />
+                          <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: fbWatchElapsed, required: fbRequiredSeconds })}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground" />
+                      <Button onClick={handleSubmitProofs} disabled={!fbCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!fbCanSubmit && (
+                      <p className="text-xs text-muted-foreground">{t('submit_disabled_until_watch')}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(showSubmittedBanner || myApplication?.status === 'approved') && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
+                  </div>
+                )}
+              </>
+            ) : isWebsiteJob ? (
+              <>
+                {canSubmitProofs ? (
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => {
+                          if (job?.website?.extras?.blockMultipleTabs) {
+                            const existing = localStorage.getItem('web_task_lock');
+                            if (existing && existing !== job.id) {
+                              toast({ title: t('error'), description: t('multiple_tabs_blocked'), variant: 'destructive' });
+                              return;
+                            }
+                            localStorage.setItem('web_task_lock', job.id);
+                          }
+                          setWebEmbedOpen(true);
+                          setWebIsWatching(true);
+                        }}>{t('open_website')}</Button>
+                      </div>
+                      {(job?.website?.actionType === 'visit' || job?.website?.actionType === 'visit_scroll') && (
+                        <div className="space-y-2">
+                          <Progress value={Math.min(100, Math.round((webWatchElapsed / webRequiredSeconds) * 100))} />
+                          <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: webWatchElapsed, required: webRequiredSeconds })}</p>
+                          {job?.website?.actionType === 'visit_scroll' && (
+                            <p className="text-xs text-muted-foreground">{webScrolledToEnd ? t('scroll_reached_end') : t('scroll_to_bottom_required')}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground" />
+                      <Button onClick={handleSubmitProofs} disabled={!webCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!webCanSubmit && (
+                      <p className="text-xs text-muted-foreground">{job?.website?.actionType === 'visit_scroll' ? t('submit_disabled_until_scroll') : t('submit_disabled_until_watch')}</p>
+                    )}
+                    <Dialog open={webEmbedOpen} onOpenChange={(o) => {
+                      setWebEmbedOpen(o);
+                      if (o) {
+                        setWebScrolledToEnd(false);
+                        setWebWatchElapsed(0);
+                      } else {
+                        setWebIsWatching(false);
+                        setWebScrolledToEnd(false);
+                        if (job?.website?.extras?.blockMultipleTabs) {
+                          const existing = localStorage.getItem('web_task_lock');
+                          if (existing === job.id) localStorage.removeItem('web_task_lock');
+                        }
+                      }
+                    }}>
+                      <DialogContent className="max-w-[900px]">
+                        <DialogHeader>
+                          <DialogTitle>{job?.website?.pageTitle || t('website')}</DialogTitle>
+                          <DialogDescription>{t('stay_on_page_message')}</DialogDescription>
+                        </DialogHeader>
+                        <div className="relative w-full h-[600px] border rounded-md overflow-hidden">
+                          <iframe src={job?.website?.pageUrl} className="absolute inset-0 w-full h-full" sandbox="allow-scripts allow-same-origin allow-forms" />
+                          {job?.website?.actionType === 'visit_scroll' && (
+                            <div onScroll={(e) => {
+                              const el = e.currentTarget;
+                              const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+                              if (atBottom) setWebScrolledToEnd(true);
+                            }} className="absolute inset-0 overflow-y-auto" style={{ background: 'transparent' }}>
+                              <div style={{ height: '200vh' }} />
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(showSubmittedBanner || myApplication?.status === 'approved') && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t('website_verification_info')}</p>
                   </div>
                 )}
               </>

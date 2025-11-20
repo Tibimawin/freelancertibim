@@ -9,12 +9,19 @@ const AdminMaintenance = () => {
   const [maintenance, setMaintenance] = useState(false);
   const [message, setMessage] = useState('Estamos temporariamente em manutenção. Voltamos em breve.');
   const [saving, setSaving] = useState(false);
+  const [marketEnabled, setMarketEnabled] = useState(true);
+  const [servicesEnabled, setServicesEnabled] = useState(true);
 
   useEffect(() => {
     (async () => {
       const st = await AdminService.getSiteStatus();
       setMaintenance(!!st.maintenance);
       if (st.message) setMessage(st.message);
+      try {
+        const ft = await AdminService.getFeatureToggles();
+        setMarketEnabled(!!ft.marketEnabled);
+        setServicesEnabled(!!ft.servicesEnabled);
+      } catch { void 0; }
     })();
   }, []);
 
@@ -22,6 +29,7 @@ const AdminMaintenance = () => {
     setSaving(true);
     try {
       await AdminService.updateSiteStatus({ maintenance, message });
+      await AdminService.updateFeatureToggles({ marketEnabled, servicesEnabled });
     } finally {
       setSaving(false);
     }
@@ -39,6 +47,20 @@ const AdminMaintenance = () => {
           <div className="flex items-center gap-2">
             <input type="checkbox" checked={maintenance} onChange={(e) => setMaintenance(e.target.checked)} />
             <span className="text-sm text-muted-foreground">Quando ativo, o site exibirá a mensagem abaixo para visitantes.</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Habilitar Mercado</Label>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={marketEnabled} onChange={(e) => setMarketEnabled(e.target.checked)} />
+            <span className="text-sm text-muted-foreground">Quando desativado, o Mercado não aparecerá no site.</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Habilitar Serviços</Label>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={servicesEnabled} onChange={(e) => setServicesEnabled(e.target.checked)} />
+            <span className="text-sm text-muted-foreground">Quando desativado, a seção de Serviços não aparecerá no site.</span>
           </div>
         </div>
         <div className="space-y-2">

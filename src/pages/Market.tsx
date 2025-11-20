@@ -8,10 +8,11 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Grid2x2, LayoutGrid, List, Wallet, Shield, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { AdminService } from '@/services/admin';
 
 const defaultListings: MarketListing[] = [
   {
@@ -71,9 +72,19 @@ export default function MarketPage() {
   const [viewMode, setViewMode] = useState<'grid3' | 'grid2' | 'list'>('grid3');
   const [priceMin, setPriceMin] = useState<string>('');
   const [priceMax, setPriceMax] = useState<string>('');
+  const navigate = useNavigate();
+  const [allowed, setAllowed] = useState(true);
 
   useEffect(() => {
     (async () => {
+      try {
+        const ft = await AdminService.getFeatureToggles();
+        if (!ft.marketEnabled) {
+          setAllowed(false);
+          navigate('/');
+          return;
+        }
+      } catch { void 0; }
       try {
         const ls = await MarketService.listListings({ limitNum: 24 });
         setListings(ls.length ? ls : defaultListings);
@@ -149,6 +160,7 @@ export default function MarketPage() {
     }
   };
 
+  if (!allowed) return null;
   return (
     <div className="min-h-screen bg-background">
       {/* Cabeçalho em formato da página principal */}

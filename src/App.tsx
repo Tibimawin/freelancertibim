@@ -31,9 +31,7 @@ import CreateServicePage from "./pages/CreateService";
 import EditServicePage from "./pages/EditService";
 import SupportLauncher from "@/components/SupportLauncher";
 import TransactionsPage from "./pages/Transactions";
-import KYCPage from "./pages/KYC";
 import AppLayout from "@/components/AppLayout";
-import KycGuard from "@/components/KycGuard";
 import MaintenanceGuard from "@/components/MaintenanceGuard";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -122,17 +120,16 @@ const App = () => (
                   <Route path="/admin-setup" element={<AdminSetup />} />
                   <Route path="/referral" element={<Referral />} />
                   <Route path="/transactions" element={<TransactionsPage />} />
-                  <Route path="/kyc" element={<KYCPage />} />
                   <Route path="/market" element={<MarketPage />} />
-                  <Route path="/market/:id" element={<KycGuard><MarketDetailsPage /></KycGuard>} />
-                  <Route path="/market/compras" element={<KycGuard><MarketOrdersPage /></KycGuard>} />
+                  <Route path="/market/:id" element={<MarketDetailsPage />} />
+                  <Route path="/market/compras" element={<MarketOrdersPage />} />
                   {/* Serviços - seção independente do Mercado */}
                   <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/services/create" element={<KycGuard><CreateServicePage /></KycGuard>} />
-                  <Route path="/services/:id/edit" element={<KycGuard><EditServicePage /></KycGuard>} />
-                  <Route path="/services/:id" element={<KycGuard><ServiceDetailsPage /></KycGuard>} />
-                  <Route path="/services/pedidos" element={<KycGuard><ServiceOrdersPage /></KycGuard>} />
-                  <Route path="/services/vendas" element={<KycGuard><SellerServiceOrdersPage /></KycGuard>} />
+                  <Route path="/services/create" element={<CreateServicePage />} />
+                  <Route path="/services/:id/edit" element={<EditServicePage />} />
+                  <Route path="/services/:id" element={<ServiceDetailsPage />} />
+                  <Route path="/services/pedidos" element={<ServiceOrdersPage />} />
+                  <Route path="/services/vendas" element={<SellerServiceOrdersPage />} />
                   <Route path="/download/:token" element={<DownloadPage />} />
                 </Route>
 

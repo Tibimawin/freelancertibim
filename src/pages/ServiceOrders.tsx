@@ -12,6 +12,7 @@ import ServiceOrderService from '@/services/serviceOrderService';
 import { ServicesService } from '@/services/servicesService';
 import { Image as ImageIcon, Star } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { AdminService } from '@/services/admin';
 
 function formatDate(d?: Date | string) {
   const date = typeof d === 'string' ? new Date(d) : d;
@@ -38,6 +39,13 @@ export default function ServiceOrdersPage() {
 
   useEffect(() => {
     (async () => {
+      try {
+        const ft = await AdminService.getFeatureToggles();
+        if (!ft.servicesEnabled) {
+          navigate('/');
+          return;
+        }
+      } catch { void 0; }
       try {
         if (!currentUser?.uid) return;
         const os = await ServiceOrderService.listOrdersForBuyer(currentUser.uid);

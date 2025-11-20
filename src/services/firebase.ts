@@ -92,7 +92,7 @@ export class JobService {
           description: `Reserva para tarefa: ${jobData.title}${useBonus > 0 ? ` (bônus usado: ${useBonus} Kz)` : ''}`,
           metadata: {
             jobId: docRef.id,
-            maxApplicants: jobData.maxApplicants,
+            ...(typeof jobData.maxApplicants === 'number' ? { maxApplicants: jobData.maxApplicants } : {}),
             bountyPerTask: jobData.bounty,
             bonusUsed: useBonus,
           },

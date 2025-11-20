@@ -11,6 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ServiceCard } from '@/components/ServiceCard';
+import { AdminService } from '@/services/admin';
 
 const sample: ServiceListing[] = [
   {
@@ -54,9 +55,18 @@ export default function ServicesPage({ hideHeader = false }: { hideHeader?: bool
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'grid3' | 'grid2' | 'list'>(isMobile ? 'list' : 'grid3');
   const navigate = useNavigate();
+  const [allowed, setAllowed] = useState(true);
 
   useEffect(() => {
     (async () => {
+      try {
+        const ft = await AdminService.getFeatureToggles();
+        if (!ft.servicesEnabled) {
+          setAllowed(false);
+          navigate('/');
+          return;
+        }
+      } catch { void 0; }
       try {
         const rs = await ServicesService.list({ limitNum: isMobile ? 12 : 24 });
         setItems(rs.length ? rs : sample);
@@ -90,6 +100,7 @@ export default function ServicesPage({ hideHeader = false }: { hideHeader?: bool
     return data;
   }, [items, search, sort]);
 
+  if (!allowed) return null;
   return (
     <div className={hideHeader ? '' : "min-h-screen bg-background"}>
       {/* Cabeçalho */}

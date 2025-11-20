@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from "@/hooks/use-mobile"; // Importando o hook de mobile
 import { useTheme } from "@/contexts/ThemeContext";
+import { AdminService } from '@/services/admin';
 
 const Header = () => {
   const { currentUser, userData, signOut } = useAuth();
@@ -36,6 +37,18 @@ const Header = () => {
   const currentBalance = userData?.currentMode === 'tester'
     ? (userData?.testerWallet?.availableBalance || 0)
     : contractorBalance;
+  const [marketEnabled, setMarketEnabled] = useState(true);
+  const [servicesEnabled, setServicesEnabled] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const ft = await AdminService.getFeatureToggles();
+        setMarketEnabled(!!ft.marketEnabled);
+        setServicesEnabled(!!ft.servicesEnabled);
+      } catch { void 0; }
+    })();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -185,12 +198,7 @@ const Header = () => {
             {t("task_history")}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="hover:bg-muted/50">
-          <Link to="/kyc" className="flex items-center">
-            <IdCard className="mr-2 h-4 w-4" />
-            Identidade/KYC
-          </Link>
-        </DropdownMenuItem>
+        
         <DropdownMenuItem asChild className="hover:bg-muted/50">
           <Link to="/referral" className="flex items-center">
             <Users className="mr-2 h-4 w-4" />
@@ -266,10 +274,7 @@ const Header = () => {
                   <History className="h-4 w-4" />
                   <span>{t("task_history")}</span>
                 </Link>
-                <Link to="/kyc" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
-                  <IdCard className="h-4 w-4" />
-                  <span>Identidade/KYC</span>
-                </Link>
+
                 <Link to="/profile" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
                   <User className="h-4 w-4" />
                   <span>{t("profile")}</span>
@@ -280,14 +285,18 @@ const Header = () => {
                 </Link>
 
                 {/* Serviços */}
-                <Link to="/services" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
-                  <Store className="h-4 w-4" />
-                  <span>Serviços</span>
-                </Link>
-                <Link to="/services/pedidos" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
-                  <History className="h-4 w-4" />
-                  <span>Meus Serviços</span>
-                </Link>
+                {servicesEnabled && (
+                  <>
+                    <Link to="/services" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                      <Store className="h-4 w-4" />
+                      <span>Serviços</span>
+                    </Link>
+                    <Link to="/services/pedidos" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                      <History className="h-4 w-4" />
+                      <span>Meus Serviços</span>
+                    </Link>
+                  </>
+                )}
 
                 {userData.currentMode === 'poster' && (
                   <Link to="/create-job" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
@@ -354,20 +363,28 @@ const Header = () => {
           {/* Área central (antiga barra de pesquisa) agora com ícone de Mercado */}
           <div className="hidden lg:flex flex-1 max-w-md mx-8 items-center">
             <div className="mx-auto flex items-center gap-4">
-              <Link to="/market" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                <Store className="h-7 w-7" />
-                <span className="text-sm font-medium">Mercado</span>
-              </Link>
-              <Link to="/market/compras" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                Minhas Compras
-              </Link>
-              <Link to="/services" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                <Store className="h-7 w-7" />
-                <span className="text-sm font-medium">Serviços</span>
-              </Link>
-              <Link to="/services/pedidos" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                Meus Serviços
-              </Link>
+              {marketEnabled && (
+                <>
+                  <Link to="/market" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <Store className="h-7 w-7" />
+                    <span className="text-sm font-medium">Mercado</span>
+                  </Link>
+                  <Link to="/market/compras" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Minhas Compras
+                  </Link>
+                </>
+              )}
+              {servicesEnabled && (
+                <>
+                  <Link to="/services" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <Store className="h-7 w-7" />
+                    <span className="text-sm font-medium">Serviços</span>
+                  </Link>
+                  <Link to="/services/pedidos" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Meus Serviços
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 

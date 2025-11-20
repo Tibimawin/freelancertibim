@@ -24,6 +24,7 @@ import { db } from '@/lib/firebase';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { DownloadService } from '@/services/downloadService';
 import { AffiliateService } from '@/services/affiliateService';
+import { AdminService } from '@/services/admin';
 
 const formatPrice = (value: number, currency: string) => {
   const iso = currency === 'KZ' ? 'AOA' : currency;
@@ -62,6 +63,7 @@ export default function MarketDetailsPage() {
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const ratingBlockRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
+  const [allowed, setAllowed] = useState(true);
   const formatKZ = (value: number) => {
     try {
       return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value);
@@ -91,6 +93,14 @@ export default function MarketDetailsPage() {
     const load = async () => {
       if (!id) return;
       try {
+        try {
+          const ft = await AdminService.getFeatureToggles();
+          if (!ft.marketEnabled) {
+            setAllowed(false);
+            navigate('/');
+            return;
+          }
+        } catch { void 0; }
         const item = await MarketService.getListing(id);
         setListing(item);
         // Buscar avatar do vendedor
@@ -418,6 +428,7 @@ export default function MarketDetailsPage() {
     }
   };
 
+  if (!allowed) return null;
   if (loading) {
     return (
       <div>

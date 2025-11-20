@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, Image as ImageIcon } from 'lucide-react';
+import { AdminService } from '@/services/admin';
 
 function formatPrice(amount: number, currency: string) {
   try {
@@ -44,6 +45,13 @@ export default function MarketOrdersPage() {
   const [ratingDraft, setRatingDraft] = useState<Record<string, { rating: number; review: string; submitting?: boolean; error?: string }>>({});
 
   const loadOrders = async () => {
+    try {
+      const ft = await AdminService.getFeatureToggles();
+      if (!ft.marketEnabled) {
+        navigate('/');
+        return;
+      }
+    } catch { void 0; }
     if (!currentUser) {
       setError('Faça login para ver seu histórico de compras.');
       setLoading(false);

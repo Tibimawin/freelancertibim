@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ApplicationService } from '@/services/applicationService';
+import { JobService } from '@/services/firebase';
 import { Play, Loader2, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -48,6 +49,17 @@ const JobApplyButton = ({ jobId, posterId }: JobApplyButtonProps) => {
 
     try {
       setIsApplying(true);
+      const job = await JobService.getJobById(jobId);
+      const isYouTubeJob = Boolean(job?.youtube) || ((job?.subcategory || '').toLowerCase().includes('youtube') || (job?.subcategory || '').toLowerCase().includes('ver vídeo'));
+      if (isYouTubeJob && !userData?.settings?.socialAccounts?.youtube) {
+        toast({
+          title: t('youtube_channel_required'),
+          description: t('link_youtube_channel_to_apply'),
+          variant: 'destructive',
+        });
+        navigate('/profile?tab=settings');
+        return;
+      }
       
       // Check if user already applied
       const hasApplied = await ApplicationService.hasUserApplied(jobId, currentUser.uid);

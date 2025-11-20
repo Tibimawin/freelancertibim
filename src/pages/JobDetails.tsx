@@ -397,6 +397,58 @@ const JobDetails = () => {
       } finally {
         setIsApplying(false);
       }
+    } else if (isTikTokJob) {
+      if (!tkCanSubmit) {
+        toast({ title: t('error'), description: ((job as any)?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch'), variant: 'destructive' });
+        return;
+      }
+      try {
+        setIsApplying(true);
+        if (myApplication) {
+          const proofsToSubmit = [
+            {
+              requirementId: ((job as any)?.tiktok?.actionType) === 'follow' ? 'tiktok_follow' : 'tiktok_watch',
+              type: 'text',
+              content: ((job as any)?.tiktok?.actionType) === 'follow' ? 'Follow confirmed' : `Watched ${tkRequiredSeconds}s`,
+              comment: 'Auto-confirmed TikTok task',
+            },
+          ];
+          await ApplicationService.submitProofs(myApplication.id, proofsToSubmit as any);
+          await ApplicationService.reviewApplication(myApplication.id, 'approved', job.posterId);
+          toast({ title: t('proofs_submitted_success'), description: t('task_auto_approved') });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
+      }
+    } else if (isVKJob) {
+      if (!vkJoinConfirmed) {
+        toast({ title: t('error'), description: ((job as any)?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like'), variant: 'destructive' });
+        return;
+      }
+      try {
+        setIsApplying(true);
+        if (myApplication) {
+          const proofsToSubmit = [
+            {
+              requirementId: ((job as any)?.vk?.actionType) === 'join' ? 'vk_join' : 'vk_like',
+              type: 'text',
+              content: ((job as any)?.vk?.actionType) === 'join' ? 'Join confirmed' : 'Like confirmed',
+              comment: 'Auto-confirmed VK task',
+            },
+          ];
+          await ApplicationService.submitProofs(myApplication.id, proofsToSubmit as any);
+          await ApplicationService.reviewApplication(myApplication.id, 'approved', job.posterId);
+          toast({ title: t('proofs_submitted_success'), description: t('task_auto_approved') });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
+      }
     } else {
       const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
       const missingProofs = requiredProofs.filter(req => {
@@ -831,6 +883,113 @@ const JobDetails = () => {
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
+                  </div>
+                )}
+              </>
+            ) : isTikTokJob ? (
+              <>
+                {canSubmitProofs ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{((job as any)?.tiktok?.actionType) === 'follow' ? t('tiktok_section_title_follow') : t('tiktok_section_title_watch')}</p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => window.open(((job as any)?.tiktok?.videoUrl) || '', '_blank')}>{t('open_video')}</Button>
+                        {((job as any)?.tiktok?.actionType) === 'follow' && (
+                          <Button variant={tkFollowConfirmed ? 'default' : 'secondary'} onClick={() => setTkFollowConfirmed(!tkFollowConfirmed)}>
+                            {t('confirm_follow')}
+                          </Button>
+                        )}
+                      </div>
+                      {((job as any)?.tiktok?.actionType) === 'watch' && (
+                        <div className="space-y-2">
+                          <Progress value={Math.min(100, Math.round((ytWatchElapsed / tkRequiredSeconds) * 100))} />
+                          <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: ytWatchElapsed, required: tkRequiredSeconds })}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground">
+                        <span>{t('tiktok_verification_info')}</span>
+                      </div>
+                      <Button onClick={handleSubmitProofs} disabled={!tkCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!tkCanSubmit && (
+                      <p className="text-xs text-muted-foreground">
+                        {((job as any)?.tiktok?.actionType) === 'follow' ? t('submit_disabled_until_follow') : t('submit_disabled_until_watch')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(showSubmittedBanner || myApplication?.status === 'submitted') && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
+                        <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    {myApplication?.status === 'approved' && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('approved')}</AlertTitle>
+                        <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t('tiktok_verification_info')}</p>
+                  </div>
+                )}
+              </>
+            ) : isVKJob ? (
+              <>
+                {canSubmitProofs ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{((job as any)?.vk?.actionType) === 'join' ? t('vk_section_title_join') : t('vk_section_title_like')}</p>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" onClick={() => window.open(((job as any)?.vk?.targetUrl) || '', '_blank')}>{t('open_profile')}</Button>
+                      {((job as any)?.vk?.actionType) === 'join' && (
+                        <Button variant={vkJoinConfirmed ? 'default' : 'secondary'} onClick={() => setVkJoinConfirmed(!vkJoinConfirmed)}>
+                          {t('confirm_join')}
+                        </Button>
+                      )}
+                      {((job as any)?.vk?.actionType) === 'like' && (
+                        <Button variant={vkJoinConfirmed ? 'default' : 'secondary'} onClick={() => setVkJoinConfirmed(!vkJoinConfirmed)}>
+                          {t('confirm_like')}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground">
+                        <span>{t('vk_verification_info')}</span>
+                      </div>
+                      <Button onClick={handleSubmitProofs} disabled={!vkJoinConfirmed || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!vkJoinConfirmed && (
+                      <p className="text-xs text-muted-foreground">
+                        {((job as any)?.vk?.actionType) === 'join' ? t('submit_disabled_until_join') : t('submit_disabled_until_like')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(showSubmittedBanner || myApplication?.status === 'submitted') && (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
+                        <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
+                      </Alert>
+                    )}
+                    {myApplication?.status === 'approved' && (
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>{t('approved')}</AlertTitle>
+                        <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                      </Alert>
+                    )}
+                    <p className="text-sm text-muted-foreground">{t('vk_verification_info')}</p>
                   </div>
                 )}
               </>

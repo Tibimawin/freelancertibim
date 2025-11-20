@@ -363,15 +363,6 @@ const JobDetails = () => {
 
     if (isYouTubeJob) {
       const channelLink = userData?.settings?.socialAccounts?.youtube;
-      if (!channelLink) {
-        toast({
-          title: t('youtube_channel_required'),
-          description: t('link_youtube_channel_to_apply'),
-          variant: 'destructive',
-        });
-        navigate('/profile?tab=settings');
-        return;
-      }
       if (!ytCanSubmit) {
         toast({
           title: t('error'),
@@ -379,6 +370,31 @@ const JobDetails = () => {
           variant: 'destructive',
         });
         return;
+      }
+      try {
+        setIsApplying(true);
+        if (myApplication) {
+          const folder = `jobs/${job.id}/applications/${myApplication.id}`;
+          const proofsToSubmit = [
+            {
+              requirementId: 'youtube_watch',
+              type: 'text',
+              content: `Watched ${ytRequiredSeconds}s`,
+              comment: 'Auto-confirmed watch',
+            },
+          ];
+          await ApplicationService.submitProofs(myApplication.id, proofsToSubmit as any);
+          await ApplicationService.reviewApplication(myApplication.id, 'approved', job.posterId);
+          toast({
+            title: t("proofs_submitted_success"),
+            description: t('task_auto_approved'),
+          });
+          setShowSubmittedBanner(true);
+        }
+      } catch (error: any) {
+        toast({ title: t('error'), description: String(error?.message || error) });
+      } finally {
+        setIsApplying(false);
       }
     } else {
       const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];

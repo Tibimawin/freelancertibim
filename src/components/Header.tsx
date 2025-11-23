@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Wallet, User, Bell, Search, LogOut, Settings, BarChart3, Plus, History, CheckCircle, Menu, X, Users, IdCard, Store, MessageSquare, TrendingUp, MessageCircle } from "lucide-react";
+import { Wallet, User, Bell, Search, LogOut, Settings, BarChart3, Plus, History, CheckCircle, Menu, X, Users, IdCard, Store, MessageSquare, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Notification } from '@/types/firebase';
@@ -12,14 +12,12 @@ import ModeToggle from "./ModeToggle";
 import WithdrawalModal from "./WithdrawalModal";
 import DirectMessagesModal from "./DirectMessagesModal";
 import { useNotifications } from "@/hooks/useNotifications";
-import { ThemeToggle } from "./ThemeToggle";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from "@/hooks/use-mobile"; // Importando o hook de mobile
 import { useTheme } from "@/contexts/ThemeContext";
 import { AdminService } from '@/services/admin';
-import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 const Header = () => {
   const { currentUser, userData, signOut } = useAuth();
@@ -32,7 +30,9 @@ const Header = () => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const dmUnreadCount = useUnreadMessages();
+  const dmUnreadCount = useMemo(() => notifications.filter((n) => !n.read && n.type === 'message_received').length, [notifications]);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const contractorBalance = (userData?.posterWallet?.balance || 0) + (userData?.posterWallet?.bonusBalance || 0);
   const currentBalance = userData?.currentMode === 'tester'
     ? (userData?.testerWallet?.availableBalance || 0)
@@ -135,23 +135,6 @@ const Header = () => {
         navigate('/dashboard?supportChat=open');
         break;
       }
-      case 'forum_reply': {
-        if (meta.topicId) {
-          navigate(`/community/forum/${encodeURIComponent(meta.topicId)}`);
-        } else {
-          navigate('/community/forum');
-        }
-        break;
-      }
-      case 'forum_solution_accepted':
-      case 'forum_upvote': {
-        if (meta.topicId) {
-          navigate(`/community/forum/${encodeURIComponent(meta.topicId)}`);
-        } else {
-          navigate('/community/forum');
-        }
-        break;
-      }
       default: {
         // Fallback para dashboard
         navigate('/dashboard');
@@ -210,12 +193,6 @@ const Header = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="hover:bg-muted/50">
-          <Link to="/stats" className="flex items-center">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Estatísticas
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="hover:bg-muted/50">
           <Link to="/task-history" className="flex items-center">
             <History className="mr-2 h-4 w-4" />
             {t("task_history")}
@@ -226,18 +203,6 @@ const Header = () => {
           <Link to="/referral" className="flex items-center">
             <Users className="mr-2 h-4 w-4" />
             {t("referral_program")}
-          </Link>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem asChild className="hover:bg-muted/50">
-          <Link to="/messages" className="flex items-center">
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Mensagens
-            {dmUnreadCount > 0 && (
-              <span className="ml-auto bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                {dmUnreadCount}
-              </span>
-            )}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="hover:bg-muted/50">
@@ -258,250 +223,155 @@ const Header = () => {
   const renderMobileSheet = () => (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden hover:bg-muted/50 transition-colors">
+        <Button variant="ghost" size="icon" className="lg:hidden">
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] bg-background border-border p-0">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-md">
-                  <span className="text-base font-bold text-primary-foreground">F</span>
-                </div>
-                <span className="text-lg font-bold text-foreground">Freelincer</span>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsSheetOpen(false)} className="h-8 w-8">
-                <X className="h-5 w-5" />
-              </Button>
+      <SheetContent side="left" className="w-[250px] sm:w-[300px] bg-card border-r border-border p-4">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="flex items-center space-x-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-md">
+              <span className="text-sm font-bold text-primary-foreground">F</span>
             </div>
-          </div>
-
-          {/* User Profile Section */}
-          {currentUser && userData && (
-            <div className="p-4 border-b border-border bg-muted/30">
-              <div className="flex items-center space-x-3 mb-3">
-                <Avatar className="h-12 w-12 border-2 border-primary/50">
-                  <AvatarImage src={userData.avatarUrl} alt={userData.name} />
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg">
-                    {userData.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">{userData.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded-lg p-2">
-                <span className="text-xs font-medium text-muted-foreground">Saldo</span>
-                <span className="text-sm font-bold text-green-500">
-                  Kz {currentBalance.toFixed(2)}
-                </span>
-              </div>
-              <div className="mt-3">
-                <ModeToggle />
-              </div>
-            </div>
-          )}
+            <span className="text-xl font-bold text-foreground">Freelincer</span>
+          </SheetTitle>
+        </SheetHeader>
         
-          {/* Navigation Links */}
-          <ScrollArea className="flex-1">
-            <nav className="p-2 space-y-1">
-              {currentUser && userData ? (
-                <>
-                  <Link 
-                    to="/dashboard" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <BarChart3 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">{t("dashboard")}</span>
-                  </Link>
-
-                  <Link 
-                    to="/stats" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <TrendingUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">Estatísticas</span>
-                  </Link>
-
-                  <Link 
-                    to="/task-history" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <History className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">{t("task_history")}</span>
-                  </Link>
-
-                  <Link 
-                    to="/profile" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <User className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">{t("profile")}</span>
-                  </Link>
-
-                  <Link 
-                    to="/referral" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <Users className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">{t("referral_program")}</span>
-                  </Link>
-
-                  <Link 
-                    to="/messages" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <MessageCircle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <span className="font-medium">Mensagens</span>
+        <ScrollArea className="h-[calc(100vh-100px)]">
+          <div className="flex flex-col space-y-4">
+            {currentUser && userData ? (
+              <>
+                {/* User Info & Mode Toggle */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10 border border-primary/50">
+                      <AvatarImage src={userData.avatarUrl} alt={userData.name} />
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                        {userData.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{userData.name}</p>
+                      <p className="text-xs text-muted-foreground">{userData.currentMode === 'tester' ? t("freelancer") : t("contractor")}</p>
                     </div>
-                    {dmUnreadCount > 0 && (
-                      <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-semibold min-w-[20px] text-center">
-                        {dmUnreadCount}
-                      </span>
-                    )}
+                    <div className="inline-flex items-center rounded bg-green-500 text-white text-xs font-semibold px-2 py-0.5">Kz {currentBalance.toFixed(2)}</div>
+                  </div>
+                  <ModeToggle />
+                </div>
+                
+                <DropdownMenuSeparator className="bg-border" />
+
+                {/* Navigation Links */}
+                <Link to="/" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <Search className="h-4 w-4" />
+                  <span>{t("available_tasks")}</span>
+                </Link>
+                <Link to="/dashboard" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>{t("dashboard")}</span>
+                </Link>
+                <Link to="/task-history" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <History className="h-4 w-4" />
+                  <span>{t("task_history")}</span>
+                </Link>
+
+                <Link to="/profile" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{t("profile")}</span>
+                </Link>
+                <Link to="/referral" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                  <Users className="h-4 w-4" />
+                  <span>{t("referral_program")}</span>
+                </Link>
+
+                {/* Serviços */}
+                {servicesEnabled && (
+                  <>
+                    <Link to="/services" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                      <Store className="h-4 w-4" />
+                      <span>Serviços</span>
+                    </Link>
+                    <Link to="/services/pedidos" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 transition-colors text-foreground">
+                      <History className="h-4 w-4" />
+                      <span>Meus Serviços</span>
+                    </Link>
+                  </>
+                )}
+
+                {userData.currentMode === 'poster' && (
+                  <Link to="/create-job" onClick={() => setIsSheetOpen(false)} className="flex items-center space-x-3 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <Plus className="h-4 w-4" />
+                    <span>{t("create_job")}</span>
                   </Link>
+                )}
+                
+                <DropdownMenuSeparator className="bg-border" />
 
-                  <Link 
-                    to="/community" 
-                    onClick={() => setIsSheetOpen(false)} 
-                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                  >
-                    <Users className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="font-medium">Comunidade</span>
-                  </Link>
-
-                  {servicesEnabled && (
-                    <>
-                      <div className="pt-2 pb-1 px-3">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Serviços</p>
-                      </div>
-                      <Link 
-                        to="/services" 
-                        onClick={() => setIsSheetOpen(false)} 
-                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                      >
-                        <Store className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="font-medium">Explorar Serviços</span>
-                      </Link>
-                      <Link 
-                        to="/services/pedidos" 
-                        onClick={() => setIsSheetOpen(false)} 
-                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/80 transition-colors text-foreground group"
-                      >
-                        <CheckCircle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="font-medium">Meus Pedidos</span>
-                      </Link>
-                    </>
-                  )}
-
-                  {userData.currentMode === 'poster' && (
-                    <>
-                      <div className="pt-2 pb-1 px-3">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ações Rápidas</p>
-                      </div>
-                      <Link 
-                        to="/create-job" 
-                        onClick={() => setIsSheetOpen(false)} 
-                        className="flex items-center space-x-3 p-3 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors group"
-                      >
-                        <Plus className="h-5 w-5" />
-                        <span className="font-semibold">{t("create_job")}</span>
-                      </Link>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="p-3">
+                {/* Actions */}
+                {userData.currentMode === 'tester' && (
                   <Button 
-                    variant="hero" 
-                    className="w-full glow-effect" 
+                    variant="outline" 
+                    className="w-full justify-start"
                     onClick={() => {
-                      setShowAuthModal(true);
+                      setShowWithdrawalModal(true);
                       setIsSheetOpen(false);
                     }}
                   >
-                    {t("login")}
+                    <Wallet className="h-4 w-4 mr-2" />
+                    {t("withdraw")}
                   </Button>
-                </div>
-              )}
-            </nav>
-          </ScrollArea>
-
-          {/* Footer Actions */}
-          {currentUser && userData && (
-            <div className="p-3 border-t border-border space-y-2 bg-muted/20">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start hover:bg-muted/80 transition-colors"
-                onClick={() => {
-                  navigate('/carteira');
-                  setIsSheetOpen(false);
-                }}
-              >
-                <Wallet className="h-4 w-4 mr-3" />
-                <span className="font-medium">Carteira</span>
+                )}
+                
+                <Button
+                  variant="destructive"
+                  onClick={handleSignOut}
+                  className="w-full justify-start"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t("logout")}
+                </Button>
+              </>
+            ) : (
+              <Button variant="hero" className="w-full glow-effect" onClick={() => {
+                setShowAuthModal(true);
+                setIsSheetOpen(false);
+              }}>
+                {t("login")}
               </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full justify-start hover:bg-muted/80 transition-colors"
-                onClick={() => {
-                  navigate('/profile?tab=settings');
-                  setIsSheetOpen(false);
-                }}
-              >
-                <Settings className="h-4 w-4 mr-3" />
-                <span className="font-medium">{t("settings")}</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-3" />
-                <span className="font-medium">{t("logout")}</span>
-              </Button>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm animate-fade-in">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 animate-slide-in-from-top" style={{ animationDuration: '0.4s' }}>
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo & Mobile Menu */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {currentUser && renderMobileSheet()}
-            <Link to="/" className="flex items-center space-x-2 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-md group-hover:shadow-lg transition-all">
-                <span className="text-base font-bold text-white">AT</span>
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-md">
+                <span className="text-sm font-bold text-primary-foreground">AT</span>
               </div>
-              <span className="text-xl font-bold text-foreground hidden sm:inline font-jakarta">Ango Tarefas</span>
+              <span className="text-xl font-bold text-foreground hidden sm:inline">Ango Tarefas</span>
             </Link>
           </div>
 
-          {/* Área central de navegação */}
+          {/* Área central (antiga barra de pesquisa) agora com ícone de Mercado */}
           <div className="hidden lg:flex flex-1 max-w-md mx-8 items-center">
             <div className="mx-auto flex items-center gap-4">
               {marketEnabled && (
                 <>
+                  <Link to="/market" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <Store className="h-7 w-7" />
+                    <span className="text-sm font-medium">Mercado</span>
+                  </Link>
+                  <Link to="/market/compras" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    Minhas Compras
+                  </Link>
                 </>
               )}
               {servicesEnabled && (
@@ -515,10 +385,6 @@ const Header = () => {
                   </Link>
                 </>
               )}
-              <Link to="/community" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                <Users className="h-5 w-5" />
-                <span className="text-sm font-medium">Comunidade</span>
-              </Link>
             </div>
           </div>
 
@@ -534,17 +400,6 @@ const Header = () => {
                     </Link>
                   </Button>
                 )}
-                
-                {/* Carteira Button (Desktop) */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => navigate('/carteira')}
-                  className="flex items-center space-x-2 hidden md:flex border-primary/50 hover:bg-primary/10"
-                >
-                  <Wallet className="h-4 w-4" />
-                  <span>Carteira</span>
-                </Button>
                 
                 {/* Mode Toggle (Desktop Only) */}
                 <div className="hidden lg:block">
@@ -603,6 +458,19 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* Toggle de Tema (Mobile) ao lado das notificações */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={isDark ? "Tema claro" : "Tema escuro"}
+                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+
+                
+
                 {/* Ícone de Chat (Mensagens Diretas) */}
                 <Button 
                   variant="ghost" 
@@ -647,9 +515,6 @@ const Header = () => {
                     </Link>
                   </Button>
                 )}
-
-                {/* Theme Toggle */}
-                <ThemeToggle />
 
                 {/* User Dropdown (Desktop Only) */}
                 <div className="hidden lg:block">

@@ -327,36 +327,25 @@ export class AdminService {
 
   static async getStatistics(): Promise<AdminStatistics> {
     try {
-      const [usersSnapshot, jobsSnapshot, withdrawalsSnapshot, reportsSnapshot] = await Promise.all([
+      const [usersSnapshot, jobsSnapshot, transactionsSnapshot, reportsSnapshot] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collection(db, 'jobs')),
-        getDocs(query(collection(db, 'withdrawalRequests'), where('status', '==', 'pending'))),
-        getDocs(query(collection(db, 'reports'), where('status', '==', 'pending')))
+        getDocs(collection(db, 'transactions')),
+        getDocs(query(collection(db, 'reports'), where('status', '==', 'pending'))) // Fetch only pending reports
       ]);
 
       const users = usersSnapshot.docs.map(doc => doc.data());
       const jobs = jobsSnapshot.docs.map(doc => doc.data());
-      const pendingWithdrawals = withdrawalsSnapshot.docs.map(doc => doc.data());
+      const transactions = transactionsSnapshot.docs.map(doc => doc.data());
       const pendingReports = reportsSnapshot.docs.map(doc => doc.data());
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Usuários online: última atividade nos últimos 15 minutos
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-      const onlineUsers = users.filter(u => {
-        const lastActive = u.lastActive?.toDate?.() || u.updatedAt?.toDate?.();
-        return lastActive && lastActive >= fifteenMinutesAgo;
-      }).length;
-
-      // Calcular total de saques pendentes
-      const totalPendingWithdrawals = pendingWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
-      const pendingWithdrawalsCount = pendingWithdrawals.length;
-
       return {
         users: {
           total: users.length,
-          active: onlineUsers, // Usuários realmente online
+          active: users.filter(u => (u.accountStatus || 'active') === 'active').length,
           suspended: users.filter(u => u.accountStatus === 'suspended').length,
           banned: users.filter(u => u.accountStatus === 'banned').length,
           verified: users.filter(u => u.verificationStatus === 'approved').length,
@@ -369,18 +358,18 @@ export class AdminService {
           cancelled: jobs.filter(j => j.status === 'cancelled').length
         },
         finances: {
-          totalDeposits: 0, // Calculado via transactions se necessário
-          totalWithdrawals: 0, // Calculado via withdrawalRequests
-          pendingWithdrawals: totalPendingWithdrawals, // Total em Kz de saques pendentes
-          platformFees: 0,
+          totalDeposits: transactions.filter(t => t.type === 'deposit' && t.status === 'completed').reduce((sum, t) => sum + t.amount, 0),
+          totalWithdrawals: transactions.filter(t => t.type === 'payout' && t.status === 'completed').reduce((sum, t) => sum + t.amount, 0),
+          pendingWithdrawals: transactions.filter(t => t.type === 'payout' && t.status === 'pending').reduce((sum, t) => sum + t.amount, 0),
+          platformFees: transactions.filter(t => t.type === 'fee' && t.status === 'completed').reduce((sum, t) => sum + t.amount, 0),
           totalBalance: users.reduce((sum, u) => sum + ((u.testerWallet?.balance || 0) + (u.posterWallet?.balance || 0)), 0)
         },
         activities: {
           newUsersToday: users.filter(u => u.createdAt?.toDate() >= today).length,
           newJobsToday: jobs.filter(j => j.createdAt?.toDate() >= today).length,
-          withdrawalsToday: pendingWithdrawals.filter(w => w.requestedAt?.toDate() >= today).length,
-          transactionsToday: 0,
-          pendingReports: pendingReports.length,
+          withdrawalsToday: transactions.filter(t => t.type === 'payout' && t.createdAt?.toDate() >= today).length,
+          transactionsToday: transactions.filter(t => t.createdAt?.toDate() >= today).length,
+          pendingReports: pendingReports.length, // Add pending reports count
         }
       };
     } catch (error) {

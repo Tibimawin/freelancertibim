@@ -33,14 +33,11 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Youtube,
-  GraduationCap
+  Youtube
 } from "lucide-react";
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { AuthService } from '@/services/auth';
 import { RecaptchaVerifier } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 const SettingsManager = () => {
   const { userData, currentUser } = useAuth();
@@ -100,39 +97,6 @@ const SettingsManager = () => {
       toast({
         title: t("error_sending_email"),
         description: t("error_sending_email"),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReopenTutorial = async () => {
-    if (!currentUser) return;
-
-    try {
-      const tutorialRef = doc(db, 'users', currentUser.uid);
-      await setDoc(
-        tutorialRef,
-        {
-          tutorialCompleted: false,
-          tutorialSkipped: false,
-        },
-        { merge: true }
-      );
-
-      toast({
-        title: "Tutorial reaberto",
-        description: "Atualize a página para ver o tutorial novamente.",
-      });
-
-      // Recarregar a página após 1 segundo
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error('Error reopening tutorial:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível reabrir o tutorial.",
         variant: "destructive",
       });
     }
@@ -489,7 +453,7 @@ const SettingsManager = () => {
           {/* 2FA Enrollment Section */}
           <div className="space-y-3">
             <div id="settings-mfa-recaptcha" />
-            {(currentUser as any)?.multiFactor?.enrolledFactors?.length ? (
+            {currentUser?.multiFactor?.enrolledFactors?.length ? (
               <div className="flex items-center justify-between">
                 <div>
                   <Label>{t('mfa_enabled')}</Label>
@@ -501,7 +465,7 @@ const SettingsManager = () => {
                   onClick={async () => {
                     try {
                       setMfaLoading(true);
-                      const first = (currentUser as any)!.multiFactor.enrolledFactors[0];
+                      const first = currentUser!.multiFactor.enrolledFactors[0];
                       await AuthService.disableMfa(first.uid);
                       toast({ title: t('mfa_disabled'), description: t('mfa_disabled_description') });
                     } catch (err: any) {
@@ -723,9 +687,10 @@ const SettingsManager = () => {
               })}
             />
           </div>
+
           <div className="space-y-2">
             <Label className="flex items-center space-x-2">
-              <Globe className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               <span>VK</span>
             </Label>
             <Input
@@ -737,33 +702,6 @@ const SettingsManager = () => {
               })}
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Tutorial de Tarefas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <GraduationCap className="h-5 w-5" />
-            <span>Tutorial de Tarefas</span>
-          </CardTitle>
-          <CardDescription>
-            Aprenda como completar tarefas corretamente
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Reveja o tutorial interativo que explica como fazer tarefas e enviar provas aceitas. 
-            Ideal para novos freelancers ou para relembrar as melhores práticas.
-          </p>
-          <Button 
-            variant="outline" 
-            onClick={handleReopenTutorial}
-            className="w-full sm:w-auto"
-          >
-            <GraduationCap className="h-4 w-4 mr-2" />
-            Rever Tutorial Interativo
-          </Button>
         </CardContent>
       </Card>
 

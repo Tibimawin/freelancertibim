@@ -90,7 +90,7 @@ export class AuthService {
           userId: firebaseUser.uid,
           type: 'welcome_bonus_info',
           title: 'Bem-vindo! Bônus de 500 Kz',
-          message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de contratante para criar anúncios.',
+          message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
           read: false,
         });
       } catch (e) {
@@ -156,20 +156,6 @@ export class AuthService {
         await ReferralService.registerReferral(referredBy, firebaseUser.uid);
       }
 
-      // 4. Enviar email de boas-vindas
-      try {
-        const { getFunctions, httpsCallable } = await import('firebase/functions');
-        const functions = getFunctions();
-        const sendEmail = httpsCallable(functions, 'sendWelcomeEmail');
-        await sendEmail({
-          userEmail: email,
-          userName: name,
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de boas-vindas:', emailError);
-        // Não bloquear o cadastro se o email falhar
-      }
-
       return { user: firebaseUser, userData };
     } catch (error) {
       console.error('Error signing up:', error);
@@ -205,7 +191,7 @@ export class AuthService {
           rating: 0,
           ratingCount: 0,
           testerWallet: { availableBalance: 0, pendingBalance: 0, totalEarnings: 0 },
-          posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0, bonusBalance: 0 },
+          posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0 },
           completedTests: 0,
           approvalRate: 0,
           createdAt: issuedAt,
@@ -324,7 +310,7 @@ export class AuthService {
               userId: firebaseUser.uid,
               type: 'first_login_bonus_info',
               title: 'Bem-vindo! Bônus de 500 Kz',
-              message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de contratante para criar anúncios.',
+              message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
               read: false,
             });
           }
@@ -354,10 +340,10 @@ export class AuthService {
       const snap = await getDoc(userRef);
       const data = snap.exists() ? (snap.data() as any) : null;
       const alreadyGranted = !!data?.welcomeBonusGrantedAt;
-      const currentBonusBalance = data?.posterWallet?.bonusBalance ?? 0;
+      const currentTesterAvail = data?.testerWallet?.availableBalance ?? 0;
       if (alreadyGranted) return;
       await updateDoc(userRef, {
-        'posterWallet.bonusBalance': currentBonusBalance + 500,
+        'testerWallet.availableBalance': currentTesterAvail + 500,
         welcomeBonusGrantedAt: Timestamp.now(),
         updatedAt: new Date(),
       });
@@ -365,19 +351,19 @@ export class AuthService {
         await NotificationService.createNotification({
           userId: user.uid,
           type: 'welcome_bonus_granted',
-          title: 'Bônus de Contratante Creditado',
-          message: '500 Kz foram creditados na sua carteira de contratante. Use para criar anúncios!',
+          title: 'Bônus creditado',
+          message: '500 Kz foram creditados na sua carteira de freelancer após confirmar seu e-mail.',
           read: false,
         });
       } catch {}
       try {
         await addDoc(collection(db, 'transactions'), {
           userId: user.uid,
-          type: 'bonus_deposit',
+          type: 'deposit',
           amount: 500,
           currency: 'KZ',
           status: 'completed',
-          description: 'Bônus de boas-vindas (não-sacável, apenas para criar anúncios)',
+          description: 'Bônus de boas-vindas (e-mail verificado)',
           provider: 'system',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
@@ -445,7 +431,7 @@ export class AuthService {
     }
     const cred = PhoneAuthProvider.credential(verificationId, code);
     const assertion = PhoneMultiFactorGenerator.assertion(cred);
-    await ((auth.currentUser as any)?.multiFactor as any)?.enroll(assertion, 'SMS');
+    await (auth.currentUser as FirebaseUser).multiFactor.enroll(assertion, 'SMS');
   }
 
   // Disable MFA by unenrolling a given factor UID.
@@ -453,7 +439,7 @@ export class AuthService {
     if (!auth.currentUser) {
       throw new Error('Usuário não autenticado');
     }
-    await ((auth.currentUser as any)?.multiFactor as any)?.unenroll(factorUid);
+    await (auth.currentUser as FirebaseUser).multiFactor.unenroll(factorUid);
   }
 
   static async getUserData(uid: string): Promise<User | null> {

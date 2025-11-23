@@ -25,7 +25,15 @@ import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { DownloadService } from '@/services/downloadService';
 import { AffiliateService } from '@/services/affiliateService';
 import { AdminService } from '@/services/admin';
-import { formatKz } from '@/lib/currency';
+
+const formatPrice = (value: number, currency: string) => {
+  const iso = currency === 'KZ' ? 'AOA' : currency;
+  try {
+    return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: iso }).format(value);
+  } catch {
+    return `${value.toFixed(2)} ${currency}`;
+  }
+};
 
 export default function MarketDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +64,13 @@ export default function MarketDetailsPage() {
   const ratingBlockRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const [allowed, setAllowed] = useState(true);
-  const formatKZ = (value: number) => formatKz(value);
+  const formatKZ = (value: number) => {
+    try {
+      return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value);
+    } catch {
+    return `${value.toFixed(2)} Kz`;
+    }
+  };
 
   // Link de afiliado para o usuário atual
   const affiliateLink = useMemo(() => {
@@ -499,7 +513,7 @@ export default function MarketDetailsPage() {
               </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold">{formatKz(listing.price)}</div>
+                  <div className="text-xl font-bold">{formatPrice(listing.price, listing.currency)}</div>
                   <div className="text-sm text-muted-foreground">Preço do serviço</div>
                 </div>
               </div>
@@ -809,7 +823,7 @@ export default function MarketDetailsPage() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-xs text-muted-foreground">Preço</span>
-            <span className="text-base font-semibold">{formatKz(listing.price)}</span>
+            <span className="text-base font-semibold">{formatPrice(listing.price, listing.currency || 'KZ')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={openChatWithSeller}><MessageSquare className="h-4 w-4 mr-1" />Chat</Button>

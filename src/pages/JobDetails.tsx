@@ -6,9 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Clock, Star, MapPin, Smartphone, Monitor, Globe, User, Calendar, Upload, ArrowLeft, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Job, Application, Transaction } from "@/types/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { JobService, TransactionService } from "@/services/firebase";
@@ -22,8 +20,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useAdmin } from '@/contexts/AdminContext';
-import { generateAutomaticInstructions } from '@/utils/taskInstructionsGenerator';
-import { cleanFirebaseData } from '@/lib/firebaseUtils';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,8 +34,6 @@ const JobDetails = () => {
   const [myApplication, setMyApplication] = useState<Application | null>(null);
   // Mover uploadProgress para o topo para manter ordem consistente dos hooks
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-  const [emailValidation, setEmailValidation] = useState<{ isValid: boolean; message: string }>({ isValid: true, message: '' });
-  const [passwordValidation, setPasswordValidation] = useState<{ isValid: boolean; message: string }>({ isValid: true, message: '' });
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -52,10 +46,6 @@ const JobDetails = () => {
   const [editDueDate, setEditDueDate] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
   const [showSubmittedBanner, setShowSubmittedBanner] = useState(false);
-  // Estados para avaliação da tarefa
-  const [jobRating, setJobRating] = useState(0);
-  const [jobComment, setJobComment] = useState('');
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [ytEmbedOpen, setYtEmbedOpen] = useState(false);
   const [ytWatchElapsed, setYtWatchElapsed] = useState(0);
   const [ytSubscribedConfirmed, setYtSubscribedConfirmed] = useState(false);
@@ -66,16 +56,8 @@ const JobDetails = () => {
   const [vkJoinConfirmed, setVkJoinConfirmed] = useState(false);
   const [igWatchElapsed, setIgWatchElapsed] = useState(0);
   const [igIsWatching, setIgIsWatching] = useState(false);
-  const [igEmbedOpen, setIgEmbedOpen] = useState(false);
-  const [igIframeError, setIgIframeError] = useState(false);
-  const igPlayerRef = useRef<HTMLIFrameElement | null>(null);
-  const igWindowRef = useRef<Window | null>(null);
-  const igWindowCheckInterval = useRef<any>(null);
   const [fbWatchElapsed, setFbWatchElapsed] = useState(0);
   const [fbIsWatching, setFbIsWatching] = useState(false);
-  const [fbFollowConfirmed, setFbFollowConfirmed] = useState(false);
-  const [fbPageDialogOpen, setFbPageDialogOpen] = useState(false);
-  const [igDialogOpen, setIgDialogOpen] = useState(false);
   const [webIsWatching, setWebIsWatching] = useState(false);
   const [webWatchElapsed, setWebWatchElapsed] = useState(0);
   const [webScrolledToEnd, setWebScrolledToEnd] = useState(false);
@@ -85,19 +67,6 @@ const JobDetails = () => {
   const dwellTimerRef = useRef<any>(null);
   const platformLoadedRef = useRef(false);
   const [latestTransaction, setLatestTransaction] = useState<Transaction | null>(null);
-  
-  // Email creation task states
-  const [showPassword, setShowPassword] = useState(false);
-  const [emailCreationChecklist, setEmailCreationChecklist] = useState({
-    created: false,
-    loggedOut: false,
-    verified: false,
-    understood: false
-  });
-  
-  // Twitter/X task states
-  const [twitterActionConfirmed, setTwitterActionConfirmed] = useState(false);
-  const [instagramActionConfirmed, setInstagramActionConfirmed] = useState(false);
   const applicantCount = useMemo(() => {
     return typeof job?.applicantCount === 'number' ? job.applicantCount : actualApplicantCount;
   }, [job?.applicantCount, actualApplicantCount]);
@@ -125,35 +94,14 @@ const JobDetails = () => {
   const isTikTokJob = Boolean(job?.tiktok) || ((job?.subcategory || '').toLowerCase().includes('tiktok'));
   const isVKJob = Boolean(job?.vk) || ((job?.subcategory || '').toLowerCase().includes('vk'));
   const isWebsiteJob = Boolean(job?.website) || (((job?.category || '').toLowerCase() === 'web') && ((job?.subcategory || '').toLowerCase().includes('website')));
-  const isEmailCreationJob = Boolean(job?.emailCreation);
-  const isTwitterJob = Boolean(job?.twitter) || ((job?.subcategory || '').toLowerCase().includes('twitter') || (job?.subcategory || '').toLowerCase().includes('x.com'));
   const ytRequiredSeconds = job?.youtube?.viewTimeSeconds || 30;
   const ytCanSubmit = isYouTubeJob && (job?.youtube?.actionType === 'watch' ? ytWatchElapsed >= ytRequiredSeconds : (ytSubscribedConfirmed && ytSubscribeDwell >= subscribeRequiredSeconds));
   const tkRequiredSeconds = job?.tiktok?.viewTimeSeconds || 30;
   const tkCanSubmit = isTikTokJob && ((job?.tiktok?.actionType) === 'watch' ? ytWatchElapsed >= tkRequiredSeconds : tkFollowConfirmed);
-  
-  const igRequiredSeconds = useMemo(() => {
-    if (!isInstagramJob || job?.instagram?.actionType !== 'watch') return 0;
-    const est = job?.timeEstimate?.toLowerCase() || '';
-    if (est.includes('30 segundos')) return 30;
-    if (est.includes('1 minuto')) return 60;
-    if (est.includes('2 minutos')) return 120;
-    if (est.includes('5 minutos')) return 300;
-    return 60;
-  }, [isInstagramJob, job?.instagram?.actionType, job?.timeEstimate]);
-  
-  const igCanSubmit = isInstagramJob && (job?.instagram?.actionType === 'watch' ? igWatchElapsed >= igRequiredSeconds : instagramActionConfirmed);
-  
-  const fbRequiredSeconds = useMemo(() => {
-    if (!isFacebookJob || job?.facebook?.actionType !== 'watch') return 0;
-    const est = job?.timeEstimate?.toLowerCase() || '';
-    if (est.includes('30 segundos')) return 30;
-    if (est.includes('1 minuto')) return 60;
-    if (est.includes('2 minutos')) return 120;
-    if (est.includes('5 minutos')) return 300;
-    return 60;
-  }, [isFacebookJob, job?.facebook?.actionType, job?.timeEstimate]);
-  const fbCanSubmit = isFacebookJob && (job?.facebook?.actionType === 'watch' ? fbWatchElapsed >= fbRequiredSeconds : (job?.facebook?.actionType === 'follow' ? fbFollowConfirmed : false));
+  const igRequiredSeconds = job?.instagram?.viewTimeSeconds || 30;
+  const igCanSubmit = isInstagramJob && (job?.instagram?.actionType === 'watch' ? igWatchElapsed >= igRequiredSeconds : false);
+  const fbRequiredSeconds = job?.facebook?.viewTimeSeconds || 30;
+  const fbCanSubmit = isFacebookJob && (job?.facebook?.actionType === 'watch' ? fbWatchElapsed >= fbRequiredSeconds : false);
   const webRequiredSeconds = job?.website?.viewTimeSeconds || 10;
   const webCanSubmit = isWebsiteJob && ((job?.website?.actionType === 'visit' && webWatchElapsed >= webRequiredSeconds) || (job?.website?.actionType === 'visit_scroll' && webWatchElapsed >= webRequiredSeconds && webScrolledToEnd));
   const extractYouTubeId = (url: string) => {
@@ -175,31 +123,6 @@ const JobDetails = () => {
       return '';
     }
   };
-  
-  // Converte URLs do Instagram/Facebook para formato embed
-  const convertToEmbedUrl = (url: string, platform: 'instagram' | 'facebook'): string => {
-    try {
-      if (platform === 'instagram') {
-        // Instagram: converter para formato /embed/
-        // https://www.instagram.com/p/ABC123/ -> https://www.instagram.com/p/ABC123/embed/
-        // https://www.instagram.com/reel/ABC123/ -> https://www.instagram.com/reel/ABC123/embed/
-        const instagramMatch = url.match(/instagram\.com\/(p|reel|reels)\/([^/?]+)/);
-        if (instagramMatch) {
-          const [, type, code] = instagramMatch;
-          return `https://www.instagram.com/${type}/${code}/embed/`;
-        }
-      } else if (platform === 'facebook') {
-        // Facebook: usar player embed oficial
-        // https://www.facebook.com/share/v/ABC/ -> embed plugin
-        const encodedUrl = encodeURIComponent(url);
-        return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&width=500`;
-      }
-      return url; // Retorna URL original se não conseguir converter
-    } catch {
-      return url;
-    }
-  };
-  
   const ytVideoId = job?.youtube?.videoUrl ? extractYouTubeId(job.youtube.videoUrl) : '';
   const extractChannelHandleOrId = (url: string) => {
     try {
@@ -213,19 +136,6 @@ const JobDetails = () => {
     } catch { return {} as any; }
   };
   const channelData = job?.youtube?.videoUrl ? extractChannelHandleOrId(job.youtube.videoUrl) : {} as any;
-
-  // Auto-popular provedor para tarefas de email
-  useEffect(() => {
-    if (job && isEmailCreationJob) {
-      const providerValue = job.emailCreation?.customProvider || job.emailCreation?.provider;
-      if (providerValue && !proofs['provider']?.text) {
-        setProofs(prev => ({
-          ...prev,
-          provider: { text: providerValue, file: null as any, comment: '' }
-        }));
-      }
-    }
-  }, [job, isEmailCreationJob]);
 
   useEffect(() => {
     let timer: any;
@@ -267,46 +177,9 @@ const JobDetails = () => {
     return () => { if (timer) clearInterval(timer); };
   }, [isWebsiteJob, webIsWatching, webRequiredSeconds]);
 
-  // Instagram watch counter - only counts when iframe is focused/playing or window is open
-  useEffect(() => {
-    let timer: any;
-    if (isInstagramJob && job?.instagram?.actionType === 'watch' && igIsWatching && document.visibilityState === 'visible') {
-      timer = setInterval(() => {
-        setIgWatchElapsed((prev) => Math.min(prev + 1, igRequiredSeconds));
-      }, 1000);
-    }
-    return () => { if (timer) clearInterval(timer); };
-  }, [isInstagramJob, job?.instagram?.actionType, igIsWatching, igRequiredSeconds]);
-  
-  // Monitor new window for Instagram (quando iframe falha)
-  useEffect(() => {
-    if (igWindowRef.current && !igWindowRef.current.closed) {
-      // Verifica a cada segundo se a janela ainda está aberta e em foco
-      igWindowCheckInterval.current = setInterval(() => {
-        if (igWindowRef.current && !igWindowRef.current.closed) {
-          setIgIsWatching(true);
-        } else {
-          setIgIsWatching(false);
-          if (igWindowCheckInterval.current) {
-            clearInterval(igWindowCheckInterval.current);
-          }
-          igWindowRef.current = null;
-        }
-      }, 1000);
-    }
-    
-    return () => {
-      if (igWindowCheckInterval.current) {
-        clearInterval(igWindowCheckInterval.current);
-      }
-    };
-  }, [igWindowRef.current]);
-
-  // Stop Instagram counter when tab is not visible
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState !== 'visible') {
-        setIgIsWatching(false);
         setWebIsWatching(false);
       }
     };
@@ -577,44 +450,7 @@ const JobDetails = () => {
     (canApply || !!myApplication) &&
     (!myApplication || (myApplication.status !== 'submitted' && myApplication.status !== 'approved'))
   );
-  
-  // Email creation specific validation
-  const isEmailCreationComplete = !isEmailCreationJob || (
-    emailCreationChecklist.created &&
-    emailCreationChecklist.loggedOut &&
-    emailCreationChecklist.verified &&
-    emailCreationChecklist.understood
-  );
 
-
-  // Validação de email em tempo real
-  const validateEmail = (email: string) => {
-    if (!email) {
-      setEmailValidation({ isValid: false, message: 'E-mail é obrigatório' });
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValid = emailRegex.test(email);
-    setEmailValidation({
-      isValid,
-      message: isValid ? 'E-mail válido ✓' : 'Formato de e-mail inválido'
-    });
-    return isValid;
-  };
-
-  // Validação de senha em tempo real
-  const validatePassword = (password: string) => {
-    if (!password) {
-      setPasswordValidation({ isValid: false, message: 'Senha é obrigatória' });
-      return false;
-    }
-    const isValid = password.length >= 6;
-    setPasswordValidation({
-      isValid,
-      message: isValid ? 'Senha válida ✓' : 'Senha deve ter no mínimo 6 caracteres'
-    });
-    return isValid;
-  };
 
   const handleProofChange = (requirementId: string, field: 'text' | 'comment', value: string) => {
     setProofs(prev => ({
@@ -625,14 +461,6 @@ const JobDetails = () => {
         file: prev[requirementId]?.file || null
       }
     }));
-
-    // Validar em tempo real para campos de email
-    if (requirementId === 'email' && field === 'text' && typeof value === 'string') {
-      validateEmail(value);
-    }
-    if (requirementId === 'password' && field === 'text' && typeof value === 'string') {
-      validatePassword(value);
-    }
   };
 
   const handleFileChange = (requirementId: string, file: File | null) => {
@@ -867,81 +695,16 @@ const JobDetails = () => {
       }
       return;
     } else {
-      // Email creation specific validation
-      if (isEmailCreationJob) {
-        if (!isEmailCreationComplete) {
-          toast({
-            title: t("error"),
-            description: "Complete todos os itens do checklist antes de enviar as credenciais.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        const emailProof = proofs['email'];
-        const passwordProof = proofs['password'];
-        const providerProof = proofs['provider'];
-        
-        // Aceitar provedor tanto do estado quanto do job (fallback)
-        const providerValue = providerProof?.text || job.emailCreation?.customProvider || job.emailCreation?.provider;
-        
-        // Debug: verificar estado das provas
-        console.log('Email Creation Proofs:', {
-          email: emailProof?.text,
-          password: passwordProof?.text ? '***' : undefined,
-          provider: providerValue,
-          jobProvider: job.emailCreation?.customProvider || job.emailCreation?.provider
-        });
-        
-        if (!emailProof?.text || !passwordProof?.text || !providerValue) {
-          toast({
-            title: t("missing_required_proofs"),
-            description: "Preencha e-mail, senha e provedor.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(emailProof.text)) {
-          toast({
-            title: t("error"),
-            description: "Formato de e-mail inválido.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Validate password length
-        if (passwordProof.text.length < 8) {
-          toast({
-            title: t("error"),
-            description: "A senha deve ter no mínimo 8 caracteres.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-      
       const requiredProofs = job.proofRequirements?.filter(req => req.isRequired) || [];
       const missingProofs = requiredProofs.filter(req => {
         const proof = proofs[req.id];
-        
-        // Para provider em tarefas de email, aceitar valor do job como fallback
-        if (isEmailCreationJob && req.id === 'provider') {
-          const providerValue = proof?.text || job.emailCreation?.customProvider || job.emailCreation?.provider;
-          return !providerValue;
-        }
-        
         return !proof || (!proof.text && !proof.file);
       });
 
       if (missingProofs.length > 0) {
-        const missingLabels = missingProofs.map(p => p.label).join(', ');
         toast({
           title: t("missing_required_proofs"),
-          description: `Provas obrigatórias em falta: ${missingLabels}`,
+          description: t("missing_required_proofs_description"),
           variant: "destructive",
         });
         return;
@@ -965,8 +728,6 @@ const JobDetails = () => {
       } else {
         // Primeiro, criar a aplicação
         applicationId = await JobService.applyToJob(job.id, currentUser.uid, userData.name);
-        
-        // Tentar atualizar job - não falhar se offline
         try {
           const refreshed = await JobService.getJobById(job.id);
           if (refreshed) {
@@ -976,10 +737,7 @@ const JobDetails = () => {
               proofRequirements: refreshed.proofRequirements || [],
             } as any);
           }
-        } catch (refreshError) {
-          console.warn('Could not refresh job (possibly offline):', refreshError);
-          // Não é erro crítico, continuar com aplicação existente
-        }
+        } catch {}
       }
       
       // Preparar provas para envio com upload ao Cloudinary (screenshots/arquivos)
@@ -1016,39 +774,21 @@ const JobDetails = () => {
             };
           }));
 
-      // Para tarefas de email, garantir que provedor está incluído
-      if (isEmailCreationJob) {
-        const providerValue = job.emailCreation?.customProvider || job.emailCreation?.provider;
-        proofsToSubmit.push({
-          requirementId: 'provider',
-          type: 'text',
-          content: providerValue || '',
-        });
-      }
-
-      // Limpar dados antes de enviar (remove undefined/null)
-      const cleanedProofs = proofsToSubmit.map(p => cleanFirebaseData(p)) as typeof proofsToSubmit;
-
-      // Enviar provas com dados limpos
-      await ApplicationService.submitProofs(applicationId, cleanedProofs);
+      // Enviar provas
+      await ApplicationService.submitProofs(applicationId, proofsToSubmit);
       
       toast({
         title: t("proofs_submitted_success"),
         description: t("proofs_submitted_description"),
       });
       setShowSubmittedBanner(true);
-      
-      // Tentar atualizar aplicação - não falhar se offline
       try {
         const applications = await ApplicationService.getApplicationsForJob(job.id);
         if (currentUser) {
           const mine = applications.find(app => app.testerId === currentUser.uid) || null;
           setMyApplication(mine);
         }
-      } catch (refreshError) {
-        console.warn('Could not refresh applications (possibly offline):', refreshError);
-        // Não é erro crítico, continuar normalmente
-      }
+      } catch {}
     } catch (error) {
       console.error('Error submitting application:', error);
       toast({
@@ -1106,48 +846,6 @@ const JobDetails = () => {
       navigate('/');
     } catch (e: any) {
       toast({ title: 'Não foi possível remover', description: e?.message || 'Verifique se o anúncio já está concluído ou contate o admin.', variant: 'destructive' });
-    }
-  };
-
-  const handleSubmitJobRating = async () => {
-    if (!myApplication || !id) return;
-    
-    if (jobRating === 0) {
-      toast({
-        title: t("error"),
-        description: "Por favor, selecione uma classificação",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmittingRating(true);
-    try {
-      await ApplicationService.submitJobFeedback(myApplication.id, jobRating, jobComment);
-      
-      // Atualizar estado local
-      setMyApplication({
-        ...myApplication,
-        feedback: {
-          rating: jobRating,
-          comment: jobComment,
-          providedAt: new Date() as any
-        }
-      });
-
-      toast({
-        title: "✨ Avaliação enviada!",
-        description: `Obrigado pelo feedback! Você ganhou ${jobRating >= 4 ? '50' : '30'} XP.`
-      });
-    } catch (error: any) {
-      console.error('Error submitting rating:', error);
-      toast({
-        title: t("error"),
-        description: error?.message || "Erro ao enviar avaliação",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmittingRating(false);
     }
   };
 
@@ -1265,15 +963,10 @@ const JobDetails = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 bg-gradient-to-r from-primary/5 to-electric-purple/5 rounded-lg border border-primary/20">
-                  <div className="prose prose-sm max-w-none text-foreground">
-                    <div 
-                      className="whitespace-pre-wrap leading-relaxed"
-                      dangerouslySetInnerHTML={{ 
-                        __html: generateAutomaticInstructions(job).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-                      }}
-                    />
-                  </div>
+                <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                  <p className="text-sm text-muted-foreground italic">
+                    {t("no_detailed_instructions")}
+                  </p>
                 </div>
               )}
             </div>
@@ -1544,428 +1237,29 @@ const JobDetails = () => {
                   </div>
                 )}
               </>
-            ) : isInstagramJob ? (
+            ) : (isInstagramJob && job?.instagram?.actionType === 'watch') ? (
               <>
                 {canSubmitProofs ? (
                   <div className="space-y-4">
-                    {job?.instagram?.actionType === 'watch' ? (
-                      <>
-                        <p className="text-sm text-muted-foreground mb-4">Assista ao vídeo/reel do Instagram completo. O contador só avança enquanto você estiver visualizando.</p>
-                        
-                        <Dialog open={igEmbedOpen} onOpenChange={setIgEmbedOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="default" size="lg" className="w-full glow-effect">
-                              Assistir Reel/Vídeo no Instagram
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh]">
-                            <DialogHeader>
-                              <DialogTitle>Assistir Instagram Reel/Vídeo</DialogTitle>
-                              <DialogDescription>
-                                Assista ao vídeo completo. Tentaremos abrir em iframe, se não funcionar abriremos em nova aba.
-                              </DialogDescription>
-                            </DialogHeader>
-                            
-                            <div className="space-y-4">
-                              {!igIframeError ? (
-                                <>
-                                  <div className="relative w-full h-[500px] bg-black rounded-lg overflow-hidden">
-                                    <iframe
-                                      ref={igPlayerRef}
-                                      src={convertToEmbedUrl(job?.instagram?.videoUrl || '', 'instagram')}
-                                      className="w-full h-full"
-                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                                      onLoad={() => {
-                                        setIgIsWatching(true);
-                                      }}
-                                      onError={() => {
-                                        console.log('Iframe bloqueado, abrindo em nova aba...');
-                                        setIgIframeError(true);
-                                      }}
-                                    />
-                                  </div>
-                                  
-                                  <Alert className="border-blue-500/50 bg-blue-500/10">
-                                    <AlertCircle className="h-4 w-4 text-blue-500" />
-                                    <AlertTitle>Vídeo em iframe</AlertTitle>
-                                    <AlertDescription>
-                                      Se o vídeo não carregar, clique no botão abaixo para abrir em nova aba.
-                                    </AlertDescription>
-                                  </Alert>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => setIgIframeError(true)}
-                                  >
-                                    Vídeo não carrega? Abrir em nova aba
-                                  </Button>
-                                </>
-                              ) : (
-                                <div className="space-y-4">
-                                  <Alert className="border-orange-500/50 bg-orange-500/10">
-                                    <AlertCircle className="h-4 w-4 text-orange-500" />
-                                    <AlertTitle>Modo Nova Aba</AlertTitle>
-                                    <AlertDescription>
-                                      O vídeo será aberto em uma nova aba. Mantenha a aba aberta enquanto assiste para que o tempo seja contabilizado.
-                                    </AlertDescription>
-                                  </Alert>
-                                  
-                                  <Button
-                                    variant="default"
-                                    size="lg"
-                                    className="w-full glow-effect"
-                                    onClick={() => {
-                                      const newWindow = window.open(job?.instagram?.videoUrl || '', '_blank', 'width=800,height=600');
-                                      if (newWindow) {
-                                        igWindowRef.current = newWindow;
-                                        setIgIsWatching(true);
-                                      }
-                                    }}
-                                  >
-                                    Abrir Vídeo em Nova Aba
-                                  </Button>
-                                  
-                                  {igWindowRef.current && !igWindowRef.current.closed && (
-                                    <Alert className="border-success/50 bg-success/10">
-                                      <CheckCircle className="h-4 w-4 text-success" />
-                                      <AlertTitle>Janela aberta!</AlertTitle>
-                                      <AlertDescription>
-                                        Assista ao vídeo. O tempo está sendo contabilizado enquanto a janela permanecer aberta.
-                                      </AlertDescription>
-                                    </Alert>
-                                  )}
-                                </div>
-                              )}
-                              
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">Progresso de Visualização</span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {igWatchElapsed}s / {igRequiredSeconds}s
-                                  </span>
-                                </div>
-                                <Progress 
-                                  value={Math.min(100, Math.round((igWatchElapsed / igRequiredSeconds) * 100))} 
-                                  className="h-3"
-                                />
-                                
-                                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-                                  <div className={`w-2 h-2 rounded-full ${igIsWatching ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
-                                  <span className="text-xs text-muted-foreground">
-                                    {igIsWatching ? 'Contador ativo - Continue assistindo' : 'Abra/interaja com o vídeo para começar'}
-                                  </span>
-                                </div>
-                                
-                                {igWatchElapsed >= igRequiredSeconds && (
-                                  <Alert className="border-success/50 bg-success/10">
-                                    <CheckCircle className="h-4 w-4 text-success" />
-                                    <AlertTitle>Tempo mínimo atingido!</AlertTitle>
-                                    <AlertDescription>
-                                      Você pode fechar esta janela e enviar suas provas agora.
-                                    </AlertDescription>
-                                  </Alert>
-                                )}
-                              </div>
-                              
-                              <DialogFooter>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setIgIsWatching(false);
-                                    setIgEmbedOpen(false);
-                                    setIgIframeError(false);
-                                    if (igWindowRef.current && !igWindowRef.current.closed) {
-                                      igWindowRef.current.close();
-                                    }
-                                    igWindowRef.current = null;
-                                  }}
-                                >
-                                  Fechar
-                                </Button>
-                              </DialogFooter>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                        
-                        <div className="space-y-2 p-4 bg-muted/30 rounded-lg border">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Seu Progresso</span>
-                            <span className="text-sm text-muted-foreground">{igWatchElapsed}s / {igRequiredSeconds}s</span>
-                          </div>
-                          <Progress value={Math.min(100, Math.round((igWatchElapsed / igRequiredSeconds) * 100))} className="h-2" />
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => { window.open((job?.instagram?.videoUrl) || '', '_blank'); setIgIsWatching(true); }}>{t('open_video')}</Button>
+                      </div>
+                      {job?.instagram?.actionType === 'watch' && (
+                        <div className="space-y-2">
+                          <Progress value={Math.min(100, Math.round((igWatchElapsed / igRequiredSeconds) * 100))} />
+                          <p className="text-xs text-muted-foreground">{t('watch_progress', { elapsed: igWatchElapsed, required: igRequiredSeconds })}</p>
                         </div>
-                        
-                        {igWatchElapsed >= igRequiredSeconds && (
-                          <Alert className="border-success/50 bg-success/10">
-                            <CheckCircle className="h-4 w-4 text-success" />
-                            <AlertTitle>Tempo mínimo de visualização atingido!</AlertTitle>
-                            <AlertDescription>
-                              Agora você pode enviar as provas da tarefa.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        <p className="text-sm text-muted-foreground mb-4">
-                          {t("submit_your_proofs")}
-                        </p>
-                        {job.proofRequirements && job.proofRequirements.map((proofReq) => (
-                          <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                                <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
-                                {proofReq.isRequired && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    {t("required")}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                            </div>
-
-                            <div className="space-y-3 ml-6">
-                              {(proofReq.type === 'text' || proofReq.type === 'url') && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    {proofReq.type === 'url' ? t('link_url') : t('text_response')}
-                                  </label>
-                                  <Textarea
-                                    placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                    value={proofs[proofReq.id]?.text || ''}
-                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                    className="min-h-[80px]"
-                                  />
-                                </div>
-                              )}
-
-                              {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-foreground block">
-                                    {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
-                                  </label>
-                                  <Input
-                                    type="file"
-                                    accept="image/png,image/jpeg"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] || null;
-                                      if (!file) { handleFileChange(proofReq.id, null); return; }
-                                      const ok = validateFile(proofReq.id, proofReq.type, file);
-                                      if (!ok) { return; }
-                                      handleFileChange(proofReq.id, file);
-                                    }}
-                                    className="cursor-pointer"
-                                  />
-                                  <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
-                                  {proofs[proofReq.id]?.file && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {t("file_selected")}: {proofs[proofReq.id].file?.name}
-                                    </p>
-                                  )}
-                                  {uploadProgress[proofReq.id] !== undefined && (
-                                    <div className="space-y-2">
-                                      <Progress value={uploadProgress[proofReq.id]} className="w-full" />
-                                      <p className="text-xs text-muted-foreground">
-                                        {t('uploading')} {uploadProgress[proofReq.id]}%
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              <div>
-                                <label className="text-sm font-medium text-foreground mb-2 block">
-                                  {t("optional_comment")}
-                                </label>
-                                <Textarea
-                                  placeholder={t("optional_comment_placeholder")}
-                                  value={proofs[proofReq.id]?.comment || ''}
-                                  onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
-                                  className="min-h-[60px]"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                        <div className="flex justify-end space-x-3 pt-4">
-                          <Button variant="outline" onClick={handleCancel}>
-                            {t("cancel_button").toUpperCase()}
-                          </Button>
-                          <Button 
-                            onClick={handleSubmitProofs} 
-                            disabled={!igCanSubmit || isApplying}
-                            className="min-w-[140px] glow-effect"
-                          >
-                            {isApplying ? t('submitting') : t('confirm_task')}
-                          </Button>
-                        </div>
-                        {!igCanSubmit && (
-                          <p className="text-xs text-muted-foreground">{t('submit_disabled_until_watch')}</p>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm text-muted-foreground">
-                          {job?.instagram?.actionType === 'follow' ? 'Siga o perfil do Instagram para continuar.' :
-                           job?.instagram?.actionType === 'like' ? 'Curta a publicação do Instagram para continuar.' :
-                           job?.instagram?.actionType === 'comment' ? 'Comente na publicação do Instagram para continuar.' : 
-                           'Complete a ação no Instagram para continuar.'}
-                        </p>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => window.open(job?.instagram?.videoUrl || '', '_blank')}
-                            >
-                              {job?.instagram?.actionType === 'follow' ? 'Abrir Perfil' : 'Abrir Publicação'}
-                            </Button>
-                            
-                            {job?.instagram?.extras?.openInIframe && (
-                              <Dialog open={igDialogOpen} onOpenChange={setIgDialogOpen}>
-                                <DialogTrigger asChild>
-                                  <Button variant="secondary">Abrir em iframe</Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      {job?.instagram?.actionType === 'follow' ? 'Perfil do Instagram' : 'Publicação do Instagram'}
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      {job?.instagram?.actionType === 'follow' ? 'Clique em "Seguir" no perfil. Aguarde alguns segundos após seguir.' :
-                                       job?.instagram?.actionType === 'like' ? 'Clique em "Curtir" na publicação. Aguarde alguns segundos após curtir.' :
-                                       job?.instagram?.actionType === 'comment' ? 'Adicione seu comentário na publicação. Aguarde alguns segundos após comentar.' :
-                                       'Complete a ação solicitada.'}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="w-full h-[500px]">
-                                    <iframe 
-                                      src={job?.instagram?.videoUrl} 
-                                      className="w-full h-full border rounded-md"
-                                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                                    />
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            )}
-                            
-                            <Button 
-                              variant={instagramActionConfirmed ? 'default' : 'secondary'} 
-                              onClick={() => setInstagramActionConfirmed(!instagramActionConfirmed)}
-                            >
-                              {instagramActionConfirmed ? 'Confirmado ✓' : 
-                               job?.instagram?.actionType === 'follow' ? 'Confirmar Seguimento' :
-                               job?.instagram?.actionType === 'like' ? 'Confirmar Curtida' :
-                               job?.instagram?.actionType === 'comment' ? 'Confirmar Comentário' : 
-                               'Confirmar Ação'}
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {instagramActionConfirmed ? (
-                          <>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              {t("submit_your_proofs")}
-                            </p>
-                            {job.proofRequirements && job.proofRequirements.map((proofReq) => (
-                              <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-                                <div className="space-y-2">
-                                  <div className="flex items-center space-x-2">
-                                    {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                                    <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
-                                    {proofReq.isRequired && (
-                                      <Badge variant="destructive" className="text-xs">
-                                        {t("required")}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                                </div>
-
-                                <div className="space-y-3 ml-6">
-                                  {(proofReq.type === 'text' || proofReq.type === 'url') && (
-                                    <div>
-                                      <label className="text-sm font-medium text-foreground mb-2 block">
-                                        {proofReq.type === 'url' ? t('link_url') : t('text_response')}
-                                      </label>
-                                      <Textarea
-                                        placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                        value={proofs[proofReq.id]?.text || ''}
-                                        onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                        className="min-h-[80px]"
-                                      />
-                                    </div>
-                                  )}
-
-                                  {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
-                                    <div className="space-y-2">
-                                      <label className="text-sm font-medium text-foreground block">
-                                        {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
-                                      </label>
-                                      <Input
-                                        type="file"
-                                        accept="image/png,image/jpeg"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0] || null;
-                                          if (!file) { handleFileChange(proofReq.id, null); return; }
-                                          const ok = validateFile(proofReq.id, proofReq.type, file);
-                                          if (!ok) { return; }
-                                          handleFileChange(proofReq.id, file);
-                                        }}
-                                        className="cursor-pointer"
-                                      />
-                                      <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
-                                      {proofs[proofReq.id]?.file && (
-                                        <p className="text-sm text-muted-foreground">
-                                          {t("file_selected")}: {proofs[proofReq.id].file?.name}
-                                        </p>
-                                      )}
-                                      {uploadProgress[proofReq.id] !== undefined && (
-                                        <div className="space-y-2">
-                                          <Progress value={uploadProgress[proofReq.id]} className="w-full" />
-                                          <p className="text-xs text-muted-foreground">
-                                            {t('uploading')} {uploadProgress[proofReq.id]}%
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  <div>
-                                    <label className="text-sm font-medium text-foreground mb-2 block">
-                                      {t("optional_comment")}
-                                    </label>
-                                    <Textarea
-                                      placeholder={t("optional_comment_placeholder")}
-                                      value={proofs[proofReq.id]?.comment || ''}
-                                      onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
-                                      className="min-h-[60px]"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-
-                            <div className="flex justify-end space-x-3 pt-4">
-                              <Button variant="outline" onClick={handleCancel}>
-                                {t("cancel_button").toUpperCase()}
-                              </Button>
-                              <Button 
-                                onClick={handleSubmitProofs} 
-                                disabled={isApplying}
-                                className="min-w-[140px] glow-effect"
-                              >
-                                {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
-                              </Button>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Complete a ação e confirme antes de enviar as provas.
-                          </p>
-                        )}
-                      </>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="text-sm text-muted-foreground" />
+                      <Button onClick={handleSubmitProofs} disabled={!igCanSubmit || isApplying} className="glow-effect">
+                        {isApplying ? t('submitting') : t('confirm_task')}
+                      </Button>
+                    </div>
+                    {!igCanSubmit && (
+                      <p className="text-xs text-muted-foreground">{t('submit_disabled_until_watch')}</p>
                     )}
                   </div>
                 ) : (
@@ -1973,63 +1267,22 @@ const JobDetails = () => {
                     {(showSubmittedBanner || myApplication?.status === 'approved') && (
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>{myApplication?.status === 'approved' ? t('payout_credited_success') : 'Provas enviadas com sucesso'}</AlertTitle>
-                        <AlertDescription>{myApplication?.status === 'approved' ? t('payout_credited_description') : 'Suas provas foram enviadas e estão aguardando aprovação do contratante. O pagamento será creditado após aprovação.'}</AlertDescription>
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
                   </div>
                 )}
               </>
-            ) : (isFacebookJob && (job?.facebook?.actionType === 'watch' || job?.facebook?.actionType === 'follow')) ? (
+            ) : (isFacebookJob && job?.facebook?.actionType === 'watch') ? (
               <>
                 {canSubmitProofs ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      {job?.facebook?.actionType === 'watch' ? 'Assista ao vídeo/publicação do Facebook para continuar.' : 'Siga a página do Facebook para continuar.'}
-                    </p>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <Button variant="outline" onClick={() => { 
-                          window.open((job?.facebook?.videoUrl) || '', '_blank'); 
-                          if (job?.facebook?.actionType === 'watch') {
-                            setFbIsWatching(true);
-                          }
-                        }}>
-                          {job?.facebook?.actionType === 'watch' ? t('open_video') : 'Abrir página'}
-                        </Button>
-                        
-                        {job?.facebook?.actionType === 'follow' && job?.facebook?.extras?.openInIframe && (
-                          <Dialog open={fbPageDialogOpen} onOpenChange={setFbPageDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button variant="secondary">Abrir em iframe</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-3xl">
-                              <DialogHeader>
-                                <DialogTitle>Página do Facebook</DialogTitle>
-                                <DialogDescription>Clique em "Seguir" ou "Curtir" na página. Aguarde alguns segundos após seguir.</DialogDescription>
-                              </DialogHeader>
-                              <div className="w-full h-[500px]">
-                                <iframe 
-                                  src={job?.facebook?.videoUrl} 
-                                  className="w-full h-full border rounded-md"
-                                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                                />
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                        
-                        {job?.facebook?.actionType === 'follow' && (
-                          <Button 
-                            variant={fbFollowConfirmed ? 'default' : 'secondary'} 
-                            onClick={() => setFbFollowConfirmed(!fbFollowConfirmed)}
-                          >
-                            {fbFollowConfirmed ? 'Confirmado ✓' : 'Confirmar que segui'}
-                          </Button>
-                        )}
+                        <Button variant="outline" onClick={() => { window.open((job?.facebook?.videoUrl) || '', '_blank'); setFbIsWatching(true); }}>{t('open_video')}</Button>
                       </div>
-                      
                       {job?.facebook?.actionType === 'watch' && (
                         <div className="space-y-2">
                           <Progress value={Math.min(100, Math.round((fbWatchElapsed / fbRequiredSeconds) * 100))} />
@@ -2037,110 +1290,14 @@ const JobDetails = () => {
                         </div>
                       )}
                     </div>
-                    
                     <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
-                      <div className="text-sm text-muted-foreground">
-                        {job?.facebook?.actionType === 'follow' 
-                          ? (fbFollowConfirmed ? 'Pronto para enviar provas' : 'Confirme que seguiu a página')
-                          : ''}
-                      </div>
+                      <div className="text-sm text-muted-foreground" />
                       <Button onClick={handleSubmitProofs} disabled={!fbCanSubmit || isApplying} className="glow-effect">
                         {isApplying ? t('submitting') : t('confirm_task')}
                       </Button>
                     </div>
-                    
                     {!fbCanSubmit && (
-                      <p className="text-xs text-muted-foreground">
-                        {job?.facebook?.actionType === 'watch' 
-                          ? t('submit_disabled_until_watch') 
-                          : 'Confirme que seguiu a página antes de enviar as provas.'}
-                      </p>
-                    )}
-                    
-                    {job?.facebook?.actionType === 'follow' && job.proofRequirements && job.proofRequirements.length > 0 && (
-                      <>
-                        <p className="text-sm text-muted-foreground mt-4">
-                          {t("submit_your_proofs")}
-                        </p>
-                        {job.proofRequirements.map((proofReq) => (
-                          <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                                <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
-                                {proofReq.isRequired && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    {t("required")}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                            </div>
-
-                            <div className="space-y-3 ml-6">
-                              {(proofReq.type === 'text' || proofReq.type === 'url') && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    {proofReq.type === 'url' ? t('link_url') : t('text_response')}
-                                  </label>
-                                  <Textarea
-                                    placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                    value={proofs[proofReq.id]?.text || ''}
-                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                    className="min-h-[80px]"
-                                  />
-                                </div>
-                              )}
-
-                              {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-foreground block">
-                                    {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
-                                  </label>
-                                  <Input
-                                    type="file"
-                                    accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] || null;
-                                      if (!file) { handleFileChange(proofReq.id, null); return; }
-                                      const ok = validateFile(proofReq.id, proofReq.type, file);
-                                      if (!ok) { return; }
-                                      handleFileChange(proofReq.id, file);
-                                    }}
-                                    className="cursor-pointer"
-                                  />
-                                  <p className="text-xs text-muted-foreground">Apenas PNG/JPG, até 5 MB</p>
-                                  {proofs[proofReq.id]?.file && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {t("file_selected")}: {proofs[proofReq.id].file?.name}
-                                    </p>
-                                  )}
-                                  {uploadProgress[proofReq.id] !== undefined && (
-                                    <div className="space-y-2">
-                                      <Progress value={uploadProgress[proofReq.id]} className="w-full" />
-                                      <p className="text-xs text-muted-foreground">
-                                        {t('uploading')} {uploadProgress[proofReq.id]}%
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              <div>
-                                <label className="text-sm font-medium text-foreground mb-2 block">
-                                  {t("optional_comment")}
-                                </label>
-                                <Textarea
-                                  placeholder={t("optional_comment_placeholder")}
-                                  value={proofs[proofReq.id]?.comment || ''}
-                                  onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
-                                  className="min-h-[60px]"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </>
+                      <p className="text-xs text-muted-foreground">{t('submit_disabled_until_watch')}</p>
                     )}
                   </div>
                 ) : (
@@ -2148,8 +1305,8 @@ const JobDetails = () => {
                     {(showSubmittedBanner || myApplication?.status === 'approved') && (
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>{myApplication?.status === 'approved' ? t('payout_credited_success') : 'Provas enviadas com sucesso'}</AlertTitle>
-                        <AlertDescription>{myApplication?.status === 'approved' ? t('payout_credited_description') : 'Suas provas foram enviadas e estão aguardando aprovação do contratante. O pagamento será creditado após aprovação.'}</AlertDescription>
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">{t('youtube_verification_info')}</p>
@@ -2233,8 +1390,8 @@ const JobDetails = () => {
                     {(showSubmittedBanner || myApplication?.status === 'approved') && (
                       <Alert>
                         <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>{myApplication?.status === 'approved' ? t('payout_credited_success') : 'Provas enviadas com sucesso'}</AlertTitle>
-                        <AlertDescription>{myApplication?.status === 'approved' ? t('payout_credited_description') : 'Suas provas foram enviadas e estão aguardando aprovação do contratante. O pagamento será creditado após aprovação.'}</AlertDescription>
+                        <AlertTitle>{t('payout_credited_success')}</AlertTitle>
+                        <AlertDescription>{t('payout_credited_description')}</AlertDescription>
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">{t('website_verification_info')}</p>
@@ -2356,44 +1513,13 @@ const JobDetails = () => {
                   </div>
                 )}
               </>
-            ) : isTwitterJob ? (
+            ) : (
               <>
-                {canSubmitProofs ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      {job?.twitter?.actionType === 'follow' && 'Complete a ação de seguir o perfil no Twitter/X'}
-                      {job?.twitter?.actionType === 'like' && 'Complete a ação de curtir o tweet no Twitter/X'}
-                      {job?.twitter?.actionType === 'retweet' && 'Complete a ação de retweetar no Twitter/X'}
-                      {job?.twitter?.actionType === 'comment' && 'Complete a ação de comentar no tweet no Twitter/X'}
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            const url = job?.twitter?.actionType === 'follow' 
-                              ? `https://twitter.com/${job?.twitter?.profileHandle}` 
-                              : job?.twitter?.tweetUrl;
-                            window.open(url || '', '_blank');
-                          }}
-                        >
-                          {job?.twitter?.actionType === 'follow' ? 'Abrir Perfil' : 'Abrir Tweet'}
-                        </Button>
-                        <Button 
-                          variant={twitterActionConfirmed ? 'default' : 'secondary'} 
-                          onClick={() => setTwitterActionConfirmed(!twitterActionConfirmed)}
-                        >
-                          {job?.twitter?.actionType === 'follow' && 'Confirmar Seguimento'}
-                          {job?.twitter?.actionType === 'like' && 'Confirmar Curtida'}
-                          {job?.twitter?.actionType === 'retweet' && 'Confirmar Retweet'}
-                          {job?.twitter?.actionType === 'comment' && 'Confirmar Comentário'}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {twitterActionConfirmed && job.proofRequirements && job.proofRequirements.length > 0 && (
+                {job.proofRequirements && job.proofRequirements.length > 0 ? (
+                  <>
+                    {canSubmitProofs ? (
                       <>
-                        <p className="text-sm text-muted-foreground mt-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                           {t("submit_your_proofs")}
                         </p>
                         {job.proofRequirements.map((proofReq) => (
@@ -2488,280 +1614,6 @@ const JobDetails = () => {
                           </Button>
                         </div>
                       </>
-                    )}
-                    
-                    {!twitterActionConfirmed && (
-                      <p className="text-xs text-muted-foreground">
-                        Confirme que completou a ação antes de enviar as provas
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {(showSubmittedBanner || myApplication?.status === 'submitted') && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>{t('proofs_submitted_success')}</AlertTitle>
-                        <AlertDescription>{t('proofs_submitted_description')}</AlertDescription>
-                      </Alert>
-                    )}
-                    {myApplication?.status === 'approved' && (
-                      <Alert>
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>{t('approved')}</AlertTitle>
-                        <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
-                      </Alert>
-                    )}
-                    <p className="text-sm text-muted-foreground">Suas provas foram enviadas e aguardam aprovação do contratante.</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {job.proofRequirements && job.proofRequirements.length > 0 ? (
-                  <>
-                    {canSubmitProofs ? (
-                      <>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          {t("submit_your_proofs")}
-                        </p>
-                        {job.proofRequirements.map((proofReq) => (
-                          <div key={proofReq.id} className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                {proofReq.isRequired ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle className="h-4 w-4 text-success" />}
-                                <span className="text-sm font-medium text-foreground">{proofReq.label}</span>
-                                {proofReq.isRequired && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    {t("required")}
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground ml-6">{proofReq.description}</p>
-                            </div>
-
-                            <div className="space-y-3 ml-6">
-                              {/* Email creation specific fields */}
-                              {isEmailCreationJob && proofReq.id === 'email' && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    E-mail criado
-                                  </label>
-                                  <Input
-                                    type="email"
-                                    placeholder="exemplo@gmail.com"
-                                    value={proofs[proofReq.id]?.text || ''}
-                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                    className={emailValidation.isValid === false && proofs[proofReq.id]?.text ? 'border-destructive focus-visible:ring-destructive' : emailValidation.isValid && proofs[proofReq.id]?.text ? 'border-success focus-visible:ring-success' : ''}
-                                  />
-                                  {proofs[proofReq.id]?.text && (
-                                    <p className={`text-xs mt-1 ${emailValidation.isValid ? 'text-success' : 'text-destructive'}`}>
-                                      {emailValidation.message}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {isEmailCreationJob && proofReq.id === 'password' && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    Senha da conta
-                                  </label>
-                                  <div className="relative">
-                                    <Input
-                                      type={showPassword ? "text" : "password"}
-                                      placeholder="Digite a senha (mínimo 6 caracteres)"
-                                      value={proofs[proofReq.id]?.text || ''}
-                                      onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                      className={`pr-10 ${passwordValidation.isValid === false && proofs[proofReq.id]?.text ? 'border-destructive focus-visible:ring-destructive' : passwordValidation.isValid && proofs[proofReq.id]?.text ? 'border-success focus-visible:ring-success' : ''}`}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowPassword(!showPassword)}
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    >
-                                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
-                                  </div>
-                                  {proofs[proofReq.id]?.text && (
-                                    <p className={`text-xs mt-1 ${passwordValidation.isValid ? 'text-success' : 'text-destructive'}`}>
-                                      {passwordValidation.message}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {isEmailCreationJob && proofReq.id === 'provider' && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    Provedor
-                                  </label>
-                                  <Input
-                                    type="text"
-                                    placeholder="Gmail, Outlook, Yahoo, etc."
-                                    value={job.emailCreation?.customProvider || job.emailCreation?.provider || ''}
-                                    readOnly
-                                    className="bg-muted/50"
-                                  />
-                                </div>
-                              )}
-                              
-                              {/* Standard proof fields for non-email tasks */}
-                              {!isEmailCreationJob && (proofReq.type === 'text' || proofReq.type === 'url') && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    {proofReq.type === 'url' ? t('link_url') : t('text_response')}
-                                  </label>
-                                  <Textarea
-                                    placeholder={proofReq.placeholder || (proofReq.type === 'url' ? t('proof_placeholder_url') : t('proof_placeholder_text'))}
-                                    value={proofs[proofReq.id]?.text || ''}
-                                    onChange={(e) => handleProofChange(proofReq.id, 'text', e.target.value)}
-                                    className="min-h-[80px]"
-                                  />
-                                </div>
-                              )}
-
-                              {(proofReq.type === 'screenshot' || proofReq.type === 'file') && (
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-foreground block">
-                                    {proofReq.type === 'screenshot' ? t('screenshot') : t('file')}
-                                  </label>
-                                  <Input
-                                    type="file"
-                                    accept={proofReq.type === 'screenshot' ? 'image/png,image/jpeg' : 'image/png,image/jpeg'}
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0] || null;
-                                      if (!file) { handleFileChange(proofReq.id, null); return; }
-                                      const ok = validateFile(proofReq.id, proofReq.type, file);
-                                      if (!ok) { return; }
-                                      handleFileChange(proofReq.id, file);
-                                    }}
-                                    className="cursor-pointer"
-                                  />
-                                  <p className="text-xs text-muted-foreground">
-                                    {isEmailCreationJob && proofReq.id === 'screenshot' ? 'Comprovante opcional (PNG/JPG, até 5 MB)' : 'Apenas PNG/JPG, até 5 MB'}
-                                  </p>
-                                  {proofs[proofReq.id]?.file && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {t("file_selected")}: {proofs[proofReq.id].file?.name}
-                                    </p>
-                                  )}
-                                  {uploadProgress[proofReq.id] !== undefined && (
-                                    <div className="space-y-2">
-                                      <Progress value={uploadProgress[proofReq.id]} className="w-full" />
-                                      <p className="text-xs text-muted-foreground">
-                                        {t('uploading')} {uploadProgress[proofReq.id]}%
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {!isEmailCreationJob && (
-                                <div>
-                                  <label className="text-sm font-medium text-foreground mb-2 block">
-                                    {t("optional_comment")}
-                                  </label>
-                                  <Textarea
-                                    placeholder={t("optional_comment_placeholder")}
-                                    value={proofs[proofReq.id]?.comment || ''}
-                                    onChange={(e) => handleProofChange(proofReq.id, 'comment', e.target.value)}
-                                    className="min-h-[60px]"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Email creation checklist */}
-                        {isEmailCreationJob && (
-                          <Card className="border-warning/30 bg-warning/5">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <AlertCircle className="w-5 h-5 text-warning" />
-                                Checklist Obrigatório
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                              <Alert className="border-destructive/50 bg-destructive/5">
-                                <AlertCircle className="h-4 w-4 text-destructive" />
-                                <AlertTitle className="text-destructive">⚠️ CRÍTICO</AlertTitle>
-                                <AlertDescription className="text-destructive">
-                                  Faça logout COMPLETO da conta antes de enviar as credenciais! Caso contrário, sua prova será rejeitada.
-                                </AlertDescription>
-                              </Alert>
-                              
-                              <div className="space-y-3">
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    id="created"
-                                    checked={emailCreationChecklist.created}
-                                    onCheckedChange={(checked) =>
-                                      setEmailCreationChecklist((prev) => ({ ...prev, created: checked as boolean }))
-                                    }
-                                  />
-                                  <Label htmlFor="created" className="cursor-pointer text-sm leading-relaxed">
-                                    Criei a conta de e-mail com sucesso
-                                  </Label>
-                                </div>
-                                
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    id="loggedOut"
-                                    checked={emailCreationChecklist.loggedOut}
-                                    onCheckedChange={(checked) =>
-                                      setEmailCreationChecklist((prev) => ({ ...prev, loggedOut: checked as boolean }))
-                                    }
-                                  />
-                                  <Label htmlFor="loggedOut" className="cursor-pointer text-sm leading-relaxed font-semibold text-destructive">
-                                    Saí da sessão no meu dispositivo (logout completo)
-                                  </Label>
-                                </div>
-                                
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    id="verified"
-                                    checked={emailCreationChecklist.verified}
-                                    onCheckedChange={(checked) =>
-                                      setEmailCreationChecklist((prev) => ({ ...prev, verified: checked as boolean }))
-                                    }
-                                  />
-                                  <Label htmlFor="verified" className="cursor-pointer text-sm leading-relaxed">
-                                    Verifiquei que as credenciais estão corretas
-                                  </Label>
-                                </div>
-                                
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    id="understood"
-                                    checked={emailCreationChecklist.understood}
-                                    onCheckedChange={(checked) =>
-                                      setEmailCreationChecklist((prev) => ({ ...prev, understood: checked as boolean }))
-                                    }
-                                  />
-                                  <Label htmlFor="understood" className="cursor-pointer text-sm leading-relaxed">
-                                    Entendo que credenciais inválidas resultarão em rejeição
-                                  </Label>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        <div className="flex justify-end space-x-3 pt-4">
-                          <Button variant="outline" onClick={handleCancel}>
-                            {t("cancel_button").toUpperCase()}
-                          </Button>
-                          <Button 
-                            onClick={handleSubmitProofs} 
-                            disabled={isApplying || (isEmailCreationJob && !isEmailCreationComplete)}
-                            className="min-w-[140px] glow-effect"
-                          >
-                            {isApplying ? t("submitting").toUpperCase() : t("submit_proofs").toUpperCase()}
-                          </Button>
-                        </div>
-                      </>
                     ) : (
                       <div className="space-y-4">
                         <p className="text-sm text-muted-foreground mb-4">
@@ -2775,131 +1627,11 @@ const JobDetails = () => {
                           </Alert>
                         )}
                         {myApplication?.status === 'approved' && (
-                          <>
-                            <Alert className="bg-success/10 border-success/20">
-                              <CheckCircle className="h-4 w-4 text-success" />
-                              <AlertTitle className="text-success">{t('approved')}</AlertTitle>
-                              <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
-                            </Alert>
-
-                            {/* Seção de Avaliação da Tarefa */}
-                            {!myApplication.feedback?.rating ? (
-                              <Card className="border-2 border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                                <CardHeader>
-                                  <CardTitle className="flex items-center gap-2 text-lg">
-                                    <Star className="w-5 h-5 text-warning" />
-                                    Avaliar esta Tarefa
-                                  </CardTitle>
-                                  <p className="text-sm text-muted-foreground">
-                                    Compartilhe sua experiência e ganhe até 50 XP!
-                                  </p>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                  <div>
-                                    <label className="text-sm font-medium mb-2 block">Classificação</label>
-                                    <div className="flex items-center gap-2">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                          key={star}
-                                          type="button"
-                                          onClick={() => setJobRating(star)}
-                                          className="p-1 transition-transform hover:scale-110"
-                                        >
-                                          <Star
-                                            className={`w-8 h-8 ${
-                                              jobRating >= star
-                                                ? 'fill-warning text-warning'
-                                                : 'text-muted-foreground'
-                                            }`}
-                                          />
-                                        </button>
-                                      ))}
-                                      <span className="ml-2 text-sm text-muted-foreground">
-                                        {jobRating > 0 ? `${jobRating}/5` : 'Selecione'}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <label className="text-sm font-medium mb-2 block">
-                                      Comentário (opcional)
-                                    </label>
-                                    <Textarea
-                                      placeholder="Compartilhe sua experiência com esta tarefa..."
-                                      value={jobComment}
-                                      onChange={(e) => setJobComment(e.target.value)}
-                                      rows={3}
-                                      className="resize-none"
-                                    />
-                                  </div>
-
-                                  <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                                    <div className="text-2xl">✨</div>
-                                    <div className="flex-1 text-sm">
-                                      <p className="font-semibold text-foreground">Ganhe XP por avaliar!</p>
-                                      <p className="text-muted-foreground text-xs">
-                                        {jobRating >= 4 ? '+50 XP' : jobRating > 0 ? '+30 XP' : '+30-50 XP'} por enviar sua avaliação
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <Button
-                                    onClick={handleSubmitJobRating}
-                                    disabled={isSubmittingRating || jobRating === 0}
-                                    className="w-full glow-effect"
-                                  >
-                                    {isSubmittingRating ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                        Enviando...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Star className="w-4 h-4 mr-2" />
-                                        Enviar Avaliação
-                                      </>
-                                    )}
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            ) : (
-                              <Card className="border-success/20 bg-success/5">
-                                <CardHeader>
-                                  <CardTitle className="flex items-center gap-2 text-lg text-success">
-                                    <CheckCircle className="w-5 h-5" />
-                                    Avaliação Enviada
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                  <div className="flex items-center gap-2">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star
-                                        key={star}
-                                        className={`w-5 h-5 ${
-                                          myApplication.feedback.rating >= star
-                                            ? 'fill-warning text-warning'
-                                            : 'text-muted-foreground'
-                                        }`}
-                                      />
-                                    ))}
-                                    <span className="ml-2 text-sm font-semibold">
-                                      {myApplication.feedback.rating}/5
-                                    </span>
-                                  </div>
-                                  {myApplication.feedback.comment && (
-                                    <div className="bg-muted/30 p-3 rounded-lg">
-                                      <p className="text-sm text-foreground">
-                                        {myApplication.feedback.comment}
-                                      </p>
-                                    </div>
-                                  )}
-                                  <p className="text-xs text-muted-foreground">
-                                    Obrigado pelo seu feedback!
-                                  </p>
-                                </CardContent>
-                              </Card>
-                            )}
-                          </>
+                          <Alert>
+                            <CheckCircle className="h-4 w-4" />
+                            <AlertTitle>{t('approved')}</AlertTitle>
+                            <AlertDescription>{t('task_approved_description', { jobTitle: job.title })}</AlertDescription>
+                          </Alert>
                         )}
                         {job.proofRequirements.map((proofReq) => (
                           <div key={proofReq.id} className="p-4 bg-muted/30 rounded-lg border border-border/50">

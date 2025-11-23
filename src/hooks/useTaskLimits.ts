@@ -3,10 +3,13 @@ import { useSystemConfig } from './useSystemConfig';
 export const useTaskLimits = () => {
   const { config, loading } = useSystemConfig();
 
+  // Debug log para verificar se config está correto
+  console.log('[useTaskLimits] Config:', config, 'Loading:', loading);
+
   return {
-    minBounty: config?.taskLimits?.minBounty || 5,
-    maxBounty: config?.taskLimits?.maxBounty || 50000,
-    highValueThreshold: config?.taskLimits?.highValueThreshold || 10000,
+    minBounty: config.taskLimits.minBounty,
+    maxBounty: config.taskLimits.maxBounty,
+    highValueThreshold: config.taskLimits.highValueThreshold,
     loading,
   };
 };

@@ -44,6 +44,7 @@ import { AdminForumModeration } from '@/components/admin/AdminForumModeration';
 import { AdminTaskTemplates } from '@/components/admin/AdminTaskTemplates';
 import { AdminRecurringJobs } from '@/components/admin/AdminRecurringJobs';
 import { AdminEmailCreationTasks } from '@/components/admin/AdminEmailCreationTasks';
+import AdminMigration from '@/pages/AdminMigration';
 import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
@@ -222,6 +223,8 @@ const AdminDashboard = () => {
         return <AdminTaskTemplates />;
       case 'recurring-jobs':
         return <AdminRecurringJobs />;
+      case 'migrations':
+        return <AdminMigration />;
       default:
         return <AdminAnalytics />;
     }

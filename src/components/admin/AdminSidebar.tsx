@@ -18,7 +18,8 @@ import {
   Bell,
   FlaskConical,
   MessageCircle,
-  RefreshCw
+  RefreshCw,
+  Upload
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -58,6 +59,7 @@ const menuItems = [
   { title: "Config. Sistema", url: "/admin?tab=system-config", icon: Settings },
   { title: "Histórico Broadcasts", url: "/admin?tab=broadcast-history", icon: Bell },
   { title: "Testes A/B", url: "/admin?tab=ab-testing", icon: FlaskConical },
+  { title: "Migrações", url: "/admin?tab=migrations", icon: Upload },
   { title: "Configurações", url: "/admin?tab=settings", icon: Settings },
 ];
 

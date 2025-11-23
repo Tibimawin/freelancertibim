@@ -96,7 +96,11 @@ const XPRanking: React.FC = () => {
           return (
             <div
               key={user.userId}
-              onClick={() => navigate(`/profile/${user.userId}`)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/profile/${user.userId}`);
+              }}
               style={{ animationDelay: `${index * 80}ms` }}
               className={`group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all duration-300 animate-fade-in ${
                 position <= 3
@@ -177,7 +181,11 @@ const XPRanking: React.FC = () => {
           return (
             <div
               key={user.userId}
-              onClick={() => navigate(`/profile/${user.userId}`)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/profile/${user.userId}`);
+              }}
               style={{ animationDelay: `${index * 100}ms` }}
               className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 animate-fade-in ${
                 position <= 3

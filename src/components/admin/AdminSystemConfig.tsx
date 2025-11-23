@@ -21,10 +21,36 @@ import {
   Briefcase,
 } from 'lucide-react';
 
+const DEFAULT_CONFIG: SystemConfig = {
+  withdrawalSettings: {
+    minAmount: 500,
+    maxAmount: 1000000,
+    expressEnabled: true,
+    ibanEnabled: true,
+    expressFeePercent: 0,
+    ibanFeePercent: 2.5,
+  },
+  depositSettings: {
+    minAmount: 100,
+    maxAmount: 5000000,
+    bonusPercent: 0,
+  },
+  platformSettings: {
+    maintenanceMode: false,
+    maintenanceMessage: 'Sistema em manutenção. Voltaremos em breve.',
+    platformFeePercent: 0,
+  },
+  taskLimits: {
+    minBounty: 5,
+    maxBounty: 50000,
+    highValueThreshold: 10000,
+  },
+};
+
 export const AdminSystemConfig = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
-  const [config, setConfig] = useState<SystemConfig | null>(null);
+  const [config, setConfig] = useState<SystemConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -145,7 +171,7 @@ export const AdminSystemConfig = () => {
     }
   };
 
-  if (loading || !config) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-muted-foreground">Carregando configurações...</div>

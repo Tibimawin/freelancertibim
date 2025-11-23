@@ -11,17 +11,19 @@ import XPRanking from "@/components/XPRanking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJobs } from "@/hooks/useFirebase";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { LevelService } from "@/services/levelService";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSettings } from "@/hooks/useSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ServicesPage from "@/pages/Services";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { userData, currentUser, switchUserMode } = useAuth();
-  const { jobs, loading: jobsLoading } = useJobs({ limitCount: 10 });
+  const [jobsLimit, setJobsLimit] = useState(10);
+  const { jobs, loading: jobsLoading } = useJobs({ limitCount: jobsLimit });
   const navigate = useNavigate();
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'micro' | 'services'>('micro');
@@ -30,10 +32,32 @@ const Index = () => {
   const [userLevelIndex, setUserLevelIndex] = useState<0 | 1 | 2>(0);
   const { settings } = useSettings();
   const [showTips, setShowTips] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const tasksTopRef = useRef<HTMLDivElement>(null);
+  const [previousJobsCount, setPreviousJobsCount] = useState(0);
+  const [newlyLoadedJobs, setNewlyLoadedJobs] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   useEffect(() => {
     setShowTips(settings?.showOnboardingTips !== false);
   }, [settings?.showOnboardingTips]);
+
+  // Detectar novas tarefas carregadas e aplicar animação
+  useEffect(() => {
+    if (jobs.length > previousJobsCount && previousJobsCount > 0) {
+      // Identificar as novas tarefas (as que foram adicionadas)
+      const newJobIds = new Set(
+        jobs.slice(previousJobsCount).map(job => job.id)
+      );
+      setNewlyLoadedJobs(newJobIds);
+      
+      // Remover a marcação de "nova" após a animação terminar
+      setTimeout(() => {
+        setNewlyLoadedJobs(new Set());
+      }, 1500);
+    }
+    setPreviousJobsCount(jobs.length);
+  }, [jobs.length]);
 
 
   useEffect(() => {
@@ -57,6 +81,42 @@ const Index = () => {
     const byLevelGate = Number(job.bounty || 0) <= maxAllowed;
     return byDifficulty && byLevelGate;
   });
+
+  const handleLoadMore = () => {
+    const currentJobsCount = jobs.length;
+    setLoadingMore(true);
+    setJobsLimit(prev => prev + 10);
+    
+    // Scroll suave até o topo da lista após um pequeno delay para o conteúdo carregar
+    setTimeout(() => {
+      const newJobsCount = jobs.length - currentJobsCount;
+      
+      if (newJobsCount > 0) {
+        toast({
+          title: "✅ Tarefas carregadas!",
+          description: `${newJobsCount} ${newJobsCount === 1 ? 'nova tarefa foi carregada' : 'novas tarefas foram carregadas'}.`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "📋 Sem mais tarefas",
+          description: "Todas as tarefas disponíveis já foram carregadas.",
+          duration: 3000,
+        });
+      }
+      
+      if (tasksTopRef.current) {
+        tasksTopRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+      setLoadingMore(false);
+    }, 600);
+  };
+
+  const hasMoreJobs = jobs.length >= jobsLimit;
 
   // Se o usuário não estiver logado, mostra apenas a página de apresentação
   if (!currentUser) {
@@ -257,27 +317,43 @@ const Index = () => {
 
 
             {activeSection === 'micro' ? (
-              <div className={
-                viewMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'
-                  : viewMode === 'panels'
-                  ? 'grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6'
-                  : 'space-y-4 lg:space-y-6'
-              }>
+              <>
+                {/* Referência para scroll automático */}
+                <div ref={tasksTopRef} className="scroll-mt-4" />
+                
+                <div className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'
+                    : viewMode === 'panels'
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6'
+                    : 'space-y-4 lg:space-y-6'
+                }>
                 {jobsLoading ? (
                   <div className="flex items-center justify-center py-8 lg:py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
-                    <JobCard 
-                      key={job.id}
-                      {...job}
-                      applicants={job.applicantCount}
-                      postedBy={job.posterName}
-                      posterId={job.posterId}
-                    />
-                  ))
+                  filteredJobs.map((job, index) => {
+                    const isNewlyLoaded = newlyLoadedJobs.has(job.id);
+                    const animationDelay = isNewlyLoaded 
+                      ? `${(index - previousJobsCount + newlyLoadedJobs.size) * 0.1}s` 
+                      : '0s';
+                    
+                    return (
+                      <div
+                        key={job.id}
+                        className={isNewlyLoaded ? 'animate-fade-in animate-scale-in' : ''}
+                        style={{ animationDelay }}
+                      >
+                        <JobCard 
+                          {...job}
+                          applicants={job.applicantCount}
+                          postedBy={job.posterName}
+                          posterId={job.posterId}
+                        />
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
@@ -288,16 +364,30 @@ const Index = () => {
                   </div>
                 )}
               </div>
+              </>
             ) : (
               <div className="mt-4">
                 <ServicesPage hideHeader />
               </div>
             )}
 
-            {activeSection === 'micro' && (
+            {activeSection === 'micro' && filteredJobs.length > 0 && hasMoreJobs && (
               <div className="text-center mt-4 md:mt-6">
-                <Button variant="outline" size="sm" className="border-primary/50 text-primary hover:bg-primary/10">
-                  {t("load_more_tasks")}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-primary/50 text-primary hover:bg-primary/10"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore || jobsLoading}
+                >
+                  {loadingMore || jobsLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {t("loading")}
+                    </>
+                  ) : (
+                    t("load_more_tasks")
+                  )}
                 </Button>
               </div>
             )}

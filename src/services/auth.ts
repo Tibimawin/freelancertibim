@@ -90,7 +90,7 @@ export class AuthService {
           userId: firebaseUser.uid,
           type: 'welcome_bonus_info',
           title: 'Bem-vindo! Bônus de 500 Kz',
-          message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
+          message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de contratante para criar anúncios.',
           read: false,
         });
       } catch (e) {
@@ -205,7 +205,7 @@ export class AuthService {
           rating: 0,
           ratingCount: 0,
           testerWallet: { availableBalance: 0, pendingBalance: 0, totalEarnings: 0 },
-          posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0 },
+          posterWallet: { balance: 0, pendingBalance: 0, totalDeposits: 0, bonusBalance: 0 },
           completedTests: 0,
           approvalRate: 0,
           createdAt: issuedAt,
@@ -324,7 +324,7 @@ export class AuthService {
               userId: firebaseUser.uid,
               type: 'first_login_bonus_info',
               title: 'Bem-vindo! Bônus de 500 Kz',
-              message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de freelancer.',
+              message: 'Confirme seu e-mail para receber 500 Kz de bônus na sua carteira de contratante para criar anúncios.',
               read: false,
             });
           }
@@ -354,10 +354,10 @@ export class AuthService {
       const snap = await getDoc(userRef);
       const data = snap.exists() ? (snap.data() as any) : null;
       const alreadyGranted = !!data?.welcomeBonusGrantedAt;
-      const currentTesterAvail = data?.testerWallet?.availableBalance ?? 0;
+      const currentBonusBalance = data?.posterWallet?.bonusBalance ?? 0;
       if (alreadyGranted) return;
       await updateDoc(userRef, {
-        'testerWallet.availableBalance': currentTesterAvail + 500,
+        'posterWallet.bonusBalance': currentBonusBalance + 500,
         welcomeBonusGrantedAt: Timestamp.now(),
         updatedAt: new Date(),
       });
@@ -365,19 +365,19 @@ export class AuthService {
         await NotificationService.createNotification({
           userId: user.uid,
           type: 'welcome_bonus_granted',
-          title: 'Bônus creditado',
-          message: '500 Kz foram creditados na sua carteira de freelancer após confirmar seu e-mail.',
+          title: 'Bônus de Contratante Creditado',
+          message: '500 Kz foram creditados na sua carteira de contratante. Use para criar anúncios!',
           read: false,
         });
       } catch {}
       try {
         await addDoc(collection(db, 'transactions'), {
           userId: user.uid,
-          type: 'deposit',
+          type: 'bonus_deposit',
           amount: 500,
           currency: 'KZ',
           status: 'completed',
-          description: 'Bônus de boas-vindas (e-mail verificado)',
+          description: 'Bônus de boas-vindas (não-sacável, apenas para criar anúncios)',
           provider: 'system',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),

@@ -201,7 +201,7 @@ export interface ProofSubmission {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'admin_deposit' | 'escrow' | 'payout' | 'fee' | 'refund' | 'referral_reward';
+  type: 'deposit' | 'admin_deposit' | 'escrow' | 'payout' | 'fee' | 'refund' | 'referral_reward' | 'bonus_deposit';
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed';

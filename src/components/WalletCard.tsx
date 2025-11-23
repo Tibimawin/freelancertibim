@@ -95,10 +95,11 @@ const WalletCard = () => {
         t.type === 'refund'
       );
     }
-    // Contratante: depósitos, reservas (escrow), taxas e reembolsos
+    // Contratante: depósitos, reservas (escrow), taxas, reembolsos e bônus
     return (
       t.type === 'deposit' ||
       t.type === 'admin_deposit' ||
+      t.type === 'bonus_deposit' ||
       t.type === 'escrow' ||
       t.type === 'fee' ||
       t.type === 'refund'
@@ -254,8 +255,8 @@ const WalletCard = () => {
                         positive = false;
                       }
                     } else {
-                      // Contratante: depósitos entram; escrow e taxas saem; reembolso entra
-                      if (transaction.type === 'deposit' || transaction.type === 'admin_deposit' || transaction.type === 'refund') {
+                      // Contratante: depósitos e bônus entram; escrow e taxas saem; reembolso entra
+                      if (transaction.type === 'deposit' || transaction.type === 'admin_deposit' || transaction.type === 'bonus_deposit' || transaction.type === 'refund') {
                         positive = true;
                       } else {
                         positive = false;

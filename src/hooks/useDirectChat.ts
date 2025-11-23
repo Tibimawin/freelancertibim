@@ -12,38 +12,55 @@ export const useDirectChat = (recipientUserId: string) => {
   const [otherTyping, setOtherTyping] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!currentUser || !recipientUserId) return;
+    
+    let unsubMessages: (() => void) | null = null;
+    let unsubMeta: (() => void) | null = null;
+    let threadIdLocal: string | null = null;
+    
     const setup = async () => {
-      if (!currentUser || !recipientUserId) return;
       setLoading(true);
+      setError(null);
       try {
         const id = await DirectMessageService.getOrCreateThread(currentUser.uid, recipientUserId);
+        threadIdLocal = id;
         setThreadId(id);
-        const unsubscribe = DirectMessageService.subscribeToMessages(id, (msgs) => {
+        
+        unsubMessages = DirectMessageService.subscribeToMessages(id, (msgs) => {
           setMessages(msgs);
           setLoading(false);
           // Mark as read when new messages from other user arrive
           const last = msgs[msgs.length - 1];
           if (last && last.senderId !== currentUser.uid) {
-            DirectMessageService.markThreadRead(id, currentUser.uid).catch(() => {});
+            DirectMessageService.markThreadRead(id, currentUser.uid).catch((err) => {
+              // Silently fail if index is still building
+              console.warn('Não foi possível marcar como lido:', err);
+            });
           }
         });
-        const unsubMeta = DirectMessageService.subscribeToThread(id, ({ typing }) => {
+        
+        unsubMeta = DirectMessageService.subscribeToThread(id, ({ typing }) => {
           const other = typing[recipientUserId];
           setOtherTyping(!!other);
         });
-        return () => unsubscribe();
       } catch (e) {
         console.error('Erro ao iniciar chat direto:', e);
-        setError('Erro ao iniciar conversa');
+        // Don't show error to user if it's just an index building issue
+        const errorMessage = e instanceof Error ? e.message : '';
+        if (!errorMessage.includes('index')) {
+          setError('Erro ao iniciar conversa');
+        }
         setLoading(false);
       }
     };
-    const cleanup = setup();
+    
+    setup();
+    
     return () => {
-      if (typeof cleanup === 'function') cleanup();
-      // clear typing when unmount
-      if (threadId && currentUser) {
-        DirectMessageService.setTyping(threadId, currentUser.uid, false).catch(() => {});
+      if (unsubMessages) unsubMessages();
+      if (unsubMeta) unsubMeta();
+      if (threadIdLocal && currentUser) {
+        DirectMessageService.setTyping(threadIdLocal, currentUser.uid, false).catch(() => {});
       }
     };
   }, [currentUser, recipientUserId]);

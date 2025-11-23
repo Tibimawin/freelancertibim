@@ -109,66 +109,99 @@ const JobCard = ({
 
   return (
     <div 
-      className="card-hover group rounded-xl bg-card p-6 shadow-md cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] border border-border" 
+      className="group relative rounded-2xl bg-card p-6 shadow-lg border-2 border-border hover:border-primary/40 cursor-pointer overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 animate-fade-in" 
       onClick={handleCardClick}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          {getPlatformIcon()}
-          <Badge variant="outline" className={getDifficultyColor()}>
-            {t(difficulty.toLowerCase())}
-          </Badge>
-          <Badge variant="secondary" className="bg-cosmic-blue/20 text-cosmic-blue border-cosmic-blue/30">{platform}</Badge>
+      {/* Gradiente de fundo animado */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      {/* Glow effect no canto */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-secondary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100" />
+      
+      {/* Header com plataforma e recompensa */}
+      <div className="flex items-start justify-between mb-5 gap-4 relative z-10">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="p-2.5 bg-gradient-primary rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+            <div className="text-white">
+              {getPlatformIcon()}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={`${getDifficultyColor()} transition-all duration-300 group-hover:shadow-md border-2 font-semibold`}>
+                {t(difficulty.toLowerCase())}
+              </Badge>
+              <Badge className="bg-gradient-secondary text-white border-0 shadow-sm group-hover:shadow-md transition-all duration-300 font-semibold">
+                {platform}
+              </Badge>
+            </div>
+          </div>
         </div>
+        
         <div className="text-right">
-      <p className="balance-display text-2xl font-bold">{bounty.toFixed(2)} Kz</p>
-          <p className="text-sm text-muted-foreground">{t("applicants_count", { count: applicants })}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="h-5 w-5 text-primary" />
+            <p className="text-3xl font-black bg-gradient-primary bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300 origin-right">
+              {bounty.toFixed(2)}
+            </p>
+          </div>
+          <p className="text-xs font-medium text-muted-foreground">Kz</p>
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-card-foreground mb-2 group-hover:text-electric-purple transition-colors">
-        {title}
-      </h3>
-      
-      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-        {description}
-      </p>
+      {/* Título e descrição */}
+      <div className="mb-5 relative z-10">
+        <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300 line-clamp-1">
+          {title}
+        </h3>
+        
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+          {description}
+        </p>
+      </div>
 
+      {/* Barra de progresso de candidatos */}
       {typeof maxApplicants === 'number' && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-            <span>{t("applicants_count", { count: applicants || 0 })}</span>
-            <span>{t("max_applicants")}: {maxApplicants}</span>
+        <div className="mb-5 relative z-10">
+          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground mb-2">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
+              {applicants || 0} {t("applicants")}
+            </span>
+            <span>{t("max")}: {maxApplicants}</span>
           </div>
-          <Progress value={progressValue} className="h-2" />
+          <Progress value={progressValue} className="h-2.5 bg-muted" />
           {isFull && (
-            <div className="mt-1 text-xs font-medium text-destructive">{t("applications_full")}</div>
+            <div className="mt-2 px-3 py-1.5 bg-destructive/10 border-2 border-destructive/30 rounded-lg">
+              <p className="text-xs font-bold text-destructive text-center">{t("applications_full")}</p>
+            </div>
           )}
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1">
-            <Clock className="h-3 w-3 text-muted-foreground" />
-            <span>{timeEstimate}</span>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <Star className="h-3 w-3 fill-star-glow text-star-glow" />
-            <span>{rating.toFixed(1)}</span>
-          </div>
-
-          {location && (
-            <div className="flex items-center space-x-1">
-              <MapPin className="h-3 w-3 text-muted-foreground" />
-              <span>{location}</span>
-            </div>
-          )}
+      {/* Informações adicionais */}
+      <div className="flex items-center gap-4 mb-5 relative z-10">
+        <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg group-hover:bg-primary/10 transition-all duration-300">
+          <Clock className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">{timeEstimate}</span>
         </div>
+        
+        <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg group-hover:bg-accent/10 transition-all duration-300">
+          <Star className="h-4 w-4 fill-accent text-accent" />
+          <span className="text-sm font-bold text-foreground">{rating.toFixed(1)}</span>
+        </div>
+
+        {location && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg group-hover:bg-secondary/10 transition-all duration-300">
+            <MapPin className="h-4 w-4 text-secondary" />
+            <span className="text-sm font-medium text-foreground">{location}</span>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Rodapé com autor e ações */}
+      <div className="flex items-center justify-between pt-4 border-t-2 border-border relative z-10">
         <div className="text-sm">
           <span className="text-muted-foreground">{t("posted_by")} </span>
           <button
@@ -177,20 +210,20 @@ const JobCard = ({
               e.stopPropagation();
               navigate(`/profile/${posterId}`);
             }}
-            className="font-medium text-primary hover:underline hover:text-primary-hover"
+            className="font-bold text-primary hover:text-primary-hover transition-colors duration-300 hover:underline"
             aria-label={t("posted_by") + ": " + postedBy}
           >
             {postedBy}
           </button>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isFull || status === 'completed' ? (
-            <Badge variant="secondary" className="bg-muted/40 text-muted-foreground border-border">
+            <Badge className="bg-muted/60 text-muted-foreground border-2 border-border font-semibold">
               {t("applications_full")}
             </Badge>
           ) : (
-            <div onClick={storePreview}>
+            <div onClick={storePreview} className="hover:scale-110 transition-transform duration-300">
               <JobApplyButton jobId={id} posterId={posterId} />
             </div>
           )}
@@ -198,9 +231,10 @@ const JobCard = ({
             to={`/job/${id}`}
             state={{ job: preview }}
             onClick={storePreview}
-            className="text-sm text-primary hover:text-primary-hover transition-colors"
+            className="text-sm font-bold text-primary hover:text-primary-hover transition-all duration-300 group-hover:translate-x-1 flex items-center gap-1"
           >
-            {t("view_details")} →
+            {t("view_details")} 
+            <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
           </Link>
         </div>
       </div>

@@ -6,19 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AuthService } from '@/services/auth';
+import { formatKz } from '@/lib/currency';
 
 type Props = {
   listing: ServiceListing;
   variant?: 'grid' | 'list';
-};
-
-const formatPrice = (value: number, currency: string) => {
-  const iso = currency === 'KZ' ? 'AOA' : currency;
-  try {
-    return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: iso }).format(value);
-  } catch {
-    return `${value.toFixed(2)} ${currency}`;
-  }
 };
 
 export const ServiceCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
@@ -46,13 +38,14 @@ export const ServiceCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
 
   if (variant === 'list') {
     return (
-      <Card className="overflow-hidden">
-        <CardContent className="p-4">
+      <Card className="overflow-hidden group card-hover animate-fade-in relative">
+        <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500" />
+        <CardContent className="p-4 relative z-10">
           <div className="flex items-center gap-4">
-            <Link to={`/services/${listing.id}`} className="block">
-              <div className="w-28 h-24 rounded bg-muted/30 overflow-hidden">
+            <Link to={`/services/${listing.id}`} className="block group-hover:scale-105 transition-transform duration-300">
+              <div className="w-28 h-24 rounded bg-muted/30 overflow-hidden shadow-sm group-hover:shadow-md transition-shadow duration-300">
                 {imageSrc ? (
-                  <img src={imageSrc} alt={listing.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  <img src={imageSrc} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Sem imagem</div>
                 )}
@@ -60,11 +53,11 @@ export const ServiceCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
             </Link>
             <div className="flex-1 min-w-0">
               <Link to={`/services/${listing.id}`} className="block">
-                <div className="font-semibold truncate hover:underline">{listing.title}</div>
+                <div className="font-semibold truncate hover:underline group-hover:text-primary transition-colors duration-300">{listing.title}</div>
               </Link>
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Star size={14} className="text-yellow-400" />
+                <div className="flex items-center gap-1 group-hover:text-warning transition-colors duration-300">
+                  <Star size={14} className="text-warning group-hover:scale-110 transition-transform duration-300" />
                   <span>{(listing.rating ?? 0).toFixed(1)}</span>
                   <span>({listing.ratingCount ?? 0})</span>
                 </div>
@@ -84,8 +77,8 @@ export const ServiceCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
               </div>
             </div>
             <div className="text-right">
-              <div className="font-semibold text-foreground">{formatPrice(listing.price, listing.currency)}</div>
-              <Link to={`/services/${listing.id}`} className="text-sm font-medium hover:underline">Ver detalhes</Link>
+              <div className="font-semibold text-foreground balance-display group-hover:scale-110 transition-transform duration-300 origin-right">{formatKz(listing.price)}</div>
+              <Link to={`/services/${listing.id}`} className="text-sm font-medium text-primary hover:underline transition-all duration-300 group-hover:translate-x-1 inline-block">Ver detalhes →</Link>
             </div>
           </div>
         </CardContent>
@@ -94,43 +87,45 @@ export const ServiceCard: React.FC<Props> = ({ listing, variant = 'grid' }) => {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        <Link to={`/services/${listing.id}`} className="block">
+    <Card className="overflow-hidden group card-hover animate-fade-in relative">
+      <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500" />
+      <CardContent className="p-0 relative z-10">
+        <Link to={`/services/${listing.id}`} className="block overflow-hidden">
           <div className="relative w-full h-56 bg-muted/30 overflow-hidden">
             {imageSrc ? (
-              <img src={imageSrc} alt={listing.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+              <img src={imageSrc} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem imagem</div>
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
         </Link>
         <div className="p-4 space-y-2">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap animate-scale-in">
             {(listing.tags || []).slice(0, 3).map((t) => (
-              <Badge key={t} variant="secondary">{t}</Badge>
+              <Badge key={t} variant="secondary" className="transition-all duration-300 group-hover:bg-primary/20 group-hover:text-primary">{t}</Badge>
             ))}
           </div>
           <Link to={`/services/${listing.id}`} className="block">
-            <div className="font-semibold truncate hover:underline">{listing.title}</div>
+            <div className="font-semibold truncate hover:underline group-hover:text-primary transition-colors duration-300">{listing.title}</div>
           </Link>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Star size={14} className="text-yellow-400" />
+            <div className="flex items-center gap-1 group-hover:text-warning transition-colors duration-300">
+              <Star size={14} className="text-warning group-hover:scale-110 transition-transform duration-300" />
               <span>{(listing.rating ?? 0).toFixed(1)}</span>
               <span>({listing.ratingCount ?? 0} avaliações)</span>
             </div>
-            <div className="font-semibold text-foreground">{formatPrice(listing.price, listing.currency)}</div>
+            <div className="font-semibold text-foreground balance-display group-hover:scale-110 transition-transform duration-300 origin-right">{formatKz(listing.price)}</div>
           </div>
           <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Avatar className="h-6 w-6">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+              <Avatar className="h-6 w-6 group-hover:scale-110 transition-transform duration-300">
                 <AvatarImage src={sellerAvatarUrl || undefined} />
                 <AvatarFallback>{(listing.sellerName || '?').charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="truncate">{listing.sellerName}</span>
             </div>
-            <Link to={`/services/${listing.id}`} className="text-sm font-medium hover:underline">Ver detalhes</Link>
+            <Link to={`/services/${listing.id}`} className="text-sm font-medium text-primary hover:underline transition-all duration-300 group-hover:translate-x-1 inline-block">Ver detalhes →</Link>
           </div>
         </div>
       </CardContent>

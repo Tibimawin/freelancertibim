@@ -158,4 +158,4 @@ export interface AdminUserView extends User {
   riskScore: number; // 0-100, calculado baseado em atividades
 }
 
-export { Report }; // Export Report type for use in admin hooks
+export type { Report }; // Export Report type for use in admin hooks

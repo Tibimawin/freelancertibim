@@ -1,83 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { JobService, TransactionService } from '@/services/firebase';
 import { Job, Transaction } from '@/types/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useJobs = (filters?: { platform?: string; limitCount?: number }) => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: jobs = [], isLoading: loading, error, refetch } = useQuery<Job[]>({
+    queryKey: ['jobs', filters?.platform, filters?.limitCount],
+    queryFn: () => JobService.getJobs(filters),
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+  });
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const fetchedJobs = await JobService.getJobs(filters);
-        setJobs(fetchedJobs);
-        setError(null);
-      } catch (err) {
-        setError('Erro ao carregar jobs');
-        console.error('Error fetching jobs:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, [filters?.platform, filters?.limitCount]);
-
-  return { jobs, loading, error, refetch: () => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const fetchedJobs = await JobService.getJobs(filters);
-        setJobs(fetchedJobs);
-        setError(null);
-      } catch (err) {
-        setError('Erro ao carregar jobs');
-        console.error('Error fetching jobs:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
-  }};
+  return { 
+    jobs, 
+    loading, 
+    error: error ? 'Erro ao carregar jobs' : null, 
+    refetch 
+  };
 };
 
 export const useTransactions = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { currentUser } = useAuth();
 
-  const fetchTransactions = async () => {
-    if (!currentUser) {
-      setTransactions([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const fetchedTransactions = await TransactionService.getUserTransactions(currentUser.uid);
-      setTransactions(fetchedTransactions);
-      setError(null);
-    } catch (err) {
-      setError('Erro ao carregar transações');
-      console.error('Error fetching transactions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
-  }, [currentUser]);
+  const { data: transactions = [], isLoading: loading, error, refetch } = useQuery<Transaction[]>({
+    queryKey: ['transactions', currentUser?.uid],
+    queryFn: () => {
+      if (!currentUser) return [];
+      return TransactionService.getUserTransactions(currentUser.uid);
+    },
+    enabled: !!currentUser,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 5, // 5 minutos
+  });
 
   return { 
     transactions, 
     loading, 
-    error,
-    refetch: fetchTransactions
+    error: error ? 'Erro ao carregar transações' : null,
+    refetch
   };
 };

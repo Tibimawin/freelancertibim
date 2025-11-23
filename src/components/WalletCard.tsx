@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote, CreditCard, DollarSign, Lock } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus, ArrowUpRight, Loader2, Banknote, CreditCard, DollarSign } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTransactions } from "@/hooks/useFirebase";
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Transaction } from "@/types/firebase";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 const WalletCard = () => {
   const { userData } = useAuth();
   const { transactions, loading, refetch } = useTransactions();
+  const { minWithdrawal } = useSystemConfig();
   const [depositModal, setDepositModal] = useState<{ open: boolean; method?: 'express' | 'iban' }>({ open: false });
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -38,9 +40,6 @@ const WalletCard = () => {
     ? (userData.testerWallet?.availableBalance || 0)
     : (userData.posterWallet?.balance || 0);
   const bonusBalance = userData.posterWallet?.bonusBalance || 0;
-    
-  const isVerified = userData.verificationStatus === 'approved';
-  const minWithdrawal = 2000;
 
   const formatDate = (date: any) => {
     if (date?.toDate) {
@@ -126,15 +125,6 @@ const WalletCard = () => {
   };
 
   const handleWithdrawalClick = () => {
-    if (!isVerified) {
-      toast({
-        title: t("verification_required"),
-        description: t("verification_required_withdrawal_description"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (currentBalance < minWithdrawal) {
       toast({
         title: t("minimum_withdrawal_not_reached"),
@@ -144,7 +134,6 @@ const WalletCard = () => {
       return;
     }
     
-    // Se verificado e com saldo suficiente, abrir modal de saque
     setWithdrawalModalOpen(true);
   };
 
@@ -195,21 +184,12 @@ const WalletCard = () => {
         {userData.currentMode === 'tester' ? (
           <Button 
             variant="outline" 
-            className={`w-full ${isVerified && currentBalance >= minWithdrawal ? 'border-primary/50 text-primary hover:bg-primary/10' : 'border-destructive/50 text-destructive opacity-70 cursor-not-allowed'}`}
-            disabled={!isVerified || currentBalance < minWithdrawal}
+            className={`w-full ${currentBalance >= minWithdrawal ? 'border-primary/50 text-primary hover:bg-primary/10' : 'border-destructive/50 text-destructive opacity-70 cursor-not-allowed'}`}
+            disabled={currentBalance < minWithdrawal}
             onClick={handleWithdrawalClick}
           >
-            {!isVerified ? (
-              <>
-                <Lock className="h-4 w-4 mr-2" />
-                {t("verification_required_short")}
-              </>
-            ) : (
-              <>
-                <TrendingDown className="h-4 w-4 mr-2" />
-                {currentBalance < minWithdrawal ? t("minimum_withdrawal_not_reached") : t("withdraw")}
-              </>
-            )}
+            <TrendingDown className="h-4 w-4 mr-2" />
+            {currentBalance < minWithdrawal ? t("minimum_withdrawal_not_reached") : t("withdraw")}
           </Button>
         ) : (
           <div className="space-y-3">

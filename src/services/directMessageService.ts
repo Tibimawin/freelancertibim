@@ -117,7 +117,8 @@ export class DirectMessageService {
 
   /** Mark all unread messages for user in this thread as read */
   static async markThreadRead(threadId: string, userId: string) {
-    const q = query(this.messagesCollection(threadId), where('recipientId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
+    // Simplified query without orderBy to avoid composite index requirement
+    const q = query(this.messagesCollection(threadId), where('recipientId', '==', userId), limit(50));
     const snap = await getDocs(q);
     const updates: Promise<void>[] = [];
     snap.forEach((d) => {
@@ -137,5 +138,43 @@ export class DirectMessageService {
       return settings.allowDirectMessages;
     }
     return true;
+  }
+
+  /** Add or update a reaction on a message */
+  static async addReaction(threadId: string, messageId: string, userId: string, emoji: string) {
+    const messageRef = doc(this.messagesCollection(threadId), messageId);
+    await updateDoc(messageRef, {
+      [`reactions.${userId}`]: emoji,
+    } as any);
+  }
+
+  /** Remove a reaction from a message */
+  static async removeReaction(threadId: string, messageId: string, userId: string) {
+    const messageRef = doc(this.messagesCollection(threadId), messageId);
+    const messageSnap = await getDoc(messageRef);
+    if (messageSnap.exists()) {
+      const data = messageSnap.data();
+      const reactions = { ...(data.reactions || {}) };
+      delete reactions[userId];
+      await updateDoc(messageRef, { reactions } as any);
+    }
+  }
+
+  /** Pin or unpin a message */
+  static async togglePinMessage(threadId: string, messageId: string, userId: string, pin: boolean) {
+    const messageRef = doc(this.messagesCollection(threadId), messageId);
+    if (pin) {
+      await updateDoc(messageRef, {
+        pinned: true,
+        pinnedBy: userId,
+        pinnedAt: Timestamp.now(),
+      } as any);
+    } else {
+      await updateDoc(messageRef, {
+        pinned: false,
+        pinnedBy: null,
+        pinnedAt: null,
+      } as any);
+    }
   }
 }

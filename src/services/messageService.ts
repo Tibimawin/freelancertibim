@@ -81,24 +81,6 @@ export class MessageService {
     return { recipientId, job, application };
   }
 
-  static subscribeToMessages(applicationId: string, callback: (messages: Message[]) => void) {
-    const q = query(this.messagesCollection(applicationId), orderBy('createdAt', 'asc'));
-    return onSnapshot(q, (snapshot) => {
-      const messages: Message[] = snapshot.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          applicationId,
-          senderId: data.senderId,
-          senderName: data.senderName,
-          recipientId: data.recipientId,
-          text: data.text,
-          createdAt: data.createdAt?.toDate() || new Date(),
-        } as Message;
-      });
-      callback(messages);
-    });
-  }
 
   private static async checkUserAllowsDM(userId: string): Promise<boolean> {
     const userRef = doc(db, 'users', userId);

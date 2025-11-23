@@ -25,6 +25,7 @@ import { useTransactions } from '@/hooks/useFirebase';
 import { useUserJobsAndApplications } from '@/hooks/useUserJobsAndApplications';
 import { useToast } from '@/hooks/use-toast';
 import FreelancerLevel from '@/components/FreelancerLevel';
+import { TaskTutorial } from '@/components/TaskTutorial';
 import { reload } from 'firebase/auth';
 
 const Dashboard = () => {
@@ -324,7 +325,7 @@ const Dashboard = () => {
                       onClick={() => navigate('/manage-applications')}
                       className="w-full bg-gradient-primary text-primary-foreground"
                     >
-                      Gerenciar Aplicações
+                      Gerir Anúncios
                     </Button>
                   </div>
                 </CardContent>
@@ -416,6 +417,9 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Tutorial Interativo */}
+      <TaskTutorial />
     </div>
   );
 };

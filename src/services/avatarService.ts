@@ -16,7 +16,7 @@ export const AvatarService = {
       const val = snap.val();
       if (!val) return FALLBACK_AVATARS;
       if (Array.isArray(val)) return val.filter(Boolean);
-      if (typeof val === 'object') return Object.values(val).filter(Boolean);
+      if (typeof val === 'object') return (Object.values(val) as string[]).filter(Boolean);
       return FALLBACK_AVATARS;
     } catch (e) {
       console.warn('Falha ao carregar avatares padrão do RTDB, usando fallback', e);

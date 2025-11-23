@@ -59,7 +59,7 @@ const AdminReports = () => {
       setProcessing(true);
       await reviewReport(
         actionDialog.report.id, 
-        actionDialog.type, 
+        actionDialog.type === 'approve' ? 'approved' : 'rejected', 
         currentUser.uid, 
         adminData.name,
         adminNotes,

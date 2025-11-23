@@ -53,7 +53,7 @@ const FAQ = () => {
               <AccordionItem value="item-posters-approve">
                 <AccordionTrigger>Contratantes (Posters) — Como aprovo ou rejeito provas?</AccordionTrigger>
                 <AccordionContent>
-                  Acesse "Gerenciar Aplicações", avalie as submissões e aprove ou recuse com feedback claro para o tester.
+                  Acesse "Gerir Anúncios", avalie as submissões e aprove ou recuse com feedback claro para o tester.
                 </AccordionContent>
               </AccordionItem>
 

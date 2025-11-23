@@ -39,7 +39,7 @@ const LandingContent = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 interactive-scale">
+          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 card-hover animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <CardHeader>
               <div className="w-16 h-16 bg-electric-purple/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-electric-purple/20">
                 <Users className="h-8 w-8 text-electric-purple" />
@@ -53,7 +53,7 @@ const LandingContent = () => {
             </CardContent>
           </Card>
 
-          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 interactive-scale">
+          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 card-hover animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <CardHeader>
               <div className="w-16 h-16 bg-cosmic-blue/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-cosmic-blue/20">
                 <Smartphone className="h-8 w-8 text-cosmic-blue" />
@@ -67,7 +67,7 @@ const LandingContent = () => {
             </CardContent>
           </Card>
 
-          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 interactive-scale">
+          <Card className="text-center border border-border bg-card p-6 shadow-lg hover:shadow-xl transition-all duration-300 card-hover animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <CardHeader>
               <div className="w-16 h-16 bg-star-glow/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-star-glow/20">
                 <DollarSign className="h-8 w-8 text-star-glow" />
@@ -128,7 +128,7 @@ const LandingContent = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+              <Card className="bg-card border border-border p-6 shadow-md card-hover animate-scale-in" style={{ animationDelay: '0.1s' }}>
                 <CardHeader className="pb-3">
                   <Clock className="h-8 w-8 text-cosmic-blue mb-2" />
                   <CardTitle className="text-lg text-foreground">{t("flexible")}</CardTitle>
@@ -140,7 +140,7 @@ const LandingContent = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+              <Card className="bg-card border border-border p-6 shadow-md card-hover animate-scale-in" style={{ animationDelay: '0.2s' }}>
                 <CardHeader className="pb-3">
                   <Shield className="h-8 w-8 text-electric-purple mb-2" />
                   <CardTitle className="text-lg text-foreground">{t("secure")}</CardTitle>
@@ -152,7 +152,7 @@ const LandingContent = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+              <Card className="bg-card border border-border p-6 shadow-md card-hover animate-scale-in" style={{ animationDelay: '0.3s' }}>
                 <CardHeader className="pb-3">
                   <Zap className="h-8 w-8 text-star-glow mb-2" />
                   <CardTitle className="text-lg text-foreground">{t("fast")}</CardTitle>
@@ -164,7 +164,7 @@ const LandingContent = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+              <Card className="bg-card border border-border p-6 shadow-md card-hover animate-scale-in" style={{ animationDelay: '0.4s' }}>
                 <CardHeader className="pb-3">
                   <Target className="h-8 w-8 text-success mb-2" />
                   <CardTitle className="text-lg text-foreground">{t("focused")}</CardTitle>
@@ -283,7 +283,7 @@ const LandingContent = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+            <Card className="bg-card border border-border p-6 shadow-md card-hover animate-slide-in-from-bottom" style={{ animationDelay: '0.1s' }}>
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-electric-purple/10 rounded-full flex items-center justify-center border border-electric-purple/20">
@@ -307,7 +307,7 @@ const LandingContent = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+            <Card className="bg-card border border-border p-6 shadow-md card-hover animate-slide-in-from-bottom" style={{ animationDelay: '0.2s' }}>
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-cosmic-blue/10 rounded-full flex items-center justify-center border border-cosmic-blue/20">
@@ -331,7 +331,7 @@ const LandingContent = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border border-border p-6 shadow-md interactive-scale">
+            <Card className="bg-card border border-border p-6 shadow-md card-hover animate-slide-in-from-bottom" style={{ animationDelay: '0.3s' }}>
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-electric-purple/10 rounded-full flex items-center justify-center border border-electric-purple/20">

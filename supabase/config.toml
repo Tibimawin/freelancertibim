@@ -1,0 +1,13 @@
+# Supabase configuration file
+
+[functions.send-proof-status-email]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-inactive-user-email]
+verify_jwt = false
+
+[functions.send-new-task-email]
+verify_jwt = false

@@ -60,7 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             approvalRate: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
-            referralCode: '', // Default fallback
+            referralCode: '',
+            verificationStatus: 'incomplete',
           });
         }
       } else {

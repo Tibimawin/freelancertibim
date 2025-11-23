@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useIsFetching } from "@tanstack/react
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
@@ -13,6 +14,8 @@ import CreateJob from "./pages/CreateJob";
 import JobDetails from "./pages/JobDetails";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSetup from "./pages/AdminSetup";
+import AdminMigration from "./pages/AdminMigration";
+import FreelancerStats from "./pages/FreelancerStats";
 import TaskHistory from "./pages/TaskHistory";
 import ManageApplications from "./pages/ManageApplications";
 import Referral from "./pages/Referral";
@@ -20,6 +23,10 @@ import NotFound from "./pages/NotFound";
 import MarketPage from "./pages/Market";
 import MarketDetailsPage from "./pages/MarketDetails";
 import MarketOrdersPage from "./pages/MarketOrders";
+import SellerProfile from "./pages/SellerProfile";
+import MessagesPage from "./pages/Messages";
+import Wallet from "./pages/Wallet";
+import DepositNegotiation from "./pages/DepositNegotiation";
 import DownloadPage from "./pages/Download";
 import ServicesPage from "./pages/Services";
 import ServiceDetailsPage from "./pages/ServiceDetails";
@@ -29,6 +36,9 @@ import AdminServiceOrdersPage from "./pages/AdminServiceOrders";
 import AdminServiceDisputesPage from "./pages/AdminServiceDisputes";
 import CreateServicePage from "./pages/CreateService";
 import EditServicePage from "./pages/EditService";
+import CommunityPage from "./pages/Community";
+import ForumPage from "./pages/Forum";
+import ForumTopicPage from "./pages/ForumTopic";
 import SupportLauncher from "@/components/SupportLauncher";
 import TransactionsPage from "./pages/Transactions";
 import AppLayout from "@/components/AppLayout";
@@ -41,7 +51,16 @@ import LoginPage from "./pages/Login";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
+      gcTime: 1000 * 60 * 10, // 10 minutos - tempo no cache
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; message?: string }> {
   constructor(props: { children: React.ReactNode }) {
@@ -93,6 +112,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <SupportLauncher />
+        <NotificationPermissionPrompt />
         <BrowserRouter
           future={{
             v7_startTransition: true,
@@ -112,6 +132,8 @@ const App = () => (
                   <Route path="/sobre-nos" element={<SobreNos />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/profile/:uid" element={<Profile />} />
+                  <Route path="/stats" element={<FreelancerStats />} />
+                  <Route path="/stats/:uid" element={<FreelancerStats />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/create-job" element={<CreateJob />} />
                   <Route path="/job/:id" element={<JobDetails />} />
@@ -120,9 +142,13 @@ const App = () => (
                   <Route path="/admin-setup" element={<AdminSetup />} />
                   <Route path="/referral" element={<Referral />} />
                   <Route path="/transactions" element={<TransactionsPage />} />
+                  <Route path="/carteira" element={<Wallet />} />
+                  <Route path="/deposit-negotiation" element={<DepositNegotiation />} />
                   <Route path="/market" element={<MarketPage />} />
                   <Route path="/market/:id" element={<MarketDetailsPage />} />
                   <Route path="/market/compras" element={<MarketOrdersPage />} />
+                  <Route path="/seller/:sellerId" element={<SellerProfile />} />
+                  <Route path="/messages" element={<MessagesPage />} />
                   {/* Serviços - seção independente do Mercado */}
                   <Route path="/services" element={<ServicesPage />} />
                   <Route path="/services/create" element={<CreateServicePage />} />
@@ -131,9 +157,13 @@ const App = () => (
                   <Route path="/services/pedidos" element={<ServiceOrdersPage />} />
                   <Route path="/services/vendas" element={<SellerServiceOrdersPage />} />
                   <Route path="/download/:token" element={<DownloadPage />} />
+                  <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/community/forum" element={<ForumPage />} />
+                  <Route path="/community/forum/:topicId" element={<ForumTopicPage />} />
                 </Route>
 
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/migration" element={<AdminMigration />} />
               <Route path="/admin/services/orders" element={<AdminServiceOrdersPage />} />
               <Route path="/admin/services/disputes" element={<AdminServiceDisputesPage />} />
 

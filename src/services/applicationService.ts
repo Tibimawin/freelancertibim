@@ -17,7 +17,10 @@ import {
 import { db } from '@/lib/firebase';
 import { Application, ProofSubmission, Job } from '@/types/firebase';
 import { NotificationService } from './notificationService';
-import { TransactionService, JobService } from './firebase'; // Import JobService
+import { TransactionService, JobService } from './firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { LevelService } from './levelService';
+import { cleanFirebaseData } from '@/lib/firebaseUtils';
 
 export class ApplicationService {
   private static normalizeApplicationData(data: any, id: string): Application {
@@ -106,6 +109,31 @@ export class ApplicationService {
         },
         updatedAt: Timestamp.now(),
       } as any);
+
+      // ⭐ DAR XP PELA AVALIAÇÃO
+      const xpGained = rating >= 4 ? 50 : 30; // Mais XP para avaliações positivas
+      try {
+        const result = await LevelService.addXP(
+          appData.testerId, 
+          xpGained, 
+          `Avaliação de tarefa (${rating}⭐)`
+        );
+        
+        // Se subiu de nível, pode enviar notificação
+        if (result.leveledUp) {
+          const levelName = LevelService.getLevelName(result.level);
+          await NotificationService.createNotification({
+            userId: appData.testerId,
+            title: '🎉 Subiu de Nível!',
+            message: `Parabéns! Você alcançou o nível ${result.level} (${levelName})!`,
+            type: 'level_up',
+            read: false
+          });
+        }
+      } catch (xpError) {
+        console.error('Error adding XP for feedback:', xpError);
+        // Não falhar a operação se o XP der erro
+      }
 
       // Atualizar agregação de rating no Job
       const jobRef = doc(db, 'jobs', appData.jobId);
@@ -219,10 +247,13 @@ export class ApplicationService {
       // Permitir envio se status for 'applied', 'accepted' ou 'rejected'
       // Registrar envio e criar hold pendente na carteira do freelancer (e reserva no contratante)
       const job = await JobService.getJobById(appData.jobId);
-
+      
+      // Limpar provas antes de salvar (remove undefined/null)
+      const cleanedProofs = proofs.map(p => cleanFirebaseData(p));
+      
       // Atualiza o documento da aplicação com provas e marca como 'submitted'
       await updateDoc(appRef, {
-        'proofSubmission.proofs': proofs,
+        'proofSubmission.proofs': cleanedProofs,
         'proofSubmission.submittedAt': Timestamp.now(),
         status: 'submitted',
       });
@@ -283,6 +314,25 @@ export class ApplicationService {
             applicationId: applicationId,
           },
         });
+
+        // Enviar email de submissão para o contratante
+        try {
+          const posterDoc = await getDoc(posterRef);
+          if (posterDoc.exists()) {
+            const posterData = posterDoc.data();
+            const functions = getFunctions();
+            const sendEmail = httpsCallable(functions, 'sendProofSubmittedEmail');
+            await sendEmail({
+              posterEmail: posterData.email,
+              posterName: posterData.name || posterData.displayName,
+              workerName: appData.testerName,
+              jobTitle: job.title,
+              proofUrl: proofs.length > 0 ? '' : '',
+            });
+          }
+        } catch (emailError) {
+          console.error('Erro ao enviar email de submissão:', emailError);
+        }
 
         if (
           (job.youtube && job.youtube.actionType === 'watch') ||
@@ -465,6 +515,25 @@ export class ApplicationService {
             applicationId: applicationId,
           },
         });
+
+        // Enviar email de aprovação
+        try {
+          const testerDoc = await getDoc(doc(db, 'users', appData.testerId));
+          if (testerDoc.exists()) {
+            const testerData = testerDoc.data();
+            const functions = getFunctions();
+            const sendEmail = httpsCallable(functions, 'sendProofApprovedEmail');
+            await sendEmail({
+              userEmail: testerData.email,
+              userName: appData.testerName,
+              jobTitle: jobTitle,
+              amount: job.bounty,
+            });
+          }
+        } catch (emailError) {
+          console.error('Erro ao enviar email de aprovação:', emailError);
+          // Não falhar a operação se o email falhar
+        }
       } else {
         // Em caso de rejeição, liberar saldo pendente do freelancer e reserva do contratante
         if (job) {
@@ -495,6 +564,28 @@ export class ApplicationService {
             }
           });
         }
+        
+        // ⚠️ ALERTA CRÍTICO: Notificar admin sobre rejeição de tarefa de e-mail
+        if (job?.emailCreation) {
+          await NotificationService.createNotification({
+            userId: 'ADMIN', // Enviado para todos os admins
+            type: 'email_task_rejection',
+            title: '🚨 Rejeição de Tarefa de E-mail',
+            message: `Contratante ${reviewerId} rejeitou tarefa de criação de e-mail: "${jobTitle}". Motivo: ${rejectionReason || 'Não especificado'}`,
+            read: false,
+            metadata: {
+              jobId: appData.jobId,
+              applicationId: applicationId,
+              contractorId: reviewerId,
+              freelancerId: appData.testerId,
+              freelancerName: appData.testerName,
+              rejectionReason: rejectionReason || 'Não especificado',
+              bounty: job.bounty,
+              provider: job.emailCreation.provider,
+              severity: 'critical'
+            },
+          });
+        }
 
         // Criar notificação de rejeição para o freelancer
         await NotificationService.createNotification({
@@ -508,6 +599,25 @@ export class ApplicationService {
             applicationId: applicationId,
           },
         });
+
+        // Enviar email de rejeição
+        try {
+          const testerDoc = await getDoc(doc(db, 'users', appData.testerId));
+          if (testerDoc.exists()) {
+            const testerData = testerDoc.data();
+            const functions = getFunctions();
+            const sendEmail = httpsCallable(functions, 'sendProofRejectedEmail');
+            await sendEmail({
+              userEmail: testerData.email,
+              userName: appData.testerName,
+              jobTitle: jobTitle,
+              rejectionReason: rejectionReason || 'Não especificado',
+            });
+          }
+        } catch (emailError) {
+          console.error('Erro ao enviar email de rejeição:', emailError);
+          // Não falhar a operação se o email falhar
+        }
       }
       
       // Commit do batch principal (apenas a atualização do status da aplicação)
@@ -614,6 +724,103 @@ export class ApplicationService {
 
     } catch (error) {
       console.error('Error accepting application:', error);
+      throw error;
+    }
+  }
+
+  // Buscar todas as aplicações (para admin)
+  static async getAllApplications(options?: { limit?: number }): Promise<Application[]> {
+    try {
+      const q = query(
+        collection(db, 'applications'),
+        orderBy('appliedAt', 'desc'),
+        limit(options?.limit || 100)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const applications: Application[] = [];
+      querySnapshot.forEach((d) => {
+        applications.push(ApplicationService.normalizeApplicationData(d.data(), d.id));
+      });
+
+      return applications;
+    } catch (error) {
+      console.error('Error getting all applications:', error);
+      throw error;
+    }
+  }
+
+  // Aprovação manual por admin (bypass de rejeição)
+  static async adminManualApproval(
+    applicationId: string,
+    adminId: string,
+    adminName: string,
+    reason: string
+  ): Promise<void> {
+    try {
+      const appRef = doc(db, 'applications', applicationId);
+      const appDoc = await getDoc(appRef);
+      
+      if (!appDoc.exists()) {
+        throw new Error('Application not found');
+      }
+
+      const appData = appDoc.data() as Application;
+      const job = await JobService.getJobById(appData.jobId);
+      
+      if (!job) {
+        throw new Error('Job not found');
+      }
+
+      // Criar log de intervenção admin
+      const { AdminInterventionService } = await import('./adminInterventionService');
+      await AdminInterventionService.createIntervention({
+        applicationId,
+        jobId: appData.jobId,
+        adminId,
+        adminName,
+        action: 'manual_approval',
+        reason,
+        originalReviewerId: job.posterId,
+        originalRejectionReason: appData.rejectionReason,
+        metadata: {
+          freelancerId: appData.testerId,
+          freelancerName: appData.testerName,
+          bountyAmount: job.bounty,
+        },
+      });
+
+      // Aprovar a aplicação normalmente
+      await this.reviewApplication(applicationId, 'approved', adminId);
+
+      // Notificar freelancer
+      await NotificationService.createNotification({
+        userId: appData.testerId,
+        type: 'task_approved',
+        title: '🎉 Intervenção Administrativa',
+        message: `Um administrador revisou sua tarefa "${job.title}" e aprovou o pagamento de ${job.bounty.toFixed(2)} Kz!`,
+        read: false,
+        metadata: {
+          jobId: appData.jobId,
+          applicationId,
+        },
+      });
+
+      // Notificar contratante
+      await NotificationService.createNotification({
+        userId: job.posterId,
+        type: 'task_approved',
+        title: '⚠️ Intervenção Administrativa',
+        message: `Sua rejeição da tarefa "${job.title}" foi revisada. Decisão final: Aprovada. O pagamento foi liberado ao freelancer.`,
+        read: false,
+        metadata: {
+          jobId: appData.jobId,
+          applicationId,
+        },
+      });
+
+    } catch (error) {
+      console.error('Error in admin manual approval:', error);
       throw error;
     }
   }

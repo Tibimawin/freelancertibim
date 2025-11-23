@@ -12,14 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  Star, 
-  TrendingUp, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Star,
+  TrendingUp,
   DollarSign,
   Settings,
   Edit,
@@ -40,7 +40,7 @@ import {
 import ModeToggle from "@/components/ModeToggle";
 import SocialMediaManager from "@/components/SocialMediaManager";
 import SettingsManager from "@/components/SettingsManager";
-import VerificationForm from "@/components/VerificationForm"; // Importando o novo componente
+
 import { useLocation, Link, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import AvatarService from '@/services/avatarService';
@@ -53,6 +53,7 @@ import { Application, Job } from '@/types/firebase';
 import { ApplicationService } from '@/services/applicationService';
 import { JobService } from '@/services/firebase';
 import DirectChatThread from '@/components/DirectChatThread';
+import XPDisplay from '@/components/XPDisplay';
 // Upload de avatar removido: não usamos mais Cloudinary aqui
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -329,7 +330,7 @@ const Profile = () => {
           <Card className="mb-8 bg-card border-border shadow-md">
             <CardHeader>
               {!displayUser ? (
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
+                <div className="flex flex-col space-y-4">
                   <div className="flex items-center space-x-6">
                     <Skeleton className="h-24 w-24 rounded-full" />
                     <div className="space-y-3 w-full max-w-md">
@@ -348,93 +349,125 @@ const Profile = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
-                  <div className="flex items-center space-x-6">
-                    <div className="relative">
-                      <Avatar className="h-24 w-24 border-2 border-primary/50 shadow-lg cursor-pointer" onClick={() => { if (!isViewingOtherUser) setAvatarPickerOpen(true); }}>
-                        <AvatarImage src={displayUser?.avatarUrl || ""} />
-                        <AvatarFallback className="text-2xl bg-gradient-primary text-primary-foreground">
-                          {(displayUser?.name?.charAt(0) || "?").toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {isDefaultAvatar && (
-                        <Badge variant="secondary" className="absolute -bottom-2 left-1 text-[10px] px-1 py-0.5">Padrão</Badge>
+                <div className="flex flex-col space-y-6">
+                  {/* Avatar e informação básica */}
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center space-x-6">
+                      <div className="relative">
+                        <Avatar className="h-24 w-24 border-2 border-primary/50 shadow-lg cursor-pointer" onClick={() => { if (!isViewingOtherUser) setAvatarPickerOpen(true); }}>
+                          <AvatarImage src={displayUser?.avatarUrl || ""} />
+                          <AvatarFallback className="text-2xl bg-gradient-primary text-primary-foreground">
+                            {(displayUser?.name?.charAt(0) || "?").toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {isDefaultAvatar && (
+                          <Badge variant="secondary" className="absolute -bottom-2 left-1 text-[10px] px-1 py-0.5">Padrão</Badge>
+                        )}
+                      </div>
+                      {!isViewingOtherUser && (
+                        <div className="mt-2 space-y-2">
+                          <p className="text-xs text-muted-foreground">Clique na foto para escolher entre 10 imagens padrão do site.</p>
+                        </div>
                       )}
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <h1 className="text-3xl font-bold text-foreground">{displayUser?.name || ''}</h1>
+                          <Badge variant={displayUser?.currentMode === 'tester' ? 'default' : 'secondary'}>
+                            {displayUser?.currentMode === 'tester' ? t("freelancer") : t("contractor")}
+                          </Badge>
+                          {getVerificationBadge(displayUser?.verificationStatus as any)}
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Mail className="h-4 w-4" />
+                            <span>{displayUser?.email || ''}</span>
+                          </div>
+                          
+                          {displayUser?.location && (
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="h-4 w-4" />
+                              <span>{displayUser?.location}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{t("member_since")} {displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('pt-BR') : ''}</span>
+                          </div>
+                        </div>
+                        
+                        {displayUser.bio && (
+                          <p className="text-muted-foreground max-w-md">{displayUser.bio}</p>
+                        )}
+                      </div>
                     </div>
-                    {!isViewingOtherUser && (
-                      <div className="mt-2 space-y-2">
-                        <p className="text-xs text-muted-foreground">Clique na foto para escolher entre 10 imagens padrão do site.</p>
+                    {!isViewingOtherUser ? (
+                      <Button
+                        variant={isEditing ? "destructive" : "outline"}
+                        onClick={isEditing ? handleCancel : () => setIsEditing(true)}
+                        className="flex items-center space-x-2"
+                      >
+                        {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                        <span>{isEditing ? t("cancel") : t("edit_profile")}</span>
+                      </Button>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {eligibleContractorApplication && (
+                          <Button variant="default" onClick={() => setActiveTab('overview')}>
+                            {t('rate_contractor')}
+                          </Button>
+                        )}
+                        {/* Iniciar conversa com o usuário */}
+                        {!isBlocked && (
+                          <Button
+                            variant="default"
+                            onClick={() => setShowDirectChat((v) => !v)}
+                          >
+                            {showDirectChat ? t('close_chat') : t('start_conversation')}
+                          </Button>
+                        )}
+                        <Button variant="outline" onClick={() => setShowReportModal(true)}>
+                          {t('report_contractor')}
+                        </Button>
+                        {isBlocked ? (
+                          <Button variant="destructive" onClick={handleUnblockUser}>Desbloquear</Button>
+                        ) : (
+                          <Button variant="secondary" onClick={handleBlockUser}>Bloquear</Button>
+                        )}
                       </div>
                     )}
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-3">
-                        <h1 className="text-3xl font-bold text-foreground">{displayUser?.name || ''}</h1>
-                        <Badge variant={displayUser?.currentMode === 'tester' ? 'default' : 'secondary'}>
-                          {displayUser?.currentMode === 'tester' ? t("freelancer") : t("contractor")}
-                        </Badge>
-                        {getVerificationBadge(displayUser?.verificationStatus as any)}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-1">
-                          <Mail className="h-4 w-4" />
-                          <span>{displayUser?.email || ''}</span>
-                        </div>
-                        
-                        {displayUser?.location && (
-                          <div className="flex items-center space-x-1">
-                            <MapPin className="h-4 w-4" />
-                            <span>{displayUser?.location}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{t("member_since")} {displayUser?.createdAt ? new Date(displayUser.createdAt).toLocaleDateString('pt-BR') : ''}</span>
-                        </div>
-                      </div>
-                      
-                      {displayUser.bio && (
-                        <p className="text-muted-foreground max-w-md">{displayUser.bio}</p>
-                      )}
-                    </div>
                   </div>
-                  {!isViewingOtherUser ? (
-                    <Button
-                      variant={isEditing ? "destructive" : "outline"}
-                      onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-                      className="flex items-center space-x-2 mt-4 md:mt-0"
-                    >
-                      {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                      <span>{isEditing ? t("cancel") : t("edit_profile")}</span>
-                    </Button>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
-                      {eligibleContractorApplication && (
-                        <Button variant="default" onClick={() => setActiveTab('overview')}>
-                          {t('rate_contractor')}
-                        </Button>
-                      )}
-                      {/* Iniciar conversa com o usuário */}
-                      {!isBlocked && (
-                        <Button
-                          variant="default"
-                          onClick={() => setShowDirectChat((v) => !v)}
-                        >
-                          {showDirectChat ? t('close_chat') : t('start_conversation')}
-                        </Button>
-                      )}
-                      <Button variant="outline" onClick={() => setShowReportModal(true)}>
-                        {t('report_contractor')}
-                      </Button>
-                      {isBlocked ? (
-                        <Button variant="destructive" onClick={handleUnblockUser}>Desbloquear</Button>
-                      ) : (
-                        <Button variant="secondary" onClick={handleBlockUser}>Bloquear</Button>
-                      )}
-                    </div>
-                  )}
+                  
+                  {/* Saldo exibido abaixo do perfil */}
+                  <Card className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-background border-primary/30 shadow-lg animate-fade-in">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 animate-pulse" />
+                    <CardContent className="relative pt-8 pb-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-3 rounded-full bg-primary/20 backdrop-blur-sm">
+                            <DollarSign className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground block">{t("current_balance")}</span>
+                            <span className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                              {(
+                                displayUser?.currentMode === 'tester'
+                                  ? (displayUser?.testerWallet?.availableBalance ?? 0)
+                                  : (displayUser?.posterWallet?.balance ?? 0)
+                              ).toFixed(2)} Kz
+                            </span>
+                          </div>
+                        </div>
+                        <div className="hidden sm:flex items-center space-x-2">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <TrendingUp className="h-6 w-6 text-primary animate-pulse" />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </CardHeader>
@@ -494,168 +527,122 @@ const Profile = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Informações Pessoais */}
-                <div className="lg:col-span-2">
-                  <Card className="mb-6 bg-card border-border shadow-md">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-electric-purple" />
-                        <span>{t("personal_information")}</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {isEditing ? (
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="name">{t("full_name")}</Label>
-                            <Input
-                              id="name"
-                              value={formData.name}
-                              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="bio">{t("bio")}</Label>
-                            <Textarea
-                              id="bio"
-                              placeholder={t("tell_about_yourself")}
-                              value={formData.bio}
-                              onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="phone">{t("phone")}</Label>
-                            <Input
-                              id="phone"
-                              placeholder="(11) 99999-9999"
-                              value={formData.phone}
-                              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="location">{t("location")}</Label>
-                            <Input
-                              id="location"
-                              placeholder="São Paulo, SP"
-                              value={formData.location}
-                              onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="skills">{t("skills")}</Label>
-                            <Input
-                              id="skills"
-                              placeholder="React, JavaScript, Mobile Testing..."
-                              value={formData.skills}
-                              onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value }))}
-                            />
-                          </div>
-                          
-                          <Button onClick={handleSave} disabled={isLoading} className="w-full glow-effect">
-                            <Save className="h-4 w-4 mr-2" />
-                            {isLoading ? t("saving") : t("save_changes")}
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          {/* Mobile: Accordion compact view */}
-                          <div className="md:hidden">
-                            <Accordion type="single" collapsible className="w-full">
-                              <AccordionItem value="basic">
-                                <AccordionTrigger>
-                                  <span className="text-sm font-medium">{t("personal_information")}</span>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <div className="space-y-3">
-                                    <div>
-                                      <Label className="text-xs text-muted-foreground">{t("name")}</Label>
-                                      <p className="text-sm text-foreground">{displayUser?.name}</p>
-                                    </div>
-                                    {displayUser?.bio && (
-                                      <div>
-                                        <Label className="text-xs text-muted-foreground">{t("bio")}</Label>
-                                        <p className="text-sm text-foreground">{displayUser?.bio}</p>
-                                      </div>
-                                    )}
+              {/* Informações Pessoais - Full Width */}
+              <Card className="bg-card border-border shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5 text-electric-purple" />
+                    <span>{t("personal_information")}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="name">{t("full_name")}</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="bio">{t("bio")}</Label>
+                        <Textarea
+                          id="bio"
+                          placeholder={t("tell_about_yourself")}
+                          value={formData.bio}
+                          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="phone">{t("phone")}</Label>
+                        <Input
+                          id="phone"
+                          placeholder="(11) 99999-9999"
+                          value={formData.phone}
+                          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="location">{t("location")}</Label>
+                        <Input
+                          id="location"
+                          placeholder="São Paulo, SP"
+                          value={formData.location}
+                          onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="skills">{t("skills")}</Label>
+                        <Input
+                          id="skills"
+                          placeholder="React, JavaScript, Mobile Testing..."
+                          value={formData.skills}
+                          onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value }))}
+                        />
+                      </div>
+                      
+                      <Button onClick={handleSave} disabled={isLoading} className="w-full glow-effect">
+                        <Save className="h-4 w-4 mr-2" />
+                        {isLoading ? t("saving") : t("save_changes")}
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile: Accordion compact view */}
+                      <div className="md:hidden">
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="basic">
+                            <AccordionTrigger>
+                              <span className="text-sm font-medium">{t("personal_information")}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-xs text-muted-foreground">{t("name")}</Label>
+                                  <p className="text-sm text-foreground">{displayUser?.name}</p>
+                                </div>
+                                {displayUser?.bio && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">{t("bio")}</Label>
+                                    <p className="text-sm text-foreground">{displayUser?.bio}</p>
                                   </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                              <AccordionItem value="contact">
-                                <AccordionTrigger>
-                                  <span className="text-sm font-medium">{t("contact")}</span>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <div className="space-y-3">
-                                    {displayUser?.phone && (
-                                      <div>
-                                        <Label className="text-xs text-muted-foreground">{t("phone")}</Label>
-                                        <p className="text-sm text-foreground">{displayUser?.phone}</p>
-                                      </div>
-                                    )}
-                                    {displayUser?.location && (
-                                      <div>
-                                        <Label className="text-xs text-muted-foreground">{t("location")}</Label>
-                                        <p className="text-sm text-foreground">{displayUser?.location}</p>
-                                      </div>
-                                    )}
+                                )}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="contact">
+                            <AccordionTrigger>
+                              <span className="text-sm font-medium">{t("contact")}</span>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-3">
+                                {displayUser?.phone && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">{t("phone")}</Label>
+                                    <p className="text-sm text-foreground">{displayUser?.phone}</p>
                                   </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                              {Array.isArray(displayUser?.skills) && displayUser?.skills.length > 0 && (
-                                <AccordionItem value="skills">
-                                  <AccordionTrigger>
-                                    <span className="text-sm font-medium">{t("skills")}</span>
-                                  </AccordionTrigger>
-                                  <AccordionContent>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                      {displayUser?.skills?.map((skill: string, index: number) => (
-                                        <Badge key={index} variant="outline" className="bg-muted/30 text-muted-foreground border-border">
-                                          {skill}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  </AccordionContent>
-                                </AccordionItem>
-                              )}
-                            </Accordion>
-                          </div>
-
-                          {/* Desktop: Original detailed view */}
-                          <div className="hidden md:block space-y-4">
-                            <div>
-                              <Label className="text-sm font-medium text-muted-foreground">{t("name")}</Label>
-                              <p className="text-foreground">{displayUser?.name}</p>
-                            </div>
-                            
-                            {displayUser?.bio && (
-                              <div>
-                                <Label className="text-sm font-medium text-muted-foreground">{t("bio")}</Label>
-                                <p className="text-foreground">{displayUser?.bio}</p>
+                                )}
+                                {displayUser?.location && (
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">{t("location")}</Label>
+                                    <p className="text-sm text-foreground">{displayUser?.location}</p>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            
-                            {displayUser?.phone && (
-                              <div>
-                                <Label className="text-sm font-medium text-muted-foreground">{t("phone")}</Label>
-                                <p className="text-foreground">{displayUser?.phone}</p>
-                              </div>
-                            )}
-                            
-                            {displayUser?.location && (
-                              <div>
-                                <Label className="text-sm font-medium text-muted-foreground">{t("location")}</Label>
-                                <p className="text-foreground">{displayUser?.location}</p>
-                              </div>
-                            )}
-                            
-                            {Array.isArray(displayUser?.skills) && displayUser?.skills.length > 0 && (
-                              <div>
-                                <Label className="text-sm font-medium text-muted-foreground">{t("skills")}</Label>
+                            </AccordionContent>
+                          </AccordionItem>
+                          {Array.isArray(displayUser?.skills) && displayUser?.skills.length > 0 && (
+                            <AccordionItem value="skills">
+                              <AccordionTrigger>
+                                <span className="text-sm font-medium">{t("skills")}</span>
+                              </AccordionTrigger>
+                              <AccordionContent>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   {displayUser?.skills?.map((skill: string, index: number) => (
                                     <Badge key={index} variant="outline" className="bg-muted/30 text-muted-foreground border-border">
@@ -663,21 +650,99 @@ const Profile = () => {
                                     </Badge>
                                   ))}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Formulário de Verificação de Identidade */}
-                  <VerificationForm />
-                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          )}
+                        </Accordion>
+                      </div>
 
+                      {/* Desktop: Original detailed view */}
+                      <div className="hidden md:block space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">{t("name")}</Label>
+                          <p className="text-foreground">{displayUser?.name}</p>
+                        </div>
+                        
+                        {displayUser?.bio && (
+                          <div>
+                            <Label className="text-sm font-medium text-muted-foreground">{t("bio")}</Label>
+                            <p className="text-foreground">{displayUser?.bio}</p>
+                          </div>
+                        )}
+                        
+                        {displayUser?.phone && (
+                          <div>
+                            <Label className="text-sm font-medium text-muted-foreground">{t("phone")}</Label>
+                            <p className="text-foreground">{displayUser?.phone}</p>
+                          </div>
+                        )}
+                        
+                        {displayUser?.location && (
+                          <div>
+                            <Label className="text-sm font-medium text-muted-foreground">{t("location")}</Label>
+                            <p className="text-foreground">{displayUser?.location}</p>
+                          </div>
+                        )}
+                        
+                        {Array.isArray(displayUser?.skills) && displayUser?.skills.length > 0 && (
+                          <div>
+                            <Label className="text-sm font-medium text-muted-foreground">{t("skills")}</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {displayUser?.skills?.map((skill: string, index: number) => (
+                                <Badge key={index} variant="outline" className="bg-muted/30 text-muted-foreground border-border">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Quick Stats e XP Display abaixo do perfil */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Sistema de XP e Gamificação */}
+                {!isViewingOtherUser && (
+                  <div>
+                    <XPDisplay />
+                  </div>
+                )}
+                
                 {/* Quick Stats */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5 text-cosmic-blue" />
+                      <span>{t("your_stats")}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{t("completed_tasks")}</span>
+                      <span className="font-semibold text-foreground">{displayUser?.completedTests ?? 0}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 fill-star-glow text-star-glow" />
+                        <span className="font-semibold text-foreground">{(displayUser.rating || 0).toFixed(1)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{t("approval_rate")}</span>
+                      <span className="font-semibold text-success">{displayUser?.approvalRate || 0}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Avaliação do Contratante (se aplicável) */}
                 {isViewingOtherUser && eligibleContractorApplication && (
-                  <Card className="bg-card border-border shadow-md">
+                  <Card className="bg-card border-border shadow-md lg:col-span-2">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center space-x-2">
                         <Star className="h-5 w-5 text-star-glow" />
@@ -746,46 +811,6 @@ const Profile = () => {
                     </CardContent>
                   </Card>
                 )}
-                <div className="space-y-6">
-                  <Card className="bg-card border-border shadow-md">
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center space-x-2">
-                        <BarChart3 className="h-5 w-5 text-cosmic-blue" />
-                        <span>{t("your_stats")}</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("completed_tasks")}</span>
-                          <span className="font-semibold text-foreground">{displayUser?.completedTests ?? 0}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("average_rating")}</span>
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 fill-star-glow text-star-glow" />
-                          <span className="font-semibold text-foreground">{(displayUser.rating || 0).toFixed(1)}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("approval_rate")}</span>
-                        <span className="font-semibold text-success">{displayUser?.approvalRate || 0}%</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("current_balance")}</span>
-                        <span className="font-semibold text-foreground">
-                          {(
-                            displayUser?.currentMode === 'tester'
-                              ? (displayUser?.testerWallet?.availableBalance ?? 0)
-                              : (displayUser?.posterWallet?.balance ?? 0)
-            ).toFixed(2)} Kz
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </TabsContent>
 
@@ -843,12 +868,21 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              <div className="mt-6 flex justify-center">
+                <Link to="/freelancer-stats">
+                  <Button className="glow-effect">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Ver Estatísticas Completas
+                  </Button>
+                </Link>
+              </div>
             </TabsContent>
 
             { !isViewingOtherUser && (
             <TabsContent value="settings" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Configurações da Conta */}
+                {/* Configurações da conta e redes sociais */}
                 <Card className="bg-card border-border shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -885,22 +919,12 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>{t("account_status")}</Label>
-                      <div className="flex items-center space-x-2">
-                        {getVerificationBadge(userData.verificationStatus)}
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                          {t("premium")}
-                        </Badge>
+                      <Label>{t("theme")}</Label>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{t("adjust_theme")}</span>
+                        <ModeToggle />
                       </div>
                     </div>
-
-                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                      <Link to="/profile?tab=settings">
-                        {t("change_password")}
-                      </Link>
-                    </Button>
-                    
-                    <ModeToggle />
                   </CardContent>
                 </Card>
 
@@ -919,265 +943,207 @@ const Profile = () => {
                     <SocialMediaManager />
                   </CardContent>
                 </Card>
-              </div>
-              
-              {/* Configurações Avançadas */}
-              <div className="lg:col-span-2">
-                <SettingsManager />
+
+                {/* Configurações Avançadas */}
+                <Card className="bg-card border-border shadow-md lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="h-5 w-5 text-electric-purple" />
+                      <span>{t("advanced_settings")}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SettingsManager />
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
             )}
 
             { !isViewingOtherUser && (
             <TabsContent value="security" className="space-y-6">
-              {/** Hook de configurações para senha e alertas de login */}
-              {/** Estados locais para operações de segurança */}
-              {(() => {
-                // Estados dentro de uma IIFE para evitar declarar no topo de arquivo imenso
-                // Em projetos maiores, ideal extrair para componente.
-                const SecuritySection = () => {
-                  const { currentUser, userData, signOut } = useAuth();
-                  const { settings, updateSettings, resetPassword } = useSettings();
-                  const { toast } = useToast();
-
-                  const [currentPassword, setCurrentPassword] = useState("");
-                  const [newPassword, setNewPassword] = useState("");
-                  const [confirmPassword, setConfirmPassword] = useState("");
-                  const [passwordLoading, setPasswordLoading] = useState(false);
-
-                  const [emailLoading, setEmailLoading] = useState(false);
-
-                  const [phoneNumber, setPhoneNumber] = useState("");
-                  const [verificationId, setVerificationId] = useState<string | null>(null);
-                  const [mfaCode, setMfaCode] = useState("");
-                  const [mfaLoading, setMfaLoading] = useState(false);
-                  const [recaptchaRefId] = useState("recaptcha-security-mfa");
-
-                  const handleResendEmailVerification = async () => {
-                    try {
-                      setEmailLoading(true);
-                      await AuthService.resendVerificationEmail();
-                      toast({ title: "E-mail de verificação reenviado", description: "Verifique sua caixa de entrada." });
-                    } catch (e: any) {
-                      toast({ title: "Falha ao reenviar verificação", description: e?.message || "Tente novamente mais tarde.", variant: "destructive" });
-                    } finally {
-                      setEmailLoading(false);
-                    }
-                  };
-
-                  const handleChangePassword = async () => {
-                    if (newPassword.length < 6) {
-                      toast({ title: "Senha muito curta", description: "Use pelo menos 6 caracteres.", variant: "destructive" });
-                      return;
-                    }
-                    if (newPassword !== confirmPassword) {
-                      toast({ title: "Confirmação diferente", description: "A nova senha e a confirmação não coincidem.", variant: "destructive" });
-                      return;
-                    }
-                    try {
-                      setPasswordLoading(true);
-                      await resetPassword(currentPassword, newPassword);
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setConfirmPassword("");
-                      toast({ title: "Senha atualizada", description: "Sua senha foi alterada com sucesso." });
-                    } catch (e: any) {
-                      toast({ title: "Erro ao alterar senha", description: e?.message || "Verifique sua senha atual.", variant: "destructive" });
-                    } finally {
-                      setPasswordLoading(false);
-                    }
-                  };
-
-                  const handleToggleLoginAlerts = async () => {
-                    try {
-                      await updateSettings({ loginAlerts: !settings?.loginAlerts });
-                      toast({ title: "Preferência atualizada", description: `Alertas de login ${!settings?.loginAlerts ? 'ativados' : 'desativados'}.` });
-                    } catch (e: any) {
-                      toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" });
-                    }
-                  };
-
-                  const handleStartMfa = async () => {
-                    if (!phoneNumber) {
-                      toast({ title: "Informe o número", description: "Digite um telefone válido para SMS.", variant: "destructive" });
-                      return;
-                    }
-                    try {
-                      setMfaLoading(true);
-                      const { verificationId: vid } = await AuthService.startMfaEnrollment(phoneNumber, recaptchaRefId);
-                      setVerificationId(vid);
-                      toast({ title: "Código enviado", description: "Digite o código recebido por SMS." });
-                    } catch (e: any) {
-                      toast({ title: "Falha ao iniciar MFA", description: e?.message || "Tente novamente mais tarde.", variant: "destructive" });
-                    } finally {
-                      setMfaLoading(false);
-                    }
-                  };
-
-                  const handleConfirmMfa = async () => {
-                    if (!verificationId || !mfaCode) {
-                      toast({ title: "Dados incompletos", description: "Envie o código e informe o SMS recebido.", variant: "destructive" });
-                      return;
-                    }
-                    try {
-                      setMfaLoading(true);
-                      await AuthService.confirmMfaEnrollment(verificationId, mfaCode);
-                      setVerificationId(null);
-                      setMfaCode("");
-                      toast({ title: "MFA ativada", description: "Autenticação por SMS foi habilitada." });
-                    } catch (e: any) {
-                      toast({ title: "Falha ao confirmar MFA", description: e?.message || "Verifique o código e tente novamente.", variant: "destructive" });
-                    } finally {
-                      setMfaLoading(false);
-                    }
-                  };
-
-                  const handleSignOut = async () => {
-                    try {
-                      await signOut();
-                    } catch (e: any) {
-                      toast({ title: "Erro ao sair", description: e?.message || "Tente novamente.", variant: "destructive" });
-                    }
-                  };
-
-                  return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Verificação de e-mail */}
-                      <Card className="bg-card border-border shadow-md">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <MailCheck className="h-5 w-5 text-electric-purple" />
-                            <span>Verificação de e-mail</span>
-                          </CardTitle>
-                          <CardDescription>
-                            Status: {currentUser?.emailVerified ? 'Verificado' : 'Não verificado'}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <Button onClick={handleResendEmailVerification} disabled={emailLoading}>
-                            {emailLoading ? 'Enviando...' : 'Reenviar verificação'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Alterar senha */}
-                      <Card className="bg-card border-border shadow-md">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <Lock className="h-5 w-5 text-cosmic-blue" />
-                            <span>Alterar senha</span>
-                          </CardTitle>
-                          <CardDescription>Reautenticação necessária para mudar sua senha.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <Label>Senha atual</Label>
-                            <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••" />
-                          </div>
-                          <div>
-                            <Label>Nova senha</Label>
-                            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••" />
-                          </div>
-                          <div>
-                            <Label>Confirmar nova senha</Label>
-                            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••" />
-                          </div>
-                          <Button onClick={handleChangePassword} disabled={passwordLoading}>
-                            {passwordLoading ? 'Atualizando...' : 'Salvar nova senha'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Alertas de login */}
-                      <Card className="bg-card border-border shadow-md">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <Shield className="h-5 w-5 text-electric-purple" />
-                            <span>Alertas de login</span>
-                          </CardTitle>
-                          <CardDescription>Receba avisos quando sua conta for acessada.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status: {settings?.loginAlerts ? 'Ativado' : 'Desativado'}</span>
-                          <Button variant="outline" onClick={handleToggleLoginAlerts}>
-                            {settings?.loginAlerts ? 'Desativar' : 'Ativar'}
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* MFA via SMS */}
-                      <Card className="bg-card border-border shadow-md">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <Smartphone className="h-5 w-5 text-cosmic-blue" />
-                            <span>Autenticação em dois fatores (SMS)</span>
-                          </CardTitle>
-                          <CardDescription>Adicione uma camada extra de segurança usando código via SMS.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <Label>Número de telefone</Label>
-                            <Input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+244 900 000 000" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button onClick={handleStartMfa} disabled={mfaLoading}>
-                              {mfaLoading ? 'Enviando...' : 'Enviar código'}
-                            </Button>
-                            {verificationId && (
-                              <>
-                                <Input className="w-40" value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} placeholder="Código" />
-                                <Button variant="secondary" onClick={handleConfirmMfa} disabled={mfaLoading}>Confirmar</Button>
-                              </>
-                            )}
-                          </div>
-                          <div id={recaptchaRefId} className="h-0 w-0 overflow-hidden" aria-hidden="true"></div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Sessões e dispositivo */}
-                      <Card className="bg-card border-border shadow-md lg:col-span-2">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <KeyRound className="h-5 w-5 text-electric-purple" />
-                            <span>Sessões e dispositivo</span>
-                          </CardTitle>
-                          <CardDescription>Informações da última atividade de login.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="text-sm text-muted-foreground">Último login IP</div>
-                            <div className="font-medium text-foreground">{(userData as any)?.lastLoginIp || '—'}</div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-sm text-muted-foreground">Última atividade</div>
-                            <div className="font-medium text-foreground">{(userData as any)?.lastLoginAt ? new Date((userData as any).lastLoginAt.toDate?.() || (userData as any).lastLoginAt).toLocaleString('pt-BR') : '—'}</div>
-                          </div>
-                          <Button variant="destructive" onClick={handleSignOut} className="gap-2">
-                            <LogOut className="h-4 w-4" />
-                            Sair da sessão
-                          </Button>
-                        </CardContent>
-                      </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Email & Verificação */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <MailCheck className="h-5 w-5 text-primary" />
+                      <span>Email & Verificação</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Status do Email</span>
+                      </div>
+                      {currentUser.emailVerified ? (
+                        <Badge className="bg-success/10 text-success border-success/20">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verificado
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-warning">
+                          Não Verificado
+                        </Badge>
+                      )}
                     </div>
-                  );
-                };
-                return <SecuritySection />;
-              })()}
+
+                    {!currentUser.emailVerified && (
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            await AuthService.resendVerificationEmail();
+                            toast({
+                              title: "Email enviado",
+                              description: "Verifique sua caixa de entrada para confirmar o email.",
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Erro",
+                              description: "Não foi possível enviar o email de verificação.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <MailCheck className="h-4 w-4 mr-2" />
+                        Reenviar Email de Verificação
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Senha */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Lock className="h-5 w-5 text-primary" />
+                      <span>Senha</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Altere sua senha regularmente para manter sua conta segura.
+                    </p>
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          if (currentUser.email) {
+                            await AuthService.resetPassword(currentUser.email);
+                            toast({
+                              title: "Email enviado",
+                              description: "Verifique sua caixa de entrada para redefinir sua senha.",
+                            });
+                          }
+                        } catch (error) {
+                          toast({
+                            title: "Erro",
+                            description: "Não foi possível enviar o email de redefinição.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Alterar Senha
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Atividade de Login */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <span>Atividade de Login</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Último acesso</span>
+                        <span className="text-foreground">
+                          {currentUser.metadata.lastSignInTime 
+                            ? new Date(currentUser.metadata.lastSignInTime).toLocaleString('pt-BR')
+                            : "N/A"
+                          }
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Conta criada</span>
+                        <span className="text-foreground">
+                          {currentUser.metadata.creationTime
+                            ? new Date(currentUser.metadata.creationTime).toLocaleDateString('pt-BR')
+                            : "N/A"
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Autenticação de Dois Fatores */}
+                <Card className="bg-card border-border shadow-md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Smartphone className="h-5 w-5 text-primary" />
+                      <span>Autenticação de Dois Fatores (MFA)</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Adicione uma camada extra de segurança à sua conta.
+                    </p>
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Em breve
+                    </Badge>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Sair */}
+              <Card className="bg-destructive/10 border-destructive/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-destructive">
+                    <LogOut className="h-5 w-5" />
+                    <span>Sair da Conta</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Você será desconectado de sua conta em todos os dispositivos.
+                  </p>
+                  <Button 
+                    variant="destructive"
+                    onClick={async () => {
+                      await AuthService.signOut();
+                      window.location.href = "/";
+                    }}
+                    className="w-full"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
             )}
           </Tabs>
-          {/* Modal de Denúncia */}
-          {isViewingOtherUser && (
-            <ReportModal
-              isOpen={showReportModal}
-              onClose={() => setShowReportModal(false)}
-              reportedUserId={(displayUser?.id as string) || (uid as string)}
-              reportedUserName={displayUser?.name}
-              reportedUserEmail={displayUser?.email}
-            />
-          )}
         </div>
       </div>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportedUserId={uid || ''}
+        reportedUserName={displayUser?.name || ''}
+        reportedUserEmail={displayUser?.email || ''}
+      />
     </div>
   );
 };

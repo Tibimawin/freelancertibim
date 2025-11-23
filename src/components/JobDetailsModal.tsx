@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { JobService } from "@/services/firebase";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from 'react-i18next';
+import { generateAutomaticInstructions } from '@/utils/taskInstructionsGenerator';
 
 interface JobDetailsModalProps {
   job: Job | null;
@@ -89,15 +90,15 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="text-xl">{job.title}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl pr-8">{job.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header Info */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               {getPlatformIcon()}
               <Badge variant="outline" className={getDifficultyColor()}>
                 {t(job.difficulty.toLowerCase())}
@@ -111,9 +112,9 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
                 {['active','completed','paused','cancelled'].includes(job.status) ? '' : t('inactive')}
               </Badge>
             </div>
-            <div className="text-right">
-          <p className="text-2xl font-bold text-primary">{job.bounty.toFixed(2)} Kz</p>
-              <p className="text-sm text-muted-foreground">{t("applicants_count", { count: job.applicantCount })}</p>
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <p className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">{job.bounty.toFixed(2)} Kz</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{t("applicants_count", { count: job.applicantCount })}</p>
             </div>
           </div>
 
@@ -124,7 +125,7 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
           </div>
 
           {/* Detailed Instructions */}
-          {job.detailedInstructions && job.detailedInstructions.length > 0 && (
+          {job.detailedInstructions && job.detailedInstructions.length > 0 ? (
             <div>
               <h3 className="font-semibold mb-3">{t("detailed_instructions_label")}</h3>
               <div className="space-y-3">
@@ -143,6 +144,20 @@ const JobDetailsModal = ({ job, open, onOpenChange }: JobDetailsModalProps) => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h3 className="font-semibold mb-3">{t("detailed_instructions_label")}</h3>
+              <div className="p-4 bg-gradient-to-r from-primary/5 to-electric-purple/5 rounded-lg border border-primary/20">
+                <div className="prose prose-sm max-w-none text-foreground">
+                  <div 
+                    className="whitespace-pre-wrap leading-relaxed text-sm"
+                    dangerouslySetInnerHTML={{ 
+                      __html: generateAutomaticInstructions(job).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}

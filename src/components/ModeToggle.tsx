@@ -37,10 +37,10 @@ const ModeToggle = () => {
   };
 
   return (
-    <div className="flex items-center space-x-3 p-4 border rounded-lg">
-      <div className="flex items-center space-x-2">
-        <Users className="h-4 w-4 text-primary" />
-        <Label htmlFor="mode-toggle" className="text-sm">
+    <div className="flex items-center space-x-2 p-2 border rounded-lg">
+      <div className="flex items-center space-x-1">
+        <Users className="h-3.5 w-3.5 text-primary" />
+        <Label htmlFor="mode-toggle" className="text-xs">
           Freelancer
         </Label>
       </div>
@@ -52,11 +52,11 @@ const ModeToggle = () => {
         disabled={isLoading}
       />
       
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="mode-toggle" className="text-sm">
+      <div className="flex items-center space-x-1">
+        <Label htmlFor="mode-toggle" className="text-xs">
           Contratante
         </Label>
-        <Briefcase className="h-4 w-4 text-primary" />
+        <Briefcase className="h-3.5 w-3.5 text-primary" />
       </div>
     </div>
   );

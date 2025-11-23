@@ -561,7 +561,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary hover:underline">Política de Privacidade</a>.
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">Para criar a conta é obrigatório aceitar nossos termos e políticas, dado que o site exige KYC e acessa dados pessoais.</p>
+                <p className="text-xs text-muted-foreground">Para criar a conta é obrigatório aceitar nossos termos e políticas.</p>
               </div>
 
               <Button 

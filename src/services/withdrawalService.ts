@@ -25,7 +25,6 @@ export class WithdrawalService {
         ...requestData,
         status: 'pending',
         requestedAt: Timestamp.now(),
-        currency: requestData.currency || 'KZ',
       });
 
       // 2) Ajustar saldos do usuário (testerWallet): disponível - amount, pendente + amount

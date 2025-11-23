@@ -117,6 +117,28 @@ export interface Job {
   instagram?: JobInstagramSettings;
   facebook?: JobFacebookSettings;
   website?: JobWebsiteSettings;
+  twitter?: JobTwitterSettings;
+  // Criação de E-mail
+  emailCreation?: {
+    provider: 'gmail' | 'outlook' | 'yahoo' | 'protonmail' | 'other';
+    quantity: number;
+    requirements?: string;
+    customProvider?: string;
+  };
+  // Campos de recorrência
+  isRecurring?: boolean;
+  recurrence?: {
+    enabled: boolean;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number; // Ex: a cada 2 dias, 3 semanas, etc.
+    endDate?: Date;
+    lastPublished?: Date;
+    nextPublishDate?: Date;
+    totalRepublications?: number;
+    maxRepublications?: number; // Limite de republicações (opcional)
+  };
+  originalJobId?: string; // ID da tarefa original se for republicação
+  republicationNumber?: number; // Número da republicação (1, 2, 3...)
 }
 
 // Instruções detalhadas da tarefa
@@ -179,13 +201,14 @@ export interface ProofSubmission {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'escrow' | 'payout' | 'fee' | 'refund' | 'referral_reward';
+  type: 'deposit' | 'admin_deposit' | 'escrow' | 'payout' | 'fee' | 'refund' | 'referral_reward';
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed';
   description: string;
   provider?: 'coinbase' | 'pix' | 'bank' | 'system';
   metadata?: {
+    negotiationId?: string;
     jobId?: string;
     applicationId?: string;
     stripePaymentId?: string;
@@ -243,6 +266,8 @@ export interface WithdrawalRequest {
   userName: string;
   userEmail: string;
   amount: number;
+  fee?: number;
+  netAmount?: number;
   method: 'express' | 'iban';
   accountInfo: {
     // Transferência Express: apenas número de telefone autenticado no Multicaixa Express
@@ -263,25 +288,52 @@ export interface WithdrawalRequest {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'task_approved' | 'task_rejected' | 'task_submitted' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed' | 'message_received' | 'comment_submitted' | 'support_message' | 'market_order_delivered' | 'service_order_delivered' | 'service_order_dispute_opened' | 'service_order_dispute_resolved';
+  type: 'task_approved' | 'task_rejected' | 'task_submitted' | 'withdrawal_approved' | 'withdrawal_rejected' | 'new_task' | 'login_alert' | 'report_submitted' | 'report_reviewed' | 'message_received' | 'comment_submitted' | 'support_message' | 'market_order_delivered' | 'service_order_delivered' | 'service_order_dispute_opened' | 'service_order_dispute_resolved' | 'verification_pending' | 'verification_approved' | 'verification_rejected' | 'welcome_bonus_info' | 'welcome_bonus_granted' | 'first_login_bonus_info' | 'service_order_paid' | 'comment_replied' | 'level_up' | 'deposit_confirmed' | 'deposit_negotiation_started' | 'deposit_negotiation_updated' | 'deposit_proof_requested' | 'deposit_approved' | 'deposit_rejected' | 'deposit_proof_uploaded' | 'system_update' | 'forum_reply' | 'forum_upvote' | 'forum_solution_accepted' | 'email_task_rejection';
   title: string;
   message: string;
   read: boolean;
+  link?: string;
   metadata?: {
     jobId?: string;
     applicationId?: string;
     withdrawalId?: string;
     reportId?: string;
     chatUserId?: string;
-    // Mercado
     orderId?: string;
     listingId?: string;
     downloadTokenId?: string;
     receiptId?: string;
+    verificationId?: string;
+    parentId?: string;
+    transactionId?: string;
+    amount?: number;
+    negotiationId?: string;
+    changeType?: string;
+    timestamp?: string;
+    abTestId?: string; // ID do teste A/B associado
+    variant?: 'A' | 'B'; // Variante do teste A/B
+    topicId?: string;
+    replyId?: string;
+    replyAuthorId?: string;
+    replyAuthorName?: string;
+    voterId?: string;
+    voterName?: string;
+    topicTitle?: string;
+    // Email task rejection metadata
+    contractorId?: string;
+    freelancerId?: string;
+    freelancerName?: string;
+    rejectionReason?: string;
+    bounty?: number;
+    provider?: string;
+    severity?: string;
   };
+  broadcastId?: string; // ID do broadcast associado para rastrear engajamento
+  clicked?: boolean; // Se o usuário clicou na notificação
   createdAt: Date;
 }
 
+// Report types
 // Report types
 export interface Report {
   id: string;
@@ -314,7 +366,7 @@ export interface Referral {
   completedAt?: Date;
 }
 
-export { User };
+export type { User };
 
 // Mensagens de aplicação (chat entre contratante e freelancer)
 export interface Message {
@@ -360,6 +412,12 @@ export interface DirectMessage {
   createdAt: Date;
   // Read receipt timestamp (set by recipient)
   readAt?: Date;
+  // Reactions map: userId -> emoji
+  reactions?: { [userId: string]: string };
+  // Pinned status (either participant can pin)
+  pinned?: boolean;
+  pinnedBy?: string;
+  pinnedAt?: Date;
 }
 
 // Marketplace types
@@ -394,6 +452,7 @@ export interface MarketListing {
   ratingCount?: number;
   status: 'active' | 'inactive';
   createdAt: Date;
+  affiliateCommissionRate?: number; // percentage commission for affiliates
 }
 
 // Serviços (seção separada do Mercado)
@@ -579,5 +638,40 @@ export interface JobWebsiteSettings {
     blockCopy?: boolean;
     blockRefresh?: boolean;
     blockMultipleTabs?: boolean;
+  };
+}
+
+export interface JobTwitterSettings {
+  actionType: 'follow' | 'like' | 'retweet' | 'comment';
+  tweetUrl: string;
+  tweetTitle: string;
+  profileHandle?: string;
+  minCommentLength?: number;
+  dailyMaxActions?: number;
+  guarantee: 'none' | 'basic' | 'premium';
+  extras: {
+    requireLogin: boolean;
+    avoidRepeat: boolean;
+    openInIframe: boolean;
+    verifiedOnly: boolean;
+  };
+}
+
+// Intervenção administrativa em tarefas de criação de e-mail
+export interface AdminIntervention {
+  id: string;
+  applicationId: string;
+  jobId: string;
+  adminId: string;
+  adminName: string;
+  action: 'manual_approval' | 'override_rejection';
+  reason: string;
+  originalReviewerId: string;
+  originalRejectionReason?: string;
+  createdAt: any;
+  metadata?: {
+    freelancerId: string;
+    freelancerName: string;
+    bountyAmount: number;
   };
 }

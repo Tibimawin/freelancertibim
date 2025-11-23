@@ -7,19 +7,16 @@ import LandingContent from "@/components/LandingContent";
 import JobCard from "@/components/JobCard";
 import WalletCard from "@/components/WalletCard";
 import FilterDialog from "@/components/FilterDialog";
+import XPRanking from "@/components/XPRanking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useJobs } from "@/hooks/useFirebase";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useTranslation } from 'react-i18next'; // Import useTranslation
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { useTranslation } from 'react-i18next';
 import { LevelService } from "@/services/levelService";
 import { Card, CardContent } from "@/components/ui/card";
- 
 import { useSettings } from "@/hooks/useSettings";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TaxonomyService, NamedItem, SubcategoryItem, PaymentRangeItem } from "@/services/taxonomyService";
 import ServicesPage from "@/pages/Services";
 
 const Index = () => {
@@ -28,21 +25,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'micro' | 'services'>('micro');
-  const [workLevel, setWorkLevel] = useState<string | null>(null);
-  const [category, setCategory] = useState<string | null>(null);
-  const [subcategory, setSubcategory] = useState<string | null>(null);
-  const [payment, setPayment] = useState<string | null>(null);
-  const [location, setLocation] = useState<string | null>(null);
-  const [stats, setStats] = useState<string | null>(null);
-  // Listas dinâmicas do admin
-  const [jobLevelOptions, setJobLevelOptions] = useState<NamedItem[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<NamedItem[]>([]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryItem[]>([]);
-  const [paymentRangeOptions, setPaymentRangeOptions] = useState<PaymentRangeItem[]>([]);
-  const [locationOptions, setLocationOptions] = useState<NamedItem[]>([]);
-  const [statsLabelOptions, setStatsLabelOptions] = useState<NamedItem[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'panels' | 'list'>('list');
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useTranslation();
   const [userLevelIndex, setUserLevelIndex] = useState<0 | 1 | 2>(0);
   const { settings } = useSettings();
   const [showTips, setShowTips] = useState<boolean>(false);
@@ -65,66 +49,13 @@ const Index = () => {
     computeLevel();
   }, [currentUser]);
 
-  // Carregar listas dinâmicas
-  useEffect(() => {
-    const loadTaxonomies = async () => {
-      try {
-        const [levels, cats, subs, pays, locs, stats] = await Promise.all([
-          TaxonomyService.getJobLevels(),
-          TaxonomyService.getCategories(),
-          TaxonomyService.getSubcategories(),
-          TaxonomyService.getPaymentRanges(),
-          TaxonomyService.getLocations(),
-          TaxonomyService.getStatsLabels(),
-        ]);
-        setJobLevelOptions(levels);
-        setCategoryOptions(cats);
-        setSubcategoryOptions(subs);
-        setPaymentRangeOptions(pays);
-        setLocationOptions(locs);
-        setStatsLabelOptions(stats);
-      } catch (e) {
-        // silencioso: se falhar, mantém listas padrão estáticas
-      }
-    };
-    loadTaxonomies();
-  }, []);
 
   // Filtrar jobs baseado na dificuldade selecionada e gate por nível
   const maxAllowed = LevelService.maxAllowedBountyKZ(userLevelIndex);
   const filteredJobs = jobs.filter(job => {
     const byDifficulty = difficultyFilter ? job.difficulty === difficultyFilter : true;
-    const byWorkLevel = workLevel ? job.difficulty === workLevel : true;
-    const byCategory = category ? job.category === category : true;
-    const bySubcategory = subcategory ? job.subcategory === subcategory : true;
-    const byLocation = location ? (job.location || '').toLowerCase() === location.toLowerCase() : true;
-    let byPayment = true;
-    if (payment) {
-      const bounty = Number(job.bounty || 0);
-      const range = paymentRangeOptions.find((r) => r.id === payment);
-      if (range) {
-        const minOk = typeof range.min === 'number' ? bounty >= (range.min as number) : true;
-        const maxOk = typeof range.max === 'number' ? bounty <= (range.max as number) : true;
-        byPayment = minOk && maxOk;
-      } else {
-        // fallback para etiquetas antigas
-        if (payment === 'Até 1.000 Kz') byPayment = bounty <= 1000;
-        else if (payment === '1.000–5.000 Kz') byPayment = bounty > 1000 && bounty <= 5000;
-        else if (payment === '> 5.000 Kz') byPayment = bounty > 5000;
-      }
-    }
-    let byStats = true;
-    if (stats === 'Alta aprovação') {
-      const approval = typeof job.posterApprovalRate === 'number' ? job.posterApprovalRate : undefined;
-      const rating = typeof job.posterRating === 'number' ? job.posterRating : (typeof job.rating === 'number' ? job.rating : undefined);
-      byStats = (typeof approval === 'number' && approval >= 80) || (typeof rating === 'number' && rating >= 4.0);
-    } else if (stats === 'Pagador confiável') {
-      const rating = typeof job.posterRating === 'number' ? job.posterRating : (typeof job.rating === 'number' ? job.rating : 0);
-      const count = typeof job.posterRatingCount === 'number' ? job.posterRatingCount : (typeof job.ratingCount === 'number' ? job.ratingCount : 0);
-      byStats = rating >= 4.5 && count >= 10;
-    }
     const byLevelGate = Number(job.bounty || 0) <= maxAllowed;
-    return byDifficulty && byWorkLevel && byCategory && bySubcategory && byLocation && byPayment && byStats && byLevelGate;
+    return byDifficulty && byLevelGate;
   });
 
   // Se o usuário não estiver logado, mostra apenas a página de apresentação
@@ -239,6 +170,9 @@ const Index = () => {
               </div>
             )}
 
+            {/* Ranking XP - Apenas na aba Micro Empregos */}
+            {activeSection === 'micro' && <XPRanking />}
+
             {/* Tips Card */}
             <div className="rounded-xl bg-gradient-secondary p-6 border border-border/50">
               <h3 className="text-lg font-semibold text-card-foreground mb-3">💡 {t("tip_of_the_day")}</h3>
@@ -319,123 +253,8 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Linha de filtros (apenas Micro Empregos) */}
-            {activeSection === 'micro' && (
-            <div className="mb-4 md:mb-8 rounded-md bg-muted/30 border border-border p-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Nível de trabalho</Label>
-                  <Select value={workLevel || ''} onValueChange={(v) => setWorkLevel(v === 'all' ? null : v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {(jobLevelOptions.length ? jobLevelOptions : [
-                        { id: 'Fácil', name: 'Fácil' },
-                        { id: 'Médio', name: 'Médio' },
-                        { id: 'Difícil', name: 'Difícil' },
-                      ]).map((lvl) => (
-                        <SelectItem key={lvl.id} value={lvl.name}>{lvl.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Categoria</Label>
-                  <Select
-                    value={category || ''}
-                    onValueChange={(v) => {
-                      const next = v === 'all' ? null : v;
-                      setCategory(next);
-                      // Ao mudar a categoria, limpar subcategoria selecionada
-                      setSubcategory(null);
-                    }}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {(categoryOptions.length ? categoryOptions : [
-                        { id: 'Mobile', name: 'Mobile' },
-                        { id: 'Web', name: 'Web' },
-                        { id: 'Social', name: 'Social' },
-                      ]).map((c) => (
-                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Subcategoria</Label>
-                  <Select value={subcategory || ''} onValueChange={(v) => setSubcategory(v === 'all' ? null : v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {(subcategoryOptions.length ? subcategoryOptions.filter((s) => !category || s.category === category) : []).map((s) => (
-                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Pagamento</Label>
-                  <Select value={payment || ''} onValueChange={(v) => setPayment(v === 'all' ? null : v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {(paymentRangeOptions.length ? paymentRangeOptions : [
-                        { id: 'r1', label: 'Até 1.000 Kz', min: 0, max: 1000 },
-                        { id: 'r2', label: '1.000–5.000 Kz', min: 1000, max: 5000 },
-                        { id: 'r3', label: '> 5.000 Kz', min: 5000 },
-                      ]).map((r) => (
-                        <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Localização</Label>
-                  <Select value={location || ''} onValueChange={(v) => setLocation(v === 'all' ? null : v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {(locationOptions.length ? locationOptions : [
-                        { id: 'Luanda', name: 'Luanda' },
-                        { id: 'Online', name: 'Online' },
-                      ]).map((l) => (
-                        <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex-none w-56 md:w-auto snap-start">
-                  <Label className="text-sm font-medium">Emp. Estatísticas</Label>
-                  <Select value={stats || ''} onValueChange={(v) => setStats(v === 'all' ? null : v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {(statsLabelOptions.length ? statsLabelOptions : [
-                        { id: 'Alta aprovação', name: 'Alta aprovação' },
-                        { id: 'Pagador confiável', name: 'Pagador confiável' },
-                      ]).map((s) => (
-                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            )}
+
+
 
             {activeSection === 'micro' ? (
               <div className={
@@ -485,44 +304,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Mensagem de bônus e verificação de conta */}
-        {showTips && (
-          <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 z-40">
-            <Card className="shadow-lg border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-semibold">Bônus de 500 KZ</h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Verifique sua conta para ganhar 500 KZ de bônus.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <Button size="sm" className="glow-effect" onClick={() => navigate('/kyc')}>
-                        Verificar conta agora
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setShowTips(false)}>Fechar</Button>
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await updateSettings({ showOnboardingTips: false });
-                          setShowTips(false);
-                        } catch (e) {
-                          setShowTips(false);
-                        }
-                      }}
-                    >
-                      Não mostrar novamente
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        
       </main>
     </div>
   );

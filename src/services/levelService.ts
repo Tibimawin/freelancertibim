@@ -1,6 +1,8 @@
 import { Application, Job } from '@/types/firebase';
 import { ApplicationService } from './applicationService';
 import { JobService } from './firebase';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, updateDoc, increment, Timestamp } from 'firebase/firestore';
 
 export type FreelancerLevelName = 'Inicial' | 'Avançado' | 'Especialista';
 
@@ -148,6 +150,122 @@ export class LevelService {
         inactivityWeeks,
       },
     };
+  }
+
+  // Novo sistema de XP persistido no banco
+  static async getUserXP(userId: string): Promise<{ xp: number; level: number }> {
+    try {
+      const userLevelRef = doc(db, 'user_levels', userId);
+      const userLevelSnap = await getDoc(userLevelRef);
+      
+      if (userLevelSnap.exists()) {
+        const data = userLevelSnap.data();
+        return {
+          xp: data.xp || 0,
+          level: data.level || 0
+        };
+      }
+      
+      // Criar documento inicial se não existir
+      await setDoc(userLevelRef, {
+        xp: 0,
+        level: 0,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      
+      return { xp: 0, level: 0 };
+    } catch (error) {
+      console.error('Error getting user XP:', error);
+      return { xp: 0, level: 0 };
+    }
+  }
+
+  static async addXP(userId: string, xpAmount: number, reason: string): Promise<{ xp: number; level: number; leveledUp: boolean }> {
+    try {
+      const userLevelRef = doc(db, 'user_levels', userId);
+      const userLevelSnap = await getDoc(userLevelRef);
+      
+      let currentXP = 0;
+      let currentLevel = 0;
+      
+      if (userLevelSnap.exists()) {
+        const data = userLevelSnap.data();
+        currentXP = data.xp || 0;
+        currentLevel = data.level || 0;
+      }
+      
+      const newXP = currentXP + xpAmount;
+      const newLevel = this.calculateLevelFromXP(newXP);
+      const leveledUp = newLevel > currentLevel;
+      
+      if (userLevelSnap.exists()) {
+        await updateDoc(userLevelRef, {
+          xp: increment(xpAmount),
+          level: newLevel,
+          lastXPReason: reason,
+          lastXPAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        });
+      } else {
+        await setDoc(userLevelRef, {
+          xp: xpAmount,
+          level: newLevel,
+          lastXPReason: reason,
+          lastXPAt: Timestamp.now(),
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        });
+      }
+      
+      return { xp: newXP, level: newLevel, leveledUp };
+    } catch (error) {
+      console.error('Error adding XP:', error);
+      throw error;
+    }
+  }
+
+  static calculateLevelFromXP(xp: number): number {
+    // Níveis baseados em XP:
+    // Nível 0: 0-99 XP
+    // Nível 1: 100-299 XP
+    // Nível 2: 300-599 XP
+    // Nível 3: 600-999 XP
+    // Nível 4: 1000-1499 XP
+    // Nível 5+: 1500+ XP (cada 500 XP = 1 nível)
+    
+    if (xp < 100) return 0;
+    if (xp < 300) return 1;
+    if (xp < 600) return 2;
+    if (xp < 1000) return 3;
+    if (xp < 1500) return 4;
+    
+    return 5 + Math.floor((xp - 1500) / 500);
+  }
+
+  static getXPForNextLevel(currentXP: number): number {
+    const currentLevel = this.calculateLevelFromXP(currentXP);
+    
+    // XP necessário para o próximo nível
+    if (currentLevel === 0) return 100;
+    if (currentLevel === 1) return 300;
+    if (currentLevel === 2) return 600;
+    if (currentLevel === 3) return 1000;
+    if (currentLevel === 4) return 1500;
+    
+    return 1500 + ((currentLevel - 4) * 500);
+  }
+
+  static getLevelName(level: number): string {
+    if (level === 0) return 'Iniciante';
+    if (level === 1) return 'Bronze';
+    if (level === 2) return 'Prata';
+    if (level === 3) return 'Ouro';
+    if (level === 4) return 'Platina';
+    if (level === 5) return 'Diamante';
+    if (level === 6) return 'Mestre';
+    if (level >= 7) return 'Lendário';
+    return 'Iniciante';
   }
 
   static maxAllowedBountyKZ(levelIdx: 0 | 1 | 2): number {

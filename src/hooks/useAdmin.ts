@@ -318,7 +318,7 @@ export const useAdminAnalytics = () => {
         const arr = months.map((m) => ({ month: m, value: 0 }));
         for (const d of items) {
           const dtRaw = dateGetter(d);
-          const dt = (dtRaw as any)?.toDate ? dtRaw.toDate() : dtRaw;
+          const dt = (dtRaw as any)?.toDate ? (dtRaw as any).toDate() : (dtRaw instanceof Date ? dtRaw : new Date(dtRaw));
           if (!dt || dt.getFullYear() !== year) continue;
           const idx = dt.getMonth();
           arr[idx].value += valueGetter ? Number(valueGetter(d) || 0) : 1;

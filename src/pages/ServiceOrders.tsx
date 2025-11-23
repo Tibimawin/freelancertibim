@@ -13,15 +13,11 @@ import { ServicesService } from '@/services/servicesService';
 import { Image as ImageIcon, Star } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { AdminService } from '@/services/admin';
+import { formatKz } from '@/lib/currency';
 
 function formatDate(d?: Date | string) {
   const date = typeof d === 'string' ? new Date(d) : d;
   return date ? new Date(date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-}
-
-function formatPrice(amount: number, currency: string) {
-  const code = currency === 'KZ' ? 'AOA' : currency;
-  return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: code }).format(amount);
 }
 
 export default function ServiceOrdersPage() {
@@ -186,7 +182,7 @@ export default function ServiceOrdersPage() {
                           {l?.sellerName || o.sellerName} • {formatDate(o.createdAt)}
                         </div>
                         <div className="text-sm">
-                          Valor: {formatPrice(o.amount, o.currency)}
+                          Valor: {formatKz(o.amount)}
                         </div>
                       </div>
                     </div>

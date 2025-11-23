@@ -85,17 +85,24 @@ export class AdminWithdrawalService {
 
       // Create transaction record como 'completed' ao aprovar
       const transactionRef = doc(collection(db, 'transactions'));
+      const transactionAmount = requestData.netAmount || requestData.amount;
+      const feeAmount = requestData.fee || 0;
+      
       batch.set(transactionRef, {
         userId: requestData.userId,
         type: 'payout',
-        amount: requestData.amount,
+        amount: transactionAmount,
         currency: requestData.currency || 'KZ',
         status: 'completed',
-        description: `Withdrawal completed - ${requestData.method}`,
+        description: feeAmount > 0 
+          ? `Withdrawal completed - ${requestData.method} (Taxa: ${feeAmount.toFixed(2)} Kz)`
+          : `Withdrawal completed - ${requestData.method}`,
         provider: requestData.method,
         metadata: {
           withdrawalRequestId: requestId,
-          approvedBy: adminId
+          approvedBy: adminId,
+          fee: feeAmount,
+          grossAmount: requestData.amount,
         },
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
@@ -120,11 +127,17 @@ export class AdminWithdrawalService {
 
       // Notificar usuário sobre conclusão
       try {
+        const netAmountDisplay = requestData.netAmount || requestData.amount;
+        const feeDisplay = requestData.fee || 0;
+        const message = feeDisplay > 0
+          ? `✅ Seu saque foi aprovado! Valor líquido: ${netAmountDisplay.toFixed(2)} Kz (Taxa: ${feeDisplay.toFixed(2)} Kz)`
+          : `✅ Seu saque foi aprovado e concluído com sucesso! Valor: ${netAmountDisplay.toFixed(2)} Kz`;
+        
         await NotificationService.createNotification({
           userId: requestData.userId,
           type: 'withdrawal_approved',
           title: 'Saque concluído',
-          message: '✅ Seu saque foi aprovado e concluído com sucesso! O valor será creditado conforme o método selecionado.',
+          message,
           read: false,
           metadata: { withdrawalId: requestId },
         });

@@ -37,9 +37,17 @@ export function ThemeProvider({
     const updateTheme = () => {
       const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
       
+      // Adiciona classe de transição antes de mudar
+      root.style.setProperty('--theme-transition', '0.5s');
+      
       root.classList.remove('light', 'dark');
       root.classList.add(effectiveTheme);
       setResolvedTheme(effectiveTheme);
+      
+      // Remove a transição após completar
+      setTimeout(() => {
+        root.style.setProperty('--theme-transition', '0s');
+      }, 500);
     };
 
     updateTheme();

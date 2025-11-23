@@ -57,7 +57,6 @@ export class JobService {
       
       if (posterDoc.exists()) {
         const posterData = posterDoc.data();
-        const isVerified = posterData.verificationStatus === 'approved';
         const currentBalance = posterData.posterWallet?.balance || 0;
         const currentPending = posterData.posterWallet?.pendingBalance || 0;
         const currentBonus = posterData.posterWallet?.bonusBalance || 0;
@@ -292,6 +291,29 @@ export class TransactionService {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
+      
+      // Enviar notificação push para depósitos confirmados
+      if ((transactionData.type === 'deposit' || transactionData.type === 'admin_deposit') && 
+          transactionData.status === 'completed') {
+        try {
+          const { NotificationService } = await import('./notificationService');
+          await NotificationService.createNotification({
+            userId: transactionData.userId,
+            type: 'deposit_confirmed',
+            title: 'Depósito Confirmado',
+            message: `Seu depósito de ${transactionData.amount.toFixed(2)} Kz foi creditado com sucesso!`,
+            read: false,
+            metadata: {
+              transactionId: docRef.id,
+              amount: transactionData.amount,
+            }
+          });
+        } catch (notifError) {
+          console.error('Error creating deposit notification:', notifError);
+          // Não falhar a transação se a notificação falhar
+        }
+      }
+      
       return docRef.id;
     } catch (error) {
       console.error('Error creating transaction:', error);
@@ -322,26 +344,73 @@ export class TransactionService {
     }
   }
 
-  static async updateUserBalance(userId: string, amount: number, type: 'add' | 'subtract') {
+  static async updateUserBalance(userId: string, amount: number, type: 'add' | 'subtract', walletType?: 'poster' | 'tester') {
     try {
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
       
       if (userDoc.exists()) {
         const data: any = userDoc.data();
-        const currentBalance = (data.testerWallet?.balance ?? data.wallet?.balance ?? 0) as number;
-        const newBalance = type === 'add' 
-          ? currentBalance + amount 
-          : Math.max(0, currentBalance - amount);
         
-        await updateDoc(userRef, {
-          'testerWallet.balance': newBalance,
-          // keep legacy in sync if it exists
-          'wallet.balance': newBalance,
+        let currentBalance = 0;
+        const updateData: any = {
           updatedAt: Timestamp.now(),
-        });
+        };
         
-        return newBalance;
+        // Se walletType foi especificado, usar ele; caso contrário, detectar automaticamente
+        let targetWallet = walletType;
+        if (!targetWallet) {
+          // Detectar pelo currentMode (modo atual do usuário)
+          if (data.currentMode === 'poster') {
+            targetWallet = 'poster';
+          } else if (data.currentMode === 'tester') {
+            targetWallet = 'tester';
+          } else if (data.role === 'poster' || data.posterWallet !== undefined) {
+            targetWallet = 'poster';
+          } else if (data.role === 'tester' || data.testerWallet !== undefined) {
+            targetWallet = 'tester';
+          }
+        }
+        
+        // Atualizar carteira do contratante (poster)
+        if (targetWallet === 'poster') {
+          currentBalance = data.posterWallet?.balance ?? 0;
+          const newBalance = type === 'add' 
+            ? currentBalance + amount 
+            : Math.max(0, currentBalance - amount);
+          
+          updateData['posterWallet.balance'] = newBalance;
+          
+          // Também atualizar wallet legacy se existir
+          if (data.wallet !== undefined) {
+            updateData['wallet.balance'] = newBalance;
+          }
+          
+          console.log(`✅ Updating posterWallet.balance: ${currentBalance} -> ${newBalance} (${type} ${amount})`);
+        }
+        // Atualizar carteira do freelancer (tester)
+        else if (targetWallet === 'tester') {
+          currentBalance = data.testerWallet?.balance ?? data.wallet?.balance ?? 0;
+          const newBalance = type === 'add' 
+            ? currentBalance + amount 
+            : Math.max(0, currentBalance - amount);
+          
+          updateData['testerWallet.balance'] = newBalance;
+          
+          // Manter wallet legacy sincronizado
+          if (data.wallet !== undefined) {
+            updateData['wallet.balance'] = newBalance;
+          }
+          
+          console.log(`✅ Updating testerWallet.balance: ${currentBalance} -> ${newBalance} (${type} ${amount})`);
+        } else {
+          console.error('❌ User data:', { role: data.role, currentMode: data.currentMode, hasPosterWallet: !!data.posterWallet, hasTesterWallet: !!data.testerWallet });
+          throw new Error('Cannot determine wallet type for user');
+        }
+        
+        await updateDoc(userRef, updateData);
+        
+        return type === 'add' ? currentBalance + amount : Math.max(0, currentBalance - amount);
       }
       throw new Error('User not found');
     } catch (error) {

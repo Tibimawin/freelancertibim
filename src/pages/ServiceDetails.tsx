@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TransactionService } from '@/services/firebase';
 import { NotificationService } from '@/services/notificationService';
 import ServiceOrderService from '@/services/serviceOrderService';
+import { formatKz } from '@/lib/currency';
 import { AdminService } from '@/services/admin';
 
 export default function ServiceDetailsPage() {
@@ -522,7 +523,7 @@ export default function ServiceDetailsPage() {
                   <div className="text-xs text-muted-foreground">Prestador do serviço</div>
                 </div>
               </div>
-              <div className="text-lg font-semibold">{new Intl.NumberFormat('pt-AO', { style: 'currency', currency: listing.currency === 'KZ' ? 'AOA' : listing.currency }).format(listing.price)}</div>
+              <div className="text-lg font-semibold">{formatKz(listing.price)}</div>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" className="w-full" onClick={() => setOpenDM(true)}>
                   <MessageSquare className="h-4 w-4 mr-2" /> Contactar

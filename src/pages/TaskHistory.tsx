@@ -16,7 +16,8 @@ import {
   DollarSign,
   Calendar,
   Flag, // Adicionado Flag para o ícone de denúncia
-  Star
+  Star,
+  Bell
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -276,7 +277,15 @@ const TaskHistory = () => {
                         <div className="text-2xl font-bold text-primary">
             {app.job?.bounty.toFixed(2) || '0.00'} Kz
                         </div>
-                        {getStatusBadge(app.status)}
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(app.status)}
+                          {app.status === 'approved' && !app.feedback?.rating && (
+                            <Badge className="bg-gradient-to-r from-warning to-accent text-white border-0 shadow-glow animate-pulse">
+                              <Bell className="h-3 w-3 mr-1" />
+                              Precisa avaliar
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
@@ -362,7 +371,15 @@ const TaskHistory = () => {
                       <div className="text-2xl font-bold text-success">
           +{app.job?.bounty.toFixed(2) || '0.00'} Kz
                       </div>
-                      {getStatusBadge(app.status)}
+                      <div className="flex flex-col items-end gap-2">
+                        {getStatusBadge(app.status)}
+                        {!app.feedback?.rating && (
+                          <Badge className="bg-gradient-to-r from-warning to-accent text-white border-0 shadow-glow animate-pulse">
+                            <Bell className="h-3 w-3 mr-1" />
+                            Precisa avaliar
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>

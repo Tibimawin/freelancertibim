@@ -200,7 +200,7 @@ const ManageApplications = () => {
                                   {application.status === 'submitted' && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleReviewApplication({ ...application, job })} // Pass job data to modal
+                                      onClick={() => handleReviewApplication(application as any)}
                                       className="glow-effect"
                                     >
                                       <Eye className="h-4 w-4 mr-2" />

@@ -14,6 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
+        jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
       },
       colors: {
@@ -70,12 +72,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Novas cores para o tema "Nebulosa Profunda"
-        'nebula-bg': 'hsl(var(--nebula-bg))',
-        'nebula-fg': 'hsl(var(--nebula-fg))',
-        'electric-purple': 'hsl(var(--electric-purple))',
-        'cosmic-blue': 'hsl(var(--cosmic-blue))',
-        'star-glow': 'hsl(var(--star-glow))',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -111,14 +107,13 @@ export default {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
-        // Novos keyframes para efeitos "mágicos"
-        "pulse-glow": {
-          "0%, 100%": { opacity: "0.8", transform: "scale(1)" },
-          "50%": { opacity: "1", transform: "scale(1.02)" },
+        "shimmer": {
+          "0%, 100%": { opacity: "0.5" },
+          "50%": { opacity: "1" },
         },
-        "float-subtle": {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-5px)" },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
         },
       },
       animation: {
@@ -127,8 +122,8 @@ export default {
         "fade-in": "fade-in 0.6s ease-out",
         "slide-up": "slide-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s ease-out",
-        "pulse-glow": "pulse-glow 2s infinite ease-in-out",
-        "float-subtle": "float-subtle 4s infinite ease-in-out",
+        "shimmer": "shimmer 2s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease infinite",
       },
     },
   },

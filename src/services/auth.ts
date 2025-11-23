@@ -156,6 +156,20 @@ export class AuthService {
         await ReferralService.registerReferral(referredBy, firebaseUser.uid);
       }
 
+      // 4. Enviar email de boas-vindas
+      try {
+        const { getFunctions, httpsCallable } = await import('firebase/functions');
+        const functions = getFunctions();
+        const sendEmail = httpsCallable(functions, 'sendWelcomeEmail');
+        await sendEmail({
+          userEmail: email,
+          userName: name,
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError);
+        // Não bloquear o cadastro se o email falhar
+      }
+
       return { user: firebaseUser, userData };
     } catch (error) {
       console.error('Error signing up:', error);
@@ -431,7 +445,7 @@ export class AuthService {
     }
     const cred = PhoneAuthProvider.credential(verificationId, code);
     const assertion = PhoneMultiFactorGenerator.assertion(cred);
-    await (auth.currentUser as FirebaseUser).multiFactor.enroll(assertion, 'SMS');
+    await ((auth.currentUser as any)?.multiFactor as any)?.enroll(assertion, 'SMS');
   }
 
   // Disable MFA by unenrolling a given factor UID.
@@ -439,7 +453,7 @@ export class AuthService {
     if (!auth.currentUser) {
       throw new Error('Usuário não autenticado');
     }
-    await (auth.currentUser as FirebaseUser).multiFactor.unenroll(factorUid);
+    await ((auth.currentUser as any)?.multiFactor as any)?.unenroll(factorUid);
   }
 
   static async getUserData(uid: string): Promise<User | null> {
